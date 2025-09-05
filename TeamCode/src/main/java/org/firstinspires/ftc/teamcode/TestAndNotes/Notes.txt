@@ -1,0 +1,29 @@
+OpMode = A program for our robot.
+
+OpModes are required to have 2 method:
+
+init() - runs once when driver presses INIT
+loop() - run repeatedly after driver presses PLAY but before STOP
+
+Additionally:
+
+init_loop() - runs repeatedly after driver presses INIT but before PLAY
+start() - runs once when the driver presses PLAY
+stop() - runs once when the driver presses STOP
+
+@TeleOp Critical - This ensures this will show on the driver station as an OpMode
+Any line that start with @ is called an notation
+You can choose from @TeleOp() or @Autonomous()
+You can give OpMode a name and group otherwise it ust uses class name
+@Disabled means code will compile but not show up as an OpMode
+
+GAMEPAD AND BASIC MATHS
+
+Buttons on the gamePad are all boolean (pressed/not pressed)
+The d-pad is exposed as four buttons
+the joysticks have values between 0 and 1 (not pressed / fully pressed)
+
+You have to pressed the "Start" and "A" simultaneously on a gamepad to recognize gamepad 1
+and "Start" and "A" simultaneously on a gamepad to recognize gamepad 2
+Once the gamepad has been recognized the gamepad icon in the upper right corner of the DS
+will be illuminated
