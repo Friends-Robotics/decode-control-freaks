@@ -14,7 +14,7 @@ stop() - runs once when the driver presses STOP
 @TeleOp Critical - This ensures this will show on the driver station as an OpMode
 Any line that start with @ is called an notation
 You can choose from @TeleOp() or @Autonomous()
-You can give OpMode a name and group otherwise it ust uses class name
+You can give OpMode a name and group otherwise it just uses class name
 @Disabled means code will compile but not show up as an OpMode
 
 GAMEPAD AND BASIC MATHS
@@ -27,3 +27,8 @@ You have to pressed the "Start" and "A" simultaneously on a gamepad to recognize
 and "Start" and "A" simultaneously on a gamepad to recognize gamepad 2
 Once the gamepad has been recognized the gamepad icon in the upper right corner of the DS
 will be illuminated
+
+private = Can only be seen in the class
+default = only that class and other classes in the same package can see them
+protected = can only be seen in class, child classes and in the same package
+public = It can be seen anywhere
