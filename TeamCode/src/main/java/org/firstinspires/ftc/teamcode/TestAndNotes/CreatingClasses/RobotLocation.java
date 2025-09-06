@@ -1,7 +1,4 @@
-package org.firstinspires.ftc.teamcode.TestAndNotes;
-
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+package org.firstinspires.ftc.teamcode.TestAndNotes.CreatingClasses;
 
 public class RobotLocation{
     double angle;

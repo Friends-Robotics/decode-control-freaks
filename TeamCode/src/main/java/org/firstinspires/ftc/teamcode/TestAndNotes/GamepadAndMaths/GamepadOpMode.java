@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.TestAndNotes;
+package org.firstinspires.ftc.teamcode.TestAndNotes.GamepadAndMaths;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
