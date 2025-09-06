@@ -32,3 +32,7 @@ private = Can only be seen in the class
 default = only that class and other classes in the same package can see them
 protected = can only be seen in class, child classes and in the same package
 public = It can be seen anywhere
+
+A circle in radians = 2 PI
+
+As a best practice in FTC, your init() method should set things back to their expected default state

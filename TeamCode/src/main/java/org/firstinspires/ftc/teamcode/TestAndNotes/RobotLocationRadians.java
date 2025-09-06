@@ -1,9 +1,13 @@
 package org.firstinspires.ftc.teamcode.TestAndNotes;
 
+import androidx.annotation.NonNull;
+
 public class RobotLocationRadians {
     // Store the robot's heading in radians (internal representation).
-    // Why radians? Because Java math functions (sin, cos, atan2, etc.) all use radians.
+    // Why radians? Because Java math functions (sin, cos, tan, etc.) all use radians.
     double angleRadians;
+    double x = 0;
+    double y = 0;
 
     // Constructor: user provides an angle in DEGREES,
     // we immediately convert it into RADIANS for storage.
@@ -38,6 +42,7 @@ public class RobotLocationRadians {
         return Math.toDegrees(angle);
     }
 
+    @NonNull
     @Override
     public String toString(){
         // Print the raw (not normalized) angle in radians
@@ -56,5 +61,28 @@ public class RobotLocationRadians {
     // Again, convert to radians for storage
     public void setAngle(double angleDegrees){
         this.angleRadians = Math.toRadians(angleDegrees);
+    }
+    public double getAngle(){
+        return Math.toDegrees(this.angleRadians);
+    }
+
+    public double getX(){
+        return this.x;
+    }
+    public void setX(double set){
+        this.x = set;
+    }
+    public void changeX(double change){
+        this.x += change;
+    }
+
+    public double getY(){
+        return this.y;
+    }
+    public void setY(double set){
+        this.y = set;
+    }
+    public void changeY(double change){
+        this.y += change;
     }
 }
