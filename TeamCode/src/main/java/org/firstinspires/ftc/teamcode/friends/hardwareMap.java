@@ -31,7 +31,8 @@ public class hardwareMap {
     public DcMotor backRightMotor;
     public DcMotor intakeMotor;
     public Servo feeder;
-    public DcMotorEx shooter;
+    public DcMotorEx shooterMotor1;
+    public DcMotorEx shooterMotor2;
 
     //Constants
     private double targetRPM = 0;
@@ -39,7 +40,7 @@ public class hardwareMap {
 
 
 
-    public HardwareMap(com.qualcomm.robotcore.hardware.HardwareMap hardwaremap) {
+    public hardwareMap(com.qualcomm.robotcore.hardware.HardwareMap hardwaremap) {
 
         frontRightMotor = hardwaremap.get(DcMotor.class, "FRM");
         frontRightMotor.setDirection(DcMotorSimple.Direction.FORWARD);
@@ -51,9 +52,14 @@ public class hardwareMap {
         backLeftMotor.setDirection(DcMotorSimple.Direction.FORWARD);
         intakeMotor = hardwaremap.get(DcMotor.class, "Intake");
         feeder = hardwaremap.get(Servo.class, "Feeder");
-        shooter = hardwaremap.get(DcMotorEx.class, "Shooter");
-        shooter.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        shooter.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+
+        shooterMotor1 = hardwaremap.get(DcMotorEx.class, "Shooter1");
+        shooterMotor1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        shooterMotor1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+
+        shooterMotor2 = hardwaremap.get(DcMotorEx.class, "Shooter2");
+        shooterMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        shooterMotor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
     }
     //INTAKE
@@ -68,13 +74,17 @@ public class hardwareMap {
     public void setShooterRPM(double rpm){
         targetRPM = rpm;
         double ticksPerSecond = (rpm * TICKS_PER_REV) / 60.0;
-        shooter.setVelocity(ticksPerSecond);
+        shooterMotor1.setVelocity(ticksPerSecond);
+        shooterMotor2.setVelocity(ticksPerSecond);
     }
     public double getShooterRPM() {
-        return (shooter.getVelocity() * 60.0) / TICKS_PER_REV;
+        return (shooterMotor1.getVelocity() * 60.0) / TICKS_PER_REV;
     }
     public boolean shooterAtSpeed(double tolerance) {
         return Math.abs(getShooterRPM() - targetRPM) <= tolerance;
     }
-    public void stopShooter() {shooter.setPower(0);}
+    public void stopShooter() {
+        shooterMotor1.setPower(0);
+        shooterMotor2.setPower(0);
+    }
 }
