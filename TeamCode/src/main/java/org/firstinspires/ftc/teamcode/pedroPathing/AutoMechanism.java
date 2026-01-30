@@ -5,6 +5,7 @@ import com.pedropathing.geometry.Pose;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import com.pedropathing.paths.Path;
@@ -58,7 +59,7 @@ public class AutoMechanism extends LinearOpMode {
     @Override
     public void runOpMode() {
 
-        robot = new HardwareMap(hardwareMap); // Starts robot hardware
+        robot = new hardwareMap(hardwareMap); // Starts robot hardware
         follower = Constants.createFollower(hardwareMap); // Creates pedro follower
         follower.setPose(startPose);
 
