@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.friends;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 
 /**
@@ -34,6 +35,10 @@ public class hardwareMap {
     public DcMotorEx shooterMotor1;
     public DcMotorEx shooterMotor2;
 
+    public DcMotorEx parallelEncoder, perpendicularEncoder; //For pinpoint
+    public IMU imu;
+
+
     //Constants
     private double targetRPM = 0;
     public static final double TICKS_PER_REV = 28;
@@ -60,6 +65,18 @@ public class hardwareMap {
         shooterMotor2 = hardwaremap.get(DcMotorEx.class, "Shooter2");
         shooterMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         shooterMotor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+
+        parallelEncoder = hardwaremap.get(DcMotorEx.class, "parallelEncoder"); //Added encoders
+        perpendicularEncoder = hardwaremap.get(DcMotorEx.class, "perpendicularEncoder");
+
+        imu = hardwaremap.get(IMU.class, "imu");
+
+        //Encoder Setup
+        parallelEncoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        perpendicularEncoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        parallelEncoder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        perpendicularEncoder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
     }
     //INTAKE
