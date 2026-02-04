@@ -112,7 +112,7 @@ public class LimelightAutoPositioning extends LinearOpMode {
             } else {
                 telemetry.addLine("No valid target");
             }
-            telemetry.update();
+            telemetry.update();//d
         }
 
 
