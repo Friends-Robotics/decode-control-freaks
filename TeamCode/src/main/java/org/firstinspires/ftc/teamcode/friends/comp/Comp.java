@@ -8,16 +8,14 @@ import org.firstinspires.ftc.teamcode.friends.hardwareMap;
 
 @TeleOp(name = "Comp")
 public class Comp extends LinearOpMode {
-    // -------- Hardware --------
     private static hardwareMap hwMap;
-    // -------- State --------
+
     private double speedModifier = 0.8;
     private float intakePower = -0.8f;
     private float shooterPower = 0.0f;
     private float turretPower = 0.0f;
     private float servoPosition = 0.0f;
 
-    // -------- Gamepads --------
     private final Gamepad currentGp1 = new Gamepad();
     private final Gamepad previousGp1 = new Gamepad();
     private final Gamepad currentGp2 = new Gamepad();
@@ -42,11 +40,6 @@ public class Comp extends LinearOpMode {
             sendTelemetry();
         }
     }
-
-    // =========================
-    // Initialization
-    // =========================
-
     private void updateGamepads() {
         previousGp1.copy(currentGp1);
         currentGp1.copy(gamepad1);
@@ -54,11 +47,6 @@ public class Comp extends LinearOpMode {
         previousGp2.copy(currentGp2);
         currentGp2.copy(gamepad2);
     }
-
-    // =========================
-    // Gamepad 1 — Drive
-    // =========================
-
     private void handleDrive() {
         if (currentGp1.touchpad && !previousGp1.touchpad) {
             speedModifier = (speedModifier == 0.8) ? 1.0 : 0.8;
@@ -80,11 +68,6 @@ public class Comp extends LinearOpMode {
         hwMap.frontRightMotor.setPower(fr * speedModifier);
         hwMap.backRightMotor.setPower(br * speedModifier);
     }
-
-    // =========================
-    // Gamepad 2 — Intake
-    // =========================
-
     private void handleIntake() {
         if (currentGp2.right_trigger > 0.8 && previousGp2.right_trigger <= 0.8) {
             intakePower = 0.8f;
@@ -100,11 +83,6 @@ public class Comp extends LinearOpMode {
             hwMap.intakeMotor.setPower(0);
         }
     }
-
-    // =========================
-    // Gamepad 2 — Shooter
-    // =========================
-
     private void handleShooter() {
         if (currentGp2.dpad_up && !previousGp2.dpad_up) {
             shooterPower += 0.1f;
@@ -124,11 +102,6 @@ public class Comp extends LinearOpMode {
             hwMap.shooterMotor2.setPower(0);
         }
     }
-
-    // =========================
-    // Gamepad 2 — Shooter Angle
-    // =========================
-
     private void handleShooterAngle() {
         if (currentGp2.triangle && !previousGp2.triangle) {
             servoPosition += 0.05f;
@@ -140,15 +113,11 @@ public class Comp extends LinearOpMode {
 
         servoPosition = clamp(servoPosition, 0f, 1.0f);
 
-        if (currentGp2.left_trigger > 0.8 && currentGp2.right_trigger > 0.8) {
-            hwMap.turretServo.setPosition(servoPosition);
-        }
+        //if (currentGp2.left_trigger > 0.8 && currentGp2.right_trigger > 0.8) {
+        //    hwMap.turretServo.setPosition(servoPosition);
+        //
+        // }
     }
-
-    // =========================
-    // Gamepad 2 — Turret
-    // =========================
-
     private void handleTurret() {
         if (currentGp2.left_bumper && !previousGp2.left_bumper) {
             turretPower -= 0.1f;
@@ -159,21 +128,11 @@ public class Comp extends LinearOpMode {
         }
 
         turretPower = clamp(turretPower, -1.0f, 1.0f);
-        hwMap.turretMotor.setPower(turretPower);
+        //hwMap.turretMotor.setPower(turretPower);
     }
-
-    // =========================
-    // Utilities
-    // =========================
-
     private float clamp(float value, float min, float max) {
         return Math.max(min, Math.min(max, value));
     }
-
-    // =========================
-    // Telemetry
-    // =========================
-
     private void sendTelemetry() {
         telemetry.addData("Drive Speed", speedModifier);
         telemetry.addData("Intake Power", intakePower);

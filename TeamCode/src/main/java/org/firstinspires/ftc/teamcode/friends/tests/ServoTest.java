@@ -7,36 +7,41 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 @TeleOp(name = "Servo Test")
 public class ServoTest extends LinearOpMode {
-    Servo servo;
-    float servoPosition = 0.0f;
+    Servo servo1;
+    Servo servo2;
+
+    double servoPosition = 0.0; // use double for servo positions
 
     @Override
-    public void runOpMode() throws InterruptedException {
-        servo = hardwareMap.get(Servo.class, "Servo");
+    public void runOpMode() {
+        servo1 = hardwareMap.get(Servo.class, "Servo1");
+        servo2 = hardwareMap.get(Servo.class, "Servo2");
 
         waitForStart();
-
-        if(isStopRequested()) return;
+        if (isStopRequested()) return;
 
         Gamepad currentGamepad = new Gamepad();
         Gamepad previousGamepad = new Gamepad();
 
-        while(opModeIsActive()){
+        while (opModeIsActive()) {
             previousGamepad.copy(currentGamepad);
             currentGamepad.copy(gamepad1);
 
-            if(currentGamepad.dpad_up && !(previousGamepad.dpad_up))
-                servoPosition += 0.05f;
-            if(currentGamepad.dpad_down && !(previousGamepad.dpad_down))
-                servoPosition -= 0.05f;
+            if (currentGamepad.dpad_up && !previousGamepad.dpad_up) {
+                servoPosition += 0.01;
+            }
 
-            servoPosition = Math.min(1.0f, servoPosition);
-            servoPosition = Math.max(0.0f, servoPosition);
+            if (currentGamepad.dpad_down && !previousGamepad.dpad_down) {
+                servoPosition -= 0.01;
+            }
 
-            telemetry.addData("Servo Position: ", servoPosition);
+            //servoPosition = Math.max(0.0, Math.min(1.0, servoPosition));
+
+            servo1.setPosition(servoPosition);
+            servo2.setPosition(servoPosition);
+
+            telemetry.addData("Servo Position", servoPosition);
             telemetry.update();
-
-            servo.setPosition(servoPosition);
         }
     }
 }

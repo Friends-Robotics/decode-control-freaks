@@ -58,7 +58,7 @@ public class AutoMechanism extends LinearOpMode {
     @Override
     public void runOpMode() {
 
-        robot = new HardwareMap(hardwareMap); // Starts robot hardware
+        robot = new hardwareMap(hardwareMap); // Starts robot hardware
         follower = Constants.createFollower(hardwareMap); // Creates pedro follower
         follower.setPose(startPose);
 
