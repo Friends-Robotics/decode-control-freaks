@@ -40,7 +40,7 @@ public class hardwareMap {
 
 
     //Constants
-    private double targetRPM = 0;
+    private double targetRPM = 3200;
     public static final double TICKS_PER_REV = 28;
 
 

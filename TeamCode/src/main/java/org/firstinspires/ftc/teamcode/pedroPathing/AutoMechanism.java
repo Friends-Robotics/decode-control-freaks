@@ -44,7 +44,7 @@ public class AutoMechanism extends LinearOpMode {
     int cycleIndex = 0; // This checks through the intakeposes array
     int ballsShot = 0;
 
-    Pose startPose = new Pose(56, 90, 135);
+    Pose startPose = new Pose(15, 130, 135);
     Pose shootPose = new Pose(56, 90, Math.toRadians(135));
 
     Pose[] intakePoses = { // Cycle index cycles through these poses
