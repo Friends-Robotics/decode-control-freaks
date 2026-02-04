@@ -6,9 +6,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.Range;
-import org.firstinspires.ftc.teamcode.friends.hardwareMap;
+
 @TeleOp
 public class LimelightAutoPositioning extends LinearOpMode {
 
@@ -18,9 +17,20 @@ public class LimelightAutoPositioning extends LinearOpMode {
     public DcMotor backLeftMotor;
     public DcMotor frontRightMotor;
     public DcMotor backRightMotor;
+    public DcMotor TurretMotorLeft;
+    public DcMotor TurretMotorRight;
+
+    private final double kP_turret = 0.015;
+    private final double maxTurretPower = 0.35;
+    private final double MaxDrivePower = 0.4;
+
+    private final double DRIVE_TOLERANCE = 0.05;
 
     private final double kP_turn = 0.02;
     private final double maxTurnPower = 0.4;
+
+    double DESIRED_DISTANCE = 71;
+    double DESIRED_DISTANCE_METRES = DESIRED_DISTANCE * 0.0254;
 
     @Override
     public void runOpMode() {
@@ -37,84 +47,94 @@ public class LimelightAutoPositioning extends LinearOpMode {
         backRightMotor = hardwareMap.get(DcMotor.class, "BRM");
         backLeftMotor = hardwareMap.get(DcMotor.class, "BLM");
 
+        TurretMotorLeft  = hardwareMap.get(DcMotor.class, "TURRET_L");
+        TurretMotorRight = hardwareMap.get(DcMotor.class, "TURRET_R");
+
+        TurretMotorRight.setDirection(DcMotor.Direction.REVERSE);
+
         waitForStart();
         if (isStopRequested()) return;
 
         while (opModeIsActive()) {
 
             LLResult result = limelight.getLatestResult();
-            double turnPower = 0.4;
-            double drivePower = 0.6;
 
-            // Target distance in meters
-            double targetDistanceMeters = 71 * 0.0254; // 135.5 inches -> meters
+            double turretPower = 0;
+            double drivePower = 0;
 
-            // Auto-turn and auto-drive logic
+            // ---- AUTO TURRET TRACKING ----
             if (gamepad1.right_bumper && result != null && result.isValid()) {
+
                 Pose3D targetPose = result.getBotpose();
 
-                // ---- Auto-turn ----
-                double yawError = targetPose.getOrientation().getYaw(); // degrees
-                turnPower = Range.clip(yawError * kP_turn, -maxTurnPower, maxTurnPower);
+                // Yaw error = how far turret is off target
+                double yawError = targetPose.getOrientation().getYaw();
 
-                // ---- Auto-drive with smooth stopping ----
-                double distanceError = targetPose.getPosition().z - targetDistanceMeters; // meters
-                double kP_drive = 0.8; // proportional gain for speed
+                turretPower = Range.clip(
+                        yawError * kP_turret,
+                        -maxTurretPower,
+                        maxTurretPower
+                );
+
+                // ---- AUTO DRIVE TO DISTANCE ----
+                double distanceError =
+                        targetPose.getPosition().z - DESIRED_DISTANCE_METRES;
+
+                double kP_drive = 0.7;
                 drivePower = distanceError * kP_drive;
 
-                // Smooth stop: reduce power when close to target
-                double minDistanceForStop = 0.05; // 5 cm tolerance
-                if (Math.abs(distanceError) < minDistanceForStop) {
-                    drivePower = 0; // close enough, stop
-                } else {
-                    // Scale speed down as robot gets closer (optional)
-                    drivePower = Range.clip(drivePower, -0.4, 0.4); // max forward/back power
+                // Smooth stop
+                if (Math.abs(distanceError) < DRIVE_TOLERANCE) { // 5 cm tolerance
+                    drivePower = 0;
                 }
+
+                drivePower = Range.clip(drivePower, -0.4, 0.4);
             }
 
-            // ---- Driver inputs ----
-            double drive = -gamepad1.left_stick_y;   // forward/back
-            double strafe = gamepad1.left_stick_x;   // left/right
-            double rotate = gamepad1.right_stick_x;  // normal rotation
+            // ---- SET TURRET MOTORS ----
+            TurretMotorLeft.setPower(turretPower);
+            TurretMotorRight.setPower(turretPower);
 
-            // Override with auto-turn/drive if active
+            // ---- DRIVER CONTROLS ----
+            double drive  = -gamepad1.left_stick_y;
+            double strafe =  gamepad1.left_stick_x;
+            double rotate =  gamepad1.right_stick_x; // driver rotation only
+
+            // Override forward/back when auto active
             if (gamepad1.right_bumper && result != null && result.isValid()) {
-                rotate = turnPower;
                 drive = drivePower;
             }
 
-            // ---- Mecanum drive calculations ----
-            double flPower = drive + strafe + rotate;
-            double frPower = drive - strafe - rotate;
-            double blPower = drive - strafe + rotate;
-            double brPower = drive + strafe - rotate;
+            // ---- MECANUM DRIVE ----
+            double fl = drive + strafe + rotate;
+            double fr = drive - strafe - rotate;
+            double bl = drive - strafe + rotate;
+            double br = drive + strafe - rotate;
 
-            // Clip powers to [-1, 1]
-            flPower = Range.clip(flPower, -1, 1);
-            frPower = Range.clip(frPower, -1, 1);
-            blPower = Range.clip(blPower, -1, 1);
-            brPower = Range.clip(brPower, -1, 1);
+            fl = Range.clip(fl, -1, 1);
+            fr = Range.clip(fr, -1, 1);
+            bl = Range.clip(bl, -1, 1);
+            br = Range.clip(br, -1, 1);
 
-            // Set motor powers
-            frontLeftMotor.setPower(flPower);
-            frontRightMotor.setPower(frPower);
-            backLeftMotor.setPower(blPower);
-            backRightMotor.setPower(brPower);
+            frontLeftMotor.setPower(fl);
+            frontRightMotor.setPower(fr);
+            backLeftMotor.setPower(bl);
+            backRightMotor.setPower(br);
 
-            // ---- Telemetry ----
-            telemetry.addData("Auto Active", gamepad1.right_bumper && result != null && result.isValid());
+            // ---- TELEMETRY ----
+            telemetry.addData("Auto Active", gamepad1.right_bumper);
             if (result != null && result.isValid()) {
-                Pose3D targetPose = result.getBotpose();
-                telemetry.addData("Distance (m)", targetPose.getPosition().z);
-                telemetry.addData("Yaw error (deg)", targetPose.getOrientation().getYaw());
+                Pose3D p = result.getBotpose();
+                telemetry.addData("Distance (m)", p.getPosition().z);
+                telemetry.addData("Yaw Error (deg)", p.getOrientation().getYaw());
+                telemetry.addData("Turret Power", turretPower);
                 telemetry.addData("Drive Power", drivePower);
-                telemetry.addData("Turn Power", turnPower);
             } else {
-                telemetry.addLine("No valid target");
+                telemetry.addLine("No AprilTag");
             }
-            telemetry.update();//d
-        }
 
+            telemetry.update();
+        }
 
     }
 }

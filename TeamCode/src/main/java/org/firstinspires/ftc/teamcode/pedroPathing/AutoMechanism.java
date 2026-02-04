@@ -5,7 +5,6 @@ import com.pedropathing.geometry.Pose;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import com.pedropathing.paths.Path;
@@ -63,8 +62,7 @@ public class AutoMechanism extends LinearOpMode {
     PathChain intakePath; // Paths are built on the fly and change every cycle
     PathChain intakePath2;
     PathChain shootPath;
-
-    PathChain startshootPath;
+    PathChain StartShootPath;
 
 
 
@@ -92,7 +90,7 @@ public class AutoMechanism extends LinearOpMode {
                 /* ---------- PRELOAD ---------- */
 
                 case PRELOAD_DRIVE_TO_SHOOT:
-                    follower.followPath(startshootPath);
+                    follower.followPath(StartShootPath);
                     currentState = AutoState.PRELOAD_SPIN_UP;
                 case PRELOAD_SPIN_UP:
                     if (robot.shooterAtSpeed(RPM_TOLERANCE) && !follower.isBusy()) { // Waits until shooter is at speed
@@ -206,7 +204,7 @@ public class AutoMechanism extends LinearOpMode {
                 .addPath(new Path(new BezierCurve(intakePose2, shootPose)))
                 .build(); // Same as above but for shooter
 
-        startshootPath = new PathBuilder(follower)
+        StartShootPath = new PathBuilder(follower)
                 .addPath(new Path(new BezierCurve(startPose, shootPose)))
                 .build();
 
