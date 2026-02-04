@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.friends;
 
+import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -35,12 +36,14 @@ public class hardwareMap {
     public DcMotorEx shooterMotor1;
     public DcMotorEx shooterMotor2;
 
+    public Limelight3A limelight;
+
     public DcMotorEx parallelEncoder, perpendicularEncoder; //For pinpoint
     public IMU imu;
 
 
     //Constants
-    private double targetRPM = 3200;
+    private double targetRPM = 2000;
     public static final double TICKS_PER_REV = 28;
 
 
@@ -57,6 +60,8 @@ public class hardwareMap {
         backLeftMotor.setDirection(DcMotorSimple.Direction.FORWARD);
         intakeMotor = hardwaremap.get(DcMotor.class, "Intake");
         feeder = hardwaremap.get(Servo.class, "Feeder");
+
+        limelight = hardwaremap.get(Limelight3A.class, "limelight");
 
         shooterMotor1 = hardwaremap.get(DcMotorEx.class, "Shooter1");
         shooterMotor1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);

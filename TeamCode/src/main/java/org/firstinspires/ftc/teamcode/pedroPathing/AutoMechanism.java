@@ -36,7 +36,7 @@ public class AutoMechanism extends LinearOpMode {
 
     ElapsedTime stateTimer = new ElapsedTime(); // Controls the feeder duration without using sleep()
 
-    static final double TARGET_RPM = 3200;
+    static final double TARGET_RPM = 3360;
     static final double RPM_TOLERANCE = 100;
     static final double FEED_TIME = 0.4;
 
