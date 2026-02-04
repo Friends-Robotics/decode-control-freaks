@@ -43,8 +43,8 @@ public class LimelightAutoPositioning extends LinearOpMode {
         while (opModeIsActive()) {
 
             LLResult result = limelight.getLatestResult();
-            double turnPower = 0;
-            double drivePower = 0;
+            double turnPower = 0.4;
+            double drivePower = 0.6;
 
             // Target distance in meters
             double targetDistanceMeters = 135.5 * 0.0254; // 135.5 inches -> meters
