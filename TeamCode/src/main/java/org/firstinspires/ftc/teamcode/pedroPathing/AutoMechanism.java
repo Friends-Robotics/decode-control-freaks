@@ -34,7 +34,7 @@ public class AutoMechanism extends LinearOpMode {
         DONE
     }
 
-    AutoState currentState = AutoState.PRELOAD_SPIN_UP; // Makes sure the first state is the first state
+    AutoState currentState = AutoState.PRELOAD_DRIVE_TO_SHOOT; // Makes sure the first state is the first state
 
     ElapsedTime stateTimer = new ElapsedTime(); // Controls the feeder duration without using sleep()
 
@@ -92,6 +92,7 @@ public class AutoMechanism extends LinearOpMode {
 
                 case PRELOAD_DRIVE_TO_SHOOT:
                     follower.followPath(startshootPath);
+                    currentState = AutoState.PRELOAD_SPIN_UP;
                 case PRELOAD_SPIN_UP:
                     if (robot.shooterAtSpeed(RPM_TOLERANCE) && !follower.isBusy()) { // Waits until shooter is at speed
                         robot.feedBall();
