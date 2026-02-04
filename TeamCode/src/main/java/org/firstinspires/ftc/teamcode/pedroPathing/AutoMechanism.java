@@ -117,7 +117,7 @@ public class AutoMechanism extends LinearOpMode {
                             follower.followPath(intakePath);
                             follower.followPath(intakePath2);
                             currentState = AutoState.DRIVE_TO_INTAKE;
-                            //Begins driving once all balls have been shot and starts intake motors
+                            //Begins driving once all balls have been shot and starts intake motorss
                         }
                     }
                     break;
