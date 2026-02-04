@@ -24,6 +24,7 @@ public class AutoMechanism extends LinearOpMode {
 
     enum AutoState { //Fun stuff
 
+        PRELOAD_DRIVE_TO_SHOOT,
         PRELOAD_SPIN_UP,
         PRELOAD_FEED,
         DRIVE_TO_INTAKE,
@@ -89,9 +90,10 @@ public class AutoMechanism extends LinearOpMode {
 
                 /* ---------- PRELOAD ---------- */
 
-                case PRELOAD_SPIN_UP:
+                case PRELOAD_DRIVE_TO_SHOOT:
                     follower.followPath(startshootPath);
-                    if (robot.shooterAtSpeed(RPM_TOLERANCE)) { // Waits until shooter is at speed
+                case PRELOAD_SPIN_UP:
+                    if (robot.shooterAtSpeed(RPM_TOLERANCE) && !follower.isBusy()) { // Waits until shooter is at speed
                         robot.feedBall();
                         stateTimer.reset(); // Allows the state timer to be used in other states
                         currentState = AutoState.PRELOAD_FEED; //Switches state
