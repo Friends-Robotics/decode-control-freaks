@@ -79,6 +79,7 @@ public class AutoMechanism extends LinearOpMode {
         telemetry.update();
         waitForStart(); // PRESS START queue geometry dash
 
+        robot.prepfeedBall();
         robot.setShooterRPM(TARGET_RPM); // Allows the shooter to be sped up before auto
         stateTimer.reset();
 
@@ -96,6 +97,7 @@ public class AutoMechanism extends LinearOpMode {
                 case PRELOAD_SPIN_UP:
                     if (robot.shooterAtSpeed(RPM_TOLERANCE) && !follower.isBusy()) { // Waits until shooter is at speed
                         robot.feedBall();
+                        robot.prepfeedBall();
                         stateTimer.reset(); // Allows the state timer to be used in other states
                         currentState = AutoState.PRELOAD_FEED; //Switches state
                     }
@@ -142,6 +144,7 @@ public class AutoMechanism extends LinearOpMode {
                 case SPIN_UP_SHOOTER:
                     if (robot.shooterAtSpeed(RPM_TOLERANCE)) {
                         robot.feedBall();
+                        robot.prepfeedBall();
                         stateTimer.reset();
                         currentState = AutoState.FEED_BALL;
                     }

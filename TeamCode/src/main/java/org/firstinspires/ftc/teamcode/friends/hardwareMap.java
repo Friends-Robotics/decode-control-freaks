@@ -89,7 +89,9 @@ public class hardwareMap {
     public void stopIntake() { intakeMotor.setPower(0.0);}
 
     //FEEDER
-    public void feedBall() {feeder.setPosition(1.0);}//0.33 0.65
+    public void prepfeedBall() {feeder.setPosition(0.65);}//0.33 0.65
+    public void feedBall() {feeder.setPosition(0.33);}//0.33 0.65
+
     public void resetFeeder() {feeder.setPosition(0.0);}
 
     //SHOOTER
