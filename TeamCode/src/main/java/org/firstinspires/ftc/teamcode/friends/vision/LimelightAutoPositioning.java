@@ -20,24 +20,26 @@ public class LimelightAutoPositioning extends LinearOpMode {
     public DcMotor TurretMotorLeft;
     public DcMotor TurretMotorRight;
 
-    private final double kP_turret = 0.015;
-    private final double maxTurretPower = 0.35;
+    private final double kP_strafe = 0.6;
+    private final double kP_turret = 0.015; // A proportional constant for turret aiming and controls how fast the turret reacts to angle error
+    private final double MaxTurretPower = 0.35; //Limits how fast the turret can spin
     private final double MaxDrivePower = 0.4;
+    private final double MaxStrafePower = 0.4;
 
-    private final double DRIVE_TOLERANCE = 0.05;
+    private final double DRIVE_TOLERANCE = 0.05; //stops the drivetrain if its within a certain range
+    private final double TURRET_TOLERANCE = 1;//Degrees
+    private final double STRAFE_TOLERANCE = 0.03;
 
-    private final double kP_turn = 0.02;
-    private final double maxTurnPower = 0.4;
 
     double DESIRED_DISTANCE = 71;
-    double DESIRED_DISTANCE_METRES = DESIRED_DISTANCE * 0.0254;
+    private final double DESIRED_DISTANCE_METRES = DESIRED_DISTANCE * 0.0254;
 
     @Override
     public void runOpMode() {
 
         // Initialize Limelight
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
-        limelight.setPollRateHz(100);
+        limelight.setPollRateHz(100); // Controls the fps
         limelight.start();
         limelight.pipelineSwitch(0); // Make sure pipeline 0 is AprilTag
 
@@ -50,7 +52,7 @@ public class LimelightAutoPositioning extends LinearOpMode {
         TurretMotorLeft  = hardwareMap.get(DcMotor.class, "TURRET_L");
         TurretMotorRight = hardwareMap.get(DcMotor.class, "TURRET_R");
 
-        TurretMotorRight.setDirection(DcMotor.Direction.REVERSE);
+        TurretMotorRight.setDirection(DcMotor.Direction.REVERSE); //Stops motors from working against each other
 
         waitForStart();
         if (isStopRequested()) return;
@@ -59,36 +61,55 @@ public class LimelightAutoPositioning extends LinearOpMode {
 
             LLResult result = limelight.getLatestResult();
 
-            double turretPower = 0;
+            double turretPower = 0; //Resets power for every loop
             double drivePower = 0;
+            double strafePower = 0;
+
+            Pose3D targetPose = null; //So i can use the pose outside of the auto tracking if
+
+            // ---- AUTO STRAFE TO CENTER ----
+            double xError = targetPose.getPosition().x; // left/right offset
+
+            if (Math.abs(xError) < STRAFE_TOLERANCE) {
+                strafePower = 0;
+            } else {
+                strafePower = Range.clip(
+                        xError * kP_strafe,
+                        -MaxStrafePower,
+                        MaxStrafePower
+                );
+            }
 
             // ---- AUTO TURRET TRACKING ----
-            if (gamepad1.right_bumper && result != null && result.isValid()) {
+            if (gamepad1.right_bumper && result != null && result.isValid()) { // If Jonny holds bumper, limelight sees an apriltag and its the right one it will work
 
-                Pose3D targetPose = result.getBotpose();
+                targetPose = result.getBotpose(); //Limelight magic so the robot knows how far it is from the tag
 
-                // Yaw error = how far turret is off target
+                // Yaw error = how far turret is off april tag target
                 double yawError = targetPose.getOrientation().getYaw();
 
-                turretPower = Range.clip(
-                        yawError * kP_turret,
-                        -maxTurretPower,
-                        maxTurretPower
-                );
-
+                if (Math.abs(yawError) < TURRET_TOLERANCE) {
+                    turretPower = 0;
+                } else {
+                    turretPower = Range.clip(
+                            yawError * kP_turret,
+                            -MaxTurretPower,
+                            MaxTurretPower
+                    );
+                }
                 // ---- AUTO DRIVE TO DISTANCE ----
-                double distanceError =
+                double distanceError = //Positive = Far Negative = close 0 = perrrfect
                         targetPose.getPosition().z - DESIRED_DISTANCE_METRES;
 
                 double kP_drive = 0.7;
                 drivePower = distanceError * kP_drive;
 
                 // Smooth stop
-                if (Math.abs(distanceError) < DRIVE_TOLERANCE) { // 5 cm tolerance
+                if (Math.abs(distanceError) < DRIVE_TOLERANCE) { // Stops movement when close enough
                     drivePower = 0;
                 }
 
-                drivePower = Range.clip(drivePower, -0.4, 0.4);
+                drivePower = Range.clip(drivePower, -MaxDrivePower, MaxDrivePower);// Keeps movement from blowing up
             }
 
             // ---- SET TURRET MOTORS ----
@@ -96,11 +117,17 @@ public class LimelightAutoPositioning extends LinearOpMode {
             TurretMotorRight.setPower(turretPower);
 
             // ---- DRIVER CONTROLS ----
-            double drive  = -gamepad1.left_stick_y;
-            double strafe =  gamepad1.left_stick_x;
-            double rotate =  gamepad1.right_stick_x; // driver rotation only
+            double drive = -gamepad1.left_stick_y;
+            double strafe = gamepad1.left_stick_x;
+            double rotate = gamepad1.right_stick_x;
 
-            // Override forward/back when auto active
+            if (gamepad1.right_bumper && result != null && result.isValid()) {
+                drive = drivePower;
+                strafe = strafePower;
+                rotate = 0; // lock robot rotation
+            }
+
+            // Override forward/back when auto active so it stays within rules
             if (gamepad1.right_bumper && result != null && result.isValid()) {
                 drive = drivePower;
             }

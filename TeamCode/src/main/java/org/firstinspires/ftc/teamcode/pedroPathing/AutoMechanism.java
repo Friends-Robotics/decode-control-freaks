@@ -92,6 +92,7 @@ public class AutoMechanism extends LinearOpMode {
                 case PRELOAD_DRIVE_TO_SHOOT:
                     follower.followPath(StartShootPath);
                     currentState = AutoState.PRELOAD_SPIN_UP;
+                    break;
                 case PRELOAD_SPIN_UP:
                     if (robot.shooterAtSpeed(RPM_TOLERANCE) && !follower.isBusy()) { // Waits until shooter is at speed
                         robot.feedBall();
