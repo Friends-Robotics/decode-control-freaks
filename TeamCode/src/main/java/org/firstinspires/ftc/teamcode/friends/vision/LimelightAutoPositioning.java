@@ -47,7 +47,7 @@ public class LimelightAutoPositioning extends LinearOpMode {
             double drivePower = 0.6;
 
             // Target distance in meters
-            double targetDistanceMeters = 135.5 * 0.0254; // 135.5 inches -> meters
+            double targetDistanceMeters = 71 * 0.0254; // 135.5 inches -> meters
 
             // Auto-turn and auto-drive logic
             if (gamepad1.right_bumper && result != null && result.isValid()) {
