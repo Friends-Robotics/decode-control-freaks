@@ -23,6 +23,7 @@ public class AutoMechanism extends LinearOpMode {
     Follower follower; // a Pedropathing thing that allows the robot to "follow" the paths
 
     enum AutoState { //Fun stuff
+
         PRELOAD_SPIN_UP,
         PRELOAD_FEED,
         DRIVE_TO_INTAKE,
@@ -36,7 +37,7 @@ public class AutoMechanism extends LinearOpMode {
 
     ElapsedTime stateTimer = new ElapsedTime(); // Controls the feeder duration without using sleep()
 
-    static final double TARGET_RPM = 3360;
+    static final double TARGET_RPM = 2000;
     static final double RPM_TOLERANCE = 100;
     static final double FEED_TIME = 0.4;
 
@@ -44,8 +45,8 @@ public class AutoMechanism extends LinearOpMode {
     int cycleIndex = 0; // This checks through the intakeposes array
     int ballsShot = 0;
 
-    Pose startPose = new Pose(15, 130, 135);
-    Pose shootPose = new Pose(56, 90, Math.toRadians(135));
+    Pose startPose = new Pose(16, 130, 135);
+    Pose shootPose = new Pose(60, 85, Math.toRadians(135));
 
     Pose[] intakePoses = { // Cycle index cycles through these poses
             new Pose(35, 85, 180),
@@ -62,6 +63,9 @@ public class AutoMechanism extends LinearOpMode {
     PathChain intakePath2;
     PathChain shootPath;
 
+    PathChain startshootPath;
+
+
 
     @Override
     public void runOpMode() {
@@ -77,6 +81,7 @@ public class AutoMechanism extends LinearOpMode {
         robot.setShooterRPM(TARGET_RPM); // Allows the shooter to be sped up before auto
         stateTimer.reset();
 
+
         while (opModeIsActive()) {
             follower.update(); // Updates follower position and must be called every loop
 
@@ -85,6 +90,7 @@ public class AutoMechanism extends LinearOpMode {
                 /* ---------- PRELOAD ---------- */
 
                 case PRELOAD_SPIN_UP:
+                    follower.followPath(startshootPath);
                     if (robot.shooterAtSpeed(RPM_TOLERANCE)) { // Waits until shooter is at speed
                         robot.feedBall();
                         stateTimer.reset(); // Allows the state timer to be used in other states
@@ -193,5 +199,10 @@ public class AutoMechanism extends LinearOpMode {
         shootPath = new PathBuilder(follower)
                 .addPath(new Path(new BezierCurve(intakePose2, shootPose)))
                 .build(); // Same as above but for shooter
+
+        startshootPath = new PathBuilder(follower)
+                .addPath(new Path(new BezierCurve(startPose, shootPose)))
+                .build();
+
     }
 }
