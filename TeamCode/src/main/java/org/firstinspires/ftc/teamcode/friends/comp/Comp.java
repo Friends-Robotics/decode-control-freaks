@@ -9,12 +9,10 @@ import org.firstinspires.ftc.teamcode.friends.hardwareMap;
 @TeleOp(name = "Comp")
 public class Comp extends LinearOpMode {
     private static hardwareMap hwMap;
-
     private double speedModifier = 0.8;
     private float intakePower = -0.8f;
     private float shooterPower = 0.0f;
-    private float turretPower = 0.0f;
-    private float servoPosition = 0.0f;
+    private float servoPosition = 0.36f;
 
     private final Gamepad currentGp1 = new Gamepad();
     private final Gamepad previousGp1 = new Gamepad();
@@ -34,8 +32,7 @@ public class Comp extends LinearOpMode {
             handleDrive();
             handleIntake();
             handleShooter();
-            handleShooterAngle();
-            handleTurret();
+            handleUptake();
 
             sendTelemetry();
         }
@@ -69,30 +66,41 @@ public class Comp extends LinearOpMode {
         hwMap.backRightMotor.setPower(br * speedModifier);
     }
     private void handleIntake() {
-        if (currentGp2.right_trigger > 0.8 && previousGp2.right_trigger <= 0.8) {
+        if (currentGp1.right_trigger > 0.8 && previousGp1.right_trigger <= 0.8) {
             intakePower = 0.8f;
         }
 
-        if (currentGp2.left_trigger > 0.8 && previousGp2.left_trigger <= 0.8) {
+        if (currentGp1.left_trigger > 0.8 && previousGp1.left_trigger <= 0.8) {
             intakePower = -0.8f;
         }
 
-        if (currentGp2.x) {
+        if (currentGp1.x) {
             hwMap.intakeMotor.setPower(intakePower);
         } else {
             hwMap.intakeMotor.setPower(0);
         }
     }
-    private void handleShooter() {
+    private void handleUptake(){
         if (currentGp2.dpad_up && !previousGp2.dpad_up) {
-            shooterPower += 0.1f;
+            servoPosition = 0.33f;
         }
 
         if (currentGp2.dpad_down && !previousGp2.dpad_down) {
-            shooterPower -= 0.1f;
+            servoPosition = 0.65f;
         }
 
-        shooterPower = clamp(shooterPower, -1.0f, 1.0f);
+        hwMap.uptake1.setPosition(servoPosition);
+        hwMap.uptake2.setPosition(servoPosition);
+    }
+    private void handleShooter() {
+        if (currentGp2.dpad_up && !previousGp2.dpad_up) {
+            shooterPower = 0.8F;
+        }
+
+        if (currentGp2.dpad_down && !previousGp2.dpad_down) {
+            shooterPower = 0.6F;
+        }
+
 
         if (currentGp2.touchpad) {
             hwMap.shooterMotor1.setPower(shooterPower);
@@ -102,34 +110,6 @@ public class Comp extends LinearOpMode {
             hwMap.shooterMotor2.setPower(0);
         }
     }
-    private void handleShooterAngle() {
-        if (currentGp2.triangle && !previousGp2.triangle) {
-            servoPosition += 0.05f;
-        }
-
-        if (currentGp2.cross && !previousGp2.cross) {
-            servoPosition -= 0.05f;
-        }
-
-        servoPosition = clamp(servoPosition, 0f, 1.0f);
-
-        //if (currentGp2.left_trigger > 0.8 && currentGp2.right_trigger > 0.8) {
-        //    hwMap.turretServo.setPosition(servoPosition);
-        //
-        // }
-    }
-    private void handleTurret() {
-        if (currentGp2.left_bumper && !previousGp2.left_bumper) {
-            turretPower -= 0.1f;
-        }
-
-        if (currentGp2.right_bumper && !previousGp2.right_bumper) {
-            turretPower += 0.1f;
-        }
-
-        turretPower = clamp(turretPower, -1.0f, 1.0f);
-        //hwMap.turretMotor.setPower(turretPower);
-    }
     private float clamp(float value, float min, float max) {
         return Math.max(min, Math.min(max, value));
     }
@@ -137,7 +117,6 @@ public class Comp extends LinearOpMode {
         telemetry.addData("Drive Speed", speedModifier);
         telemetry.addData("Intake Power", intakePower);
         telemetry.addData("Shooter Power", shooterPower);
-        telemetry.addData("Turret Power", turretPower);
         telemetry.addData("Servo Position", servoPosition);
         telemetry.update();
     }

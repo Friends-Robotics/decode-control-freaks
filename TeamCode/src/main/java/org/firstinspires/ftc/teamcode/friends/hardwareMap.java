@@ -21,7 +21,11 @@ public class hardwareMap {
         --------------------+-----------------------+--------------------------
         | FLM               | Front Left Wheel      | Control Hub Motor 3     |
         -----------------------------------------------------------------------
-        | Intake            | Intake Motor          | Expansion Hub Motor 1   |
+        | Intake            | Intake Motor          | Expansion Hub Motor 0   |
+        -----------------------------------------------------------------------
+        | Shooter Motor 1   | shooterMotor1         | Expansion Hub Motor 1   |
+        -----------------------------------------------------------------------
+        | Shooter Motor 2   | shooterMotor2         | Expansion Hub Motor 2   |
         -----------------------------------------------------------------------
      */
 
@@ -30,8 +34,8 @@ public class hardwareMap {
     public DcMotor frontRightMotor;
     public DcMotor backRightMotor;
     public DcMotor intakeMotor;
-    public Servo feeder1;
-    public Servo feeder2;
+    public Servo uptake1;
+    public Servo uptake2;
     public DcMotorEx shooterMotor1;
     public DcMotorEx shooterMotor2;
 
@@ -42,18 +46,19 @@ public class hardwareMap {
     public hardwareMap(com.qualcomm.robotcore.hardware.HardwareMap hardwaremap) {
 
         frontRightMotor = hardwaremap.get(DcMotor.class, "FRM");
-        frontRightMotor.setDirection(DcMotorSimple.Direction.FORWARD);
+        //frontRightMotor.setDirection(DcMotorSimple.Direction.FORWARD);
         frontLeftMotor = hardwaremap.get(DcMotor.class, "FLM");
-        frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        //frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         backRightMotor = hardwaremap.get(DcMotor.class, "BRM");
-        backRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        //backRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         backLeftMotor = hardwaremap.get(DcMotor.class, "BLM");
-        backLeftMotor.setDirection(DcMotorSimple.Direction.FORWARD);
+        //backLeftMotor.setDirection(DcMotorSimple.Direction.FORWARD);
 
         intakeMotor = hardwaremap.get(DcMotor.class, "Intake");
 
-        feeder1 = hardwaremap.get(Servo.class, "Feeder1");
-        feeder2 = hardwaremap.get(Servo.class, "Feeder2");
+        uptake1 = hardwaremap.get(Servo.class, "Uptake1");
+        uptake2 = hardwaremap.get(Servo.class, "Uptake2");
+        uptake2.setDirection(Servo.Direction.REVERSE);
 
         shooterMotor1 = hardwaremap.get(DcMotorEx.class, "Shooter1");
         shooterMotor1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -70,12 +75,12 @@ public class hardwareMap {
 
     //FEEDER
     public void feedBall() {
-        feeder1.setPosition(1.0);
-        feeder2.setPosition(1.0);
+        uptake1.setPosition(1.0);
+        uptake2.setPosition(1.0);
     }
     public void resetFeeder() {
-        feeder1.setPosition(0.0);
-        feeder2.setPosition(0.0);
+        uptake1.setPosition(0.0);
+        uptake2.setPosition(0.0);
     }
 
     //SHOOTER
