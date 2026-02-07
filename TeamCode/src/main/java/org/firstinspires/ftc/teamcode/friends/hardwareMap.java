@@ -23,9 +23,15 @@ public class hardwareMap {
         -----------------------------------------------------------------------
         | Intake            | Intake Motor          | Expansion Hub Motor 0   |
         -----------------------------------------------------------------------
-        | Shooter Motor 1   | shooterMotor1         | Expansion Hub Motor 1   |
+        | Uptake1           | Uptake Servo 1        |                         |
         -----------------------------------------------------------------------
-        | Shooter Motor 2   | shooterMotor2         | Expansion Hub Motor 2   |
+        | Uptake2           | Uptake Servo 2        |                         |
+        -----------------------------------------------------------------------
+        | turretAngle       | Turret Angle Servo    |                         |
+        -----------------------------------------------------------------------
+        | shooterMotor1     | Shooter Motor 1       | Expansion Hub Motor 1   |
+        -----------------------------------------------------------------------
+        | shooterMotor2     | Shooter Motor 2       | Expansion Hub Motor 2   |
         -----------------------------------------------------------------------
      */
 
@@ -36,6 +42,7 @@ public class hardwareMap {
     public DcMotor intakeMotor;
     public Servo uptake1;
     public Servo uptake2;
+    public Servo turretAngle;
     public DcMotorEx shooterMotor1;
     public DcMotorEx shooterMotor2;
 
@@ -59,6 +66,8 @@ public class hardwareMap {
         uptake1 = hardwaremap.get(Servo.class, "Uptake1");
         uptake2 = hardwaremap.get(Servo.class, "Uptake2");
         uptake2.setDirection(Servo.Direction.REVERSE);
+
+        turretAngle = hardwaremap.get(Servo.class, "Turret Servo");
 
         shooterMotor1 = hardwaremap.get(DcMotorEx.class, "Shooter1");
         shooterMotor1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
