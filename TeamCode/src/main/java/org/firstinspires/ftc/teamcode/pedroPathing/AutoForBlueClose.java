@@ -3,6 +3,8 @@ package org.firstinspires.ftc.teamcode.pedroPathing;
 import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.Pose;
 
+import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -12,17 +14,23 @@ import com.pedropathing.paths.PathBuilder;
 import com.pedropathing.paths.PathChain;
 
 import com.pedropathing.follower.Follower;
+import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.teamcode.friends.hardwareMap;
+import org.firstinspires.ftc.teamcode.friends.vision.VisionAlign;
 
 @Autonomous(name = "Pedro Multi-Ball")
 public class AutoForBlueClose extends LinearOpMode { //FOR BLUE ALLIANCE CLOSE
 
     hardwareMap robot; // Uses the Hardware map in teleOp
     Follower follower; // a Pedropathing thing that allows the robot to "follow" the paths
+    Limelight3A limelight;
+    VisionAlign visionAlign;
+
 
     enum AutoState { //Fun stuff
 
+        VISION_ALIGN,
         PRELOAD_DRIVE_TO_SHOOT,
         PRELOAD_SPIN_UP,
         PRELOAD_FEED,
@@ -41,12 +49,13 @@ public class AutoForBlueClose extends LinearOpMode { //FOR BLUE ALLIANCE CLOSE
     static final double RPM_TOLERANCE = 100;
     static final double FEED_TIME = 0.4;
 
+    int VisionCount = 0;
     static final int MAX_CYCLES = 3; // Does runs through the state machine 3 times
     int cycleIndex = 0; // This checks through the intakeposes array
     int ballsShot = 0;
 
     Pose startPose = new Pose(16, 130, 135);
-    Pose shootPose = new Pose(60, 85, Math.toRadians(135));
+    Pose shootPose = new Pose(60, 84, Math.toRadians(135)); // At this position the goal is 70 inches away
 
     Pose[] intakePoses = { // Cycle index cycles through these poses
             new Pose(35, 85, 180),
@@ -89,14 +98,62 @@ public class AutoForBlueClose extends LinearOpMode { //FOR BLUE ALLIANCE CLOSE
 
                 /* ---------- PRELOAD ---------- */
 
+                case VISION_ALIGN:
+                    LLResult result = limelight.getLatestResult();
+
+                    // Update visionAlign
+                    visionAlign.update(result, true);
+
+                    robot.turretMotor.setPower(visionAlign.turretPower);
+
+                    /*------Mecanum Drive------*/
+
+                    double drive  = visionAlign.drivePower;
+                    double strafe = visionAlign.strafePower;
+                    double rotate = 0; // lock rotation while aligning
+
+                    double fl = drive + strafe + rotate;
+                    double fr = drive - strafe - rotate;
+                    double bl = drive - strafe + rotate;
+                    double br = drive + strafe - rotate;
+
+                    fl = Range.clip(fl, -1, 1);
+                    fr = Range.clip(fr, -1, 1);
+                    bl = Range.clip(bl, -1, 1);
+                    br = Range.clip(br, -1, 1);
+
+                    robot.frontLeftMotor.setPower(fl);
+                    robot.frontRightMotor.setPower(fr);
+                    robot.backLeftMotor.setPower(bl);
+                    robot.backRightMotor.setPower(br);
+
+                    // If aligned within tolerance, move to shooter spin-up
+                    if (Math.abs(visionAlign.turretPower) < 0.05 &&
+                            Math.abs(visionAlign.strafePower) < 0.05 &&
+                            Math.abs(visionAlign.drivePower) < 0.05 &&
+                            VisionCount == 0 ) {
+
+                        currentState = AutoState.PRELOAD_SPIN_UP;
+                        VisionCount++;
+                    }
+                    else if (Math.abs(visionAlign.turretPower) < 0.05 &&
+                            Math.abs(visionAlign.strafePower) < 0.05 &&
+                            Math.abs(visionAlign.drivePower) < 0.05 &&
+                            VisionCount > 0 ) {
+
+                        currentState = AutoState.SPIN_UP_SHOOTER;
+                    }
+
+                    break;
+
                 case PRELOAD_DRIVE_TO_SHOOT:
                     follower.followPath(StartShootPath);
-                    currentState = AutoState.PRELOAD_SPIN_UP;
+                    currentState = AutoState.VISION_ALIGN;
                     break;
+
                 case PRELOAD_SPIN_UP:
                     if (robot.shooterAtSpeed(RPM_TOLERANCE) && !follower.isBusy()) { // Waits until shooter is at speed
-                        robot.feedBall();
-                        robot.prepfeedBall();
+                        robot.feedBall();//Raises feeder
                         stateTimer.reset(); // Allows the state timer to be used in other states
                         currentState = AutoState.PRELOAD_FEED; //Switches state
                     }
@@ -104,7 +161,7 @@ public class AutoForBlueClose extends LinearOpMode { //FOR BLUE ALLIANCE CLOSE
 
                 case PRELOAD_FEED:
                     if (stateTimer.seconds() > FEED_TIME) { //Waits until feeder has been on long enough
-                        robot.resetFeeder(); // Stops feeder
+                        robot.prepfeedBall(); // Lowers feeder
                         ballsShot++; // Counts ball
 
                         if (ballsShot < 3) {
@@ -116,7 +173,7 @@ public class AutoForBlueClose extends LinearOpMode { //FOR BLUE ALLIANCE CLOSE
                             follower.followPath(intakePath);
                             follower.followPath(intakePath2);
                             currentState = AutoState.DRIVE_TO_INTAKE;
-                            //Begins driving once all balls have been shot and starts intake motorss
+                            //Begins driving once all balls have been shot and starts intake motors
                         }
                     }
                     break;
@@ -134,7 +191,7 @@ public class AutoForBlueClose extends LinearOpMode { //FOR BLUE ALLIANCE CLOSE
 
                 case DRIVE_TO_SHOOT:
                     if (!follower.isBusy()) {
-                        currentState = AutoState.SPIN_UP_SHOOTER;
+                        currentState = AutoState.VISION_ALIGN;
                     } // Waits until robot arrives
                     break;
 
@@ -183,6 +240,7 @@ public class AutoForBlueClose extends LinearOpMode { //FOR BLUE ALLIANCE CLOSE
             telemetry.addData("Cycle", cycleIndex);
             telemetry.addData("Pose", follower.getPose());
             telemetry.update();
+
         }
     }
 
@@ -210,4 +268,5 @@ public class AutoForBlueClose extends LinearOpMode { //FOR BLUE ALLIANCE CLOSE
                 .build();
 
     }
+
 }

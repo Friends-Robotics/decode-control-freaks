@@ -43,17 +43,17 @@ public class AutoForRedClose extends LinearOpMode { //FOR RED ALLIANCE CLOSE
     int ballsShot = 0;
 
     Pose startPose = new Pose(122, 121, 40);
-    Pose shootPose = new Pose(80, 85, Math.toRadians(40));
+    Pose shootPose = new Pose(90, 85, Math.toRadians(40)); // At this position the goal is 70 inches away
 
     Pose[] intakePoses = { // Cycle index cycles through these poses
-            new Pose(35, 85, 180),
-            new Pose(35, 60, 180),
-            new Pose(35, 35, 180)
+            new Pose(105, 85, 180),
+            new Pose(105, 60, 180),
+            new Pose(105, 35, 180)
     };
     Pose[] intakePoses2 = { // Cycle index cycles through these poses
-            new Pose(8, 85, 180),
-            new Pose(8, 60, 180),
-            new Pose(8, 35, 180)
+            new Pose(128, 85, 180),
+            new Pose(138, 60, 180),
+            new Pose(148, 35, 180)
     };
 
     PathChain intakePath; // Paths are built on the fly and change every cycle

@@ -35,6 +35,7 @@ public class hardwareMap {
     public Servo feeder;
     public DcMotorEx shooterMotor1;
     public DcMotorEx shooterMotor2;
+    public DcMotor turretMotor;
 
     public Limelight3A limelight;
 
@@ -70,6 +71,10 @@ public class hardwareMap {
         shooterMotor2 = hardwaremap.get(DcMotorEx.class, "Shooter2");
         shooterMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         shooterMotor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+
+        turretMotor = hardwaremap.get(DcMotorEx.class, "Turret");
+        turretMotor.setDirection(DcMotorSimple.Direction.FORWARD);
+        turretMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
         parallelEncoder = hardwaremap.get(DcMotorEx.class, "parallelEncoder"); //Added encoders
         perpendicularEncoder = hardwaremap.get(DcMotorEx.class, "perpendicularEncoder");
@@ -110,5 +115,8 @@ public class hardwareMap {
     public void stopShooter() {
         shooterMotor1.setPower(0);
         shooterMotor2.setPower(0);
+    }
+    public void setTurretPower(double power) {
+        turretMotor.setPower(power);
     }
 }
