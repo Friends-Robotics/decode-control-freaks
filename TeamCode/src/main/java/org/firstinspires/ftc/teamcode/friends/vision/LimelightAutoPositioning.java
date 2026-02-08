@@ -21,7 +21,7 @@ public class LimelightAutoPositioning extends LinearOpMode {
     public DcMotor TurretMotorRight;
 
     private final double kP_strafe = 0.6;
-    private final double kP_turret = 0.015; // A proportional constant for turret aiming and controls how fast the turret reacts to angle error
+    private final double kP_turret = 0.015; // A proportional constant for turret aiming which controls how fast the turret reacts to angle error
     private final double MaxTurretPower = 0.35; //Limits how fast the turret can spin
     private final double MaxDrivePower = 0.4;
     private final double MaxStrafePower = 0.4;
@@ -29,6 +29,7 @@ public class LimelightAutoPositioning extends LinearOpMode {
     private final double DRIVE_TOLERANCE = 0.05; //stops the drivetrain if its within a certain range
     private final double TURRET_TOLERANCE = 1;//Degrees
     private final double STRAFE_TOLERANCE = 0.03;
+    private final double AngleOffset = 15; // Allows the angle of the shooter to be higher than the apriltag
 
 
     double DESIRED_DISTANCE = 71;

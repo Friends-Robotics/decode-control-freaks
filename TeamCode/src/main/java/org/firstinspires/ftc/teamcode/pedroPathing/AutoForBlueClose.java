@@ -16,7 +16,7 @@ import com.pedropathing.follower.Follower;
 import org.firstinspires.ftc.teamcode.friends.hardwareMap;
 
 @Autonomous(name = "Pedro Multi-Ball")
-public class AutoMechanism extends LinearOpMode {
+public class AutoForBlueClose extends LinearOpMode { //FOR BLUE ALLIANCE CLOSE
 
     hardwareMap robot; // Uses the Hardware map in teleOp
     Follower follower; // a Pedropathing thing that allows the robot to "follow" the paths
@@ -54,9 +54,9 @@ public class AutoMechanism extends LinearOpMode {
             new Pose(35, 35, 180)
     };
     Pose[] intakePoses2 = { // Cycle index cycles through these poses
-            new Pose(15, 85, 180),
-            new Pose(15, 60, 180),
-            new Pose(15, 35, 180)
+            new Pose(8, 85, 180),
+            new Pose(8, 60, 180),
+            new Pose(8, 35, 180)
     };
 
     PathChain intakePath; // Paths are built on the fly and change every cycle
