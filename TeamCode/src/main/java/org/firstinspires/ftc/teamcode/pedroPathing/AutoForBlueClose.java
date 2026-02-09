@@ -84,7 +84,7 @@ public class AutoForBlueClose extends LinearOpMode { //FOR BLUE ALLIANCE CLOSE
 
         telemetry.addLine("Ready");
         telemetry.update();
-        waitForStart(); // PRESS START queue geometry dash
+        waitForStart(); // PRESS START
 
         robot.prepfeedBall();
         robot.setShooterRPM(TARGET_RPM); // Allows the shooter to be sped up before auto
@@ -93,23 +93,22 @@ public class AutoForBlueClose extends LinearOpMode { //FOR BLUE ALLIANCE CLOSE
 
         while (opModeIsActive()) {
             follower.update(); // Updates follower position and must be called every loop
+            LLResult result = limelight.getLatestResult();
+
+            // Update visionAlign
+            visionAlign.update(result, true);
+            robot.turretMotor.setPower(visionAlign.turretRotatePower);
 
             switch (currentState) {
 
                 /* ---------- PRELOAD ---------- */
 
                 case VISION_ALIGN:
-                    LLResult result = limelight.getLatestResult();
-
-                    // Update visionAlign
-                    visionAlign.update(result, true);
-
-                    robot.turretMotor.setPower(visionAlign.turretPower);
 
                     /*------Mecanum Drive------*/
 
                     double drive  = visionAlign.drivePower;
-                    double strafe = visionAlign.strafePower;
+                    double strafe = 0;
                     double rotate = 0; // lock rotation while aligning
 
                     double fl = drive + strafe + rotate;
@@ -128,16 +127,16 @@ public class AutoForBlueClose extends LinearOpMode { //FOR BLUE ALLIANCE CLOSE
                     robot.backRightMotor.setPower(br);
 
                     // If aligned within tolerance, move to shooter spin-up
-                    if (Math.abs(visionAlign.turretPower) < 0.05 &&
-                            Math.abs(visionAlign.strafePower) < 0.05 &&
+                    if (/*Math.abs(visionAlign.turretPower) < 0.05 &&8*/
+                            Math.abs(visionAlign.turretRotatePower) < 0.05 &&
                             Math.abs(visionAlign.drivePower) < 0.05 &&
                             VisionCount == 0 ) {
 
                         currentState = AutoState.PRELOAD_SPIN_UP;
                         VisionCount++;
                     }
-                    else if (Math.abs(visionAlign.turretPower) < 0.05 &&
-                            Math.abs(visionAlign.strafePower) < 0.05 &&
+                    else if (/*Math.abs(visionAlign.turretPower) < 0.05 &&*/
+                            Math.abs(visionAlign.turretRotatePower) < 0.05 &&
                             Math.abs(visionAlign.drivePower) < 0.05 &&
                             VisionCount > 0 ) {
 

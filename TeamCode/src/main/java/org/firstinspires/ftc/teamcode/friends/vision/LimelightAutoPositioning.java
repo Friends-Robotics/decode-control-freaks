@@ -4,8 +4,6 @@ import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 import org.firstinspires.ftc.teamcode.friends.hardwareMap;
 
@@ -22,7 +20,7 @@ public class LimelightAutoPositioning extends LinearOpMode {
     // -------- Vision Outputs --------
     public double turretPower = 0;
     public double drivePower = 0;
-    public double strafePower = 0;
+
 
     @Override
     public void runOpMode() {
@@ -52,11 +50,15 @@ public class LimelightAutoPositioning extends LinearOpMode {
 
             if (gamepad1.right_bumper && result != null && result.isValid()) {
                 drive  = visionAlign.drivePower;
-                strafe = visionAlign.strafePower;
+                strafe = 0;
                 rotate = 0;
             }
 
-            robot.turretMotor.setPower(visionAlign.turretPower);
+            visionAlign.update(result, true);
+            robot.turretMotor.setPower(visionAlign.turretRotatePower);
+
+
+
 
 
 
@@ -78,9 +80,9 @@ public class LimelightAutoPositioning extends LinearOpMode {
 
             // -------- Telemetry --------
             telemetry.addData("Vision Active", gamepad1.right_bumper);
-            telemetry.addData("Turret Power", turretPower);
+            telemetry.addData("Turret Angle  Power", turretPower);
             telemetry.addData("Drive Power", drivePower);
-            telemetry.addData("Strafe Power", strafePower);
+            telemetry.addData("Rotate Power", visionAlign.turretRotatePower);
             telemetry.update();
         }
     }
