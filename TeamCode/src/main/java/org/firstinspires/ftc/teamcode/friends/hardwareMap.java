@@ -73,6 +73,7 @@ public class hardwareMap {
         shooterMotor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
         turretMotor = hardwaremap.get(DcMotorEx.class, "Turret");
+        turretMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         turretMotor.setDirection(DcMotorSimple.Direction.FORWARD);
         turretMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 

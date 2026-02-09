@@ -16,6 +16,19 @@ public class VisionAlign {
     public double drivePower  = 0;
     public double turretRotatePower = 0;
 
+    /* ---------- Turret Angle Limits ---------- */
+
+    // degrees
+    double MIN_TURRET_ANGLE = -90.0;
+    double MAX_TURRET_ANGLE =  90.0;
+
+    // encoder conversion
+    double TICKS_PER_DEGREE = 10.5;  // need to calibrate
+    //TICKS_PER_DEGREE = (rightTicks - leftTicks) / (angleRangeDegrees);
+
+    double currentTurretAngle = 0;
+
+
     //--Reverse Motor--
 
     int reverseCount = 0;
@@ -47,13 +60,14 @@ public class VisionAlign {
 
     /*--- MAIN METHOD --- */
 
-    public void update(LLResult result, boolean enable) {
+    public void update(LLResult result, boolean enable, int turretEncoderTicks) {
 
+        currentTurretAngle = turretEncoderTicks / TICKS_PER_DEGREE;
         turretPower = 0;
         drivePower  = 0;
         turretRotatePower = 0;
 
-        if (result == null || !result.isValid()) {
+        if (!enable) {
             timer.reset();   // give vision time to recover
             timerStarted = false;
             directionLocked = false;
@@ -71,7 +85,7 @@ public class VisionAlign {
         if (timer.seconds() > VISION_TIMEOUT) return;
 
 
-        if (!result.isValid()) {
+        if (result == null || !result.isValid()) {
             directionLocked = false;
             lastXError = 0;
             return;
@@ -117,10 +131,31 @@ public class VisionAlign {
             );
         }
 
+        /* ---------- Software Angle Limit ---------- */
+
+        // Trying to rotate past max
+        if (currentTurretAngle >= MAX_TURRET_ANGLE && turretRotatePower > 0) {
+            turretRotatePower = 0;
+        }
+
+        // Trying to rotate past min
+        if (currentTurretAngle <= MIN_TURRET_ANGLE && turretRotatePower < 0) {
+            turretRotatePower = 0;
+        }
+        //Slows down as it get close to limit
+        double limitBuffer = 10.0; // degrees
+
+        if (currentTurretAngle > MAX_TURRET_ANGLE - limitBuffer) {
+            double scale = (MAX_TURRET_ANGLE - currentTurretAngle) / limitBuffer;
+            turretRotatePower *= Range.clip(scale, 0.0, 1.0);
+        }
+
+        if (currentTurretAngle < MIN_TURRET_ANGLE + limitBuffer) {
+            double scale = (currentTurretAngle - MIN_TURRET_ANGLE) / limitBuffer;
+            turretRotatePower *= Range.clip(scale, 0.0, 1.0);
+        }
 
         lastXError = xError;
-
-
 
         /* ---------- TURRET ---------- */
         /*double yawError = -pose.getOrientation().getYaw(); //Turret yaw is opposite to camera yaw

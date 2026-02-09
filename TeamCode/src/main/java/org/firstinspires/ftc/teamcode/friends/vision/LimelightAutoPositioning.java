@@ -46,8 +46,9 @@ public class LimelightAutoPositioning extends LinearOpMode {
 
             LLResult result = limelight.getLatestResult();
 
+            int turretTicks = robot.turretMotor.getCurrentPosition();
             boolean visionEnabled = gamepad1.right_bumper;
-            visionAlign.update(result, visionEnabled);
+            visionAlign.update(result, visionEnabled,turretTicks);
 
             if (gamepad1.right_bumper && result != null && result.isValid()) {
                 drive  = visionAlign.drivePower;
@@ -56,11 +57,6 @@ public class LimelightAutoPositioning extends LinearOpMode {
             }
 
             robot.turretMotor.setPower(visionAlign.turretRotatePower);
-
-
-
-
-
 
             // -------- Mecanum Drive --------
             double fl = drive + strafe + rotate;
