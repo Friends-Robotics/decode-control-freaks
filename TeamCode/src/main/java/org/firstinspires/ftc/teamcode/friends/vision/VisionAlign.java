@@ -18,12 +18,15 @@ public class VisionAlign {
 
     //--Reverse Motor--
 
+    int reverseCount = 0;
     double lastXError = 0;
     int turretDirection = 1;   // +1 or -1
     boolean directionLocked = false;
 
 
     /* -------- Constants -------- */
+
+    double scaledKP = 0;
     double kP_rotate = 0.6; // scales x-error → strafe power; higher = faster, lower = smoother
     double kP_turret = 0.015;
     double kP_drive  = 0.7;
@@ -50,12 +53,15 @@ public class VisionAlign {
         drivePower  = 0;
         turretRotatePower = 0;
 
-        if (!enable) {
-            timer.reset();
+        if (result == null || !result.isValid()) {
+            timer.reset();   // give vision time to recover
+            timerStarted = false;
             directionLocked = false;
             lastXError = 0;
             return;
         }
+
+
 
         if (!timerStarted) {
             timer.reset();
@@ -65,7 +71,7 @@ public class VisionAlign {
         if (timer.seconds() > VISION_TIMEOUT) return;
 
 
-        if (result == null || !result.isValid()) {
+        if (!result.isValid()) {
             directionLocked = false;
             lastXError = 0;
             return;
@@ -78,22 +84,39 @@ public class VisionAlign {
         double xError = pose.getPosition().x;
 
        // Auto-detect motor direction (flip once if error worsens)
-        if (!directionLocked && Math.abs(lastXError) > ROTATE_TOLERANCE) {
 
+        if (!directionLocked && Math.abs(lastXError) > ROTATE_TOLERANCE) {
             if (Math.abs(xError) > Math.abs(lastXError)) {
-                turretDirection *= -1;   // Reverse direction
-                directionLocked = true;  // Lock it
-            }
+                reverseCount++;
+                if (reverseCount > 3) {
+                    turretDirection *= -1;
+                    directionLocked = true;
+                }
+            } else reverseCount = 0;
         }
 
+
         // Proportional control with direction applied
+        double minPower = 0.06;
+
         if (Math.abs(xError) > ROTATE_TOLERANCE) {
+
+            scaledKP = Range.clip(
+                    Math.abs(xError) / 0.25,// at 25cm use 100% of kp power
+                    0.2,
+                    1.0
+            );
+
+            turretRotatePower = Math.signum(xError) * turretDirection *
+                    (minPower + Math.abs(xError * kP_rotate));
+
             turretRotatePower = Range.clip(
-                    xError * kP_rotate * turretDirection,
+                    turretRotatePower,
                     -MAX_ROTATE_TURRET_POWER,
                     MAX_ROTATE_TURRET_POWER
             );
         }
+
 
         lastXError = xError;
 

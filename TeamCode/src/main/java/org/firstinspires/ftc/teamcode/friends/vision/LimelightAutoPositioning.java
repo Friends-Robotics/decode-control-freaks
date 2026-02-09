@@ -46,7 +46,8 @@ public class LimelightAutoPositioning extends LinearOpMode {
 
             LLResult result = limelight.getLatestResult();
 
-            visionAlign.update(result, gamepad1.right_bumper);
+            boolean visionEnabled = gamepad1.right_bumper;
+            visionAlign.update(result, visionEnabled);
 
             if (gamepad1.right_bumper && result != null && result.isValid()) {
                 drive  = visionAlign.drivePower;
@@ -54,7 +55,6 @@ public class LimelightAutoPositioning extends LinearOpMode {
                 rotate = 0;
             }
 
-            visionAlign.update(result, true);
             robot.turretMotor.setPower(visionAlign.turretRotatePower);
 
 
