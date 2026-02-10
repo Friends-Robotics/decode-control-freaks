@@ -4,13 +4,10 @@ import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.Range;
 import org.firstinspires.ftc.teamcode.friends.hardwareMap;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
-import com.qualcomm.hardware.limelightvision.Limelight3A;
-import com.qualcomm.robotcore.util.SerialNumber;
-import java.net.InetAddress;
+
 
 
 
@@ -64,8 +61,10 @@ public class LimelightAutoPositioning extends LinearOpMode {
             LLResult result = limelight.getLatestResult();
 
             int turretTicks = robot.turretMotor.getCurrentPosition();
-            boolean visionEnabled = gamepad1.right_bumper;
-            visionAlign.update(result, visionEnabled,turretTicks);
+            visionAlign.update(result, true, turretTicks);
+
+            boolean turretLock = gamepad1.left_bumper;
+            visionAlign.update(result, !turretLock, turretTicks);
 
             if (gamepad1.right_bumper && result != null && result.isValid()) {
                 drive  = visionAlign.drivePower;
