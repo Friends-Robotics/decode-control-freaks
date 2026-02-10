@@ -23,7 +23,7 @@ public class VisionAlign {
     double MAX_TURRET_ANGLE =  90.0;
 
     // encoder conversion
-    double TICKS_PER_DEGREE = 10.5;  // need to calibrate
+    double TICKS_PER_DEGREE = 0.389;  // need to calibrate
     //TICKS_PER_DEGREE = (rightTicks - leftTicks) / (angleRangeDegrees);
 
     double currentTurretAngle = 0;

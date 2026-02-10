@@ -13,13 +13,10 @@ public class LimelightAutoPositioning extends LinearOpMode {
     // -------- Hardware --------
 
     hardwareMap robot;
-    Limelight3A limelight;
     VisionAlign visionAlign;
 
 
     // -------- Vision Outputs --------
-    public double turretPower = 0;
-    public double drivePower = 0;
 
 
     @Override
@@ -28,10 +25,10 @@ public class LimelightAutoPositioning extends LinearOpMode {
         visionAlign = new VisionAlign();
 
         // -------- Init --------
-        limelight = hardwareMap.get(Limelight3A.class, "limelight");
-        limelight.setPollRateHz(100);
-        limelight.pipelineSwitch(0);
-        limelight.start();
+        robot.limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        robot.limelight.setPollRateHz(100);
+        robot.limelight.pipelineSwitch(0);
+        robot.limelight.start();
 
         waitForStart();
         if (isStopRequested()) return;
@@ -44,7 +41,7 @@ public class LimelightAutoPositioning extends LinearOpMode {
             double strafe =  gamepad1.left_stick_x;
             double rotate =  gamepad1.right_stick_x;
 
-            LLResult result = limelight.getLatestResult();
+            LLResult result = robot.limelight.getLatestResult();
 
             int turretTicks = robot.turretMotor.getCurrentPosition();
             boolean visionEnabled = gamepad1.right_bumper;
@@ -76,8 +73,8 @@ public class LimelightAutoPositioning extends LinearOpMode {
 
             // -------- Telemetry --------
             telemetry.addData("Vision Active", gamepad1.right_bumper);
-            telemetry.addData("Turret Angle  Power", turretPower);
-            telemetry.addData("Drive Power", drivePower);
+            telemetry.addData("Turret Angle  Power", visionAlign.turretPower);
+            telemetry.addData("Drive Power", visionAlign.drivePower);
             telemetry.addData("Rotate Power", visionAlign.turretRotatePower);
             telemetry.update();
         }
