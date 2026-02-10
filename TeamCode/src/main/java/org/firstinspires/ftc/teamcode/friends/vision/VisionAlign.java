@@ -122,7 +122,7 @@ public class VisionAlign {
             );
 
             turretRotatePower = Math.signum(xError) * turretDirection *
-                    (minPower + Math.abs(xError * kP_rotate));
+                    (minPower + Math.abs(xError * kP_rotate * scaledKP));
 
             turretRotatePower = Range.clip(
                     turretRotatePower,
