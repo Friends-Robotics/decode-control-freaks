@@ -7,6 +7,8 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.Range;
 import org.firstinspires.ftc.teamcode.friends.hardwareMap;
 
+
+
 @TeleOp(name = "LimelightAutoAlign")
 public class LimelightAutoPositioning extends LinearOpMode {
 
@@ -22,6 +24,7 @@ public class LimelightAutoPositioning extends LinearOpMode {
     @Override
     public void runOpMode() {
 
+        robot = new hardwareMap(hardwareMap);
         visionAlign = new VisionAlign();
 
         // -------- Init --------
@@ -79,9 +82,12 @@ public class LimelightAutoPositioning extends LinearOpMode {
             telemetry.addData("Drive Power", visionAlign.drivePower);
             telemetry.addData("Rotate Power", visionAlign.turretRotatePower);
             telemetry.update();
+
+            /*
+            OpMode threw an unexpected exception.
+            java.lang.NullPointerException: attempt to read from field 'com.qualcomm.hardware.limelightvision.Limelight3A
+            org.firstinspires.ftc.teamcode.friends.hardwareMap.limelight' on a null object reference
+             */
         }
     }
-
 }
-
-
