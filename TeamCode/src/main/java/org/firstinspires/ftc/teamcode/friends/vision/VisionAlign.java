@@ -11,6 +11,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 
 public class VisionAlign {
 
+    LimelightAutoPositioning pos;
+
     /* -------- Outputs -------- */
     public double turretPower = 0;
     public double drivePower  = 0;
@@ -56,11 +58,13 @@ public class VisionAlign {
     double VISION_TIMEOUT = 0.4; //Vision doesnt compromise everything if it fails
     boolean timerStarted = false;
 
+
+
     ElapsedTime timer = new ElapsedTime();
 
     /*--- MAIN METHOD --- */
 
-    public void update(LLResult result, boolean enable, int turretEncoderTicks) {
+    public void update( LLResult results, boolean enable, int turretEncoderTicks) {
 
         currentTurretAngle = turretEncoderTicks / TICKS_PER_DEGREE;
         turretPower = 0;
@@ -85,14 +89,14 @@ public class VisionAlign {
         if (timer.seconds() > VISION_TIMEOUT) return;
 
 
-        if (result == null || !result.isValid()) {
+        if (results == null || !results.isValid()) {
             directionLocked = false;
             lastXError = 0;
             return;
         }
 
 
-        Pose3D pose = result.getBotpose();
+        Pose3D pose = results.getBotpose();
 
         /* ---------- Rotating Turret ---------- */
         double xError = pose.getPosition().x;

@@ -37,7 +37,6 @@ public class hardwareMap {
     public DcMotorEx shooterMotor2;
     public DcMotor turretMotor;
 
-    public Limelight3A limelight;
 
     public DcMotorEx parallelEncoder, perpendicularEncoder; //For pinpoint
     public IMU imu;
@@ -62,7 +61,7 @@ public class hardwareMap {
         intakeMotor = hardwaremap.get(DcMotor.class, "Intake");
         feeder = hardwaremap.get(Servo.class, "Feeder");
 
-        limelight = hardwaremap.get(Limelight3A.class, "limelight");
+
 
         shooterMotor1 = hardwaremap.get(DcMotorEx.class, "Shooter1");
         shooterMotor1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);

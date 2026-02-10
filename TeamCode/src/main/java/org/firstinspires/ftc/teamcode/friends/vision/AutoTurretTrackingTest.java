@@ -13,6 +13,7 @@ public class AutoTurretTrackingTest extends LinearOpMode{
 
     hardwareMap robot;
     VisionAlign visionAlign;
+    LimelightAutoPositioning pos;
 
 
     @Override
@@ -21,17 +22,17 @@ public class AutoTurretTrackingTest extends LinearOpMode{
         visionAlign = new VisionAlign();
 
         // -------- Init --------
-        robot.limelight = hardwareMap.get(Limelight3A.class, "limelight");
-        robot.limelight.setPollRateHz(100);
-        robot.limelight.pipelineSwitch(0);
-        robot.limelight.start();
+        pos.limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        pos.limelight.setPollRateHz(100);
+        pos.limelight.pipelineSwitch(0);
+        pos.limelight.start();
 
         waitForStart();
         if (isStopRequested()) return;
 
         while (opModeIsActive()) {
 
-            LLResult result = robot.limelight.getLatestResult();
+            LLResult result = pos.limelight.getLatestResult();
             int turretTicks = robot.turretMotor.getCurrentPosition();
             boolean visionEnabled = gamepad1.right_bumper;
             visionAlign.update(result, visionEnabled, turretTicks);

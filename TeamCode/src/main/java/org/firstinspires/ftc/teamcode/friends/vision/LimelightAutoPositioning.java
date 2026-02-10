@@ -7,6 +7,12 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.Range;
 import org.firstinspires.ftc.teamcode.friends.hardwareMap;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.robotcore.util.SerialNumber;
+import java.net.InetAddress;
+
+
 
 
 
@@ -17,6 +23,8 @@ public class LimelightAutoPositioning extends LinearOpMode {
 
     hardwareMap robot;
     VisionAlign visionAlign;
+    public Limelight3A limelight;
+
 
 
     // -------- Vision Outputs --------
@@ -26,19 +34,21 @@ public class LimelightAutoPositioning extends LinearOpMode {
     public void runOpMode() {
 
         robot = new hardwareMap(hardwareMap);
+
         visionAlign = new VisionAlign();
 
+
+
+
         // -------- Init --------
-        robot.limelight.setPollRateHz(100);
-        robot.limelight.pipelineSwitch(0);
-        robot.limelight.start();
+        limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        limelight.setPollRateHz(100);
+        limelight.start();
+        limelight.pipelineSwitch(0);
+
 
         robot.turretMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         robot.turretMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        robot.frontRightMotor.setDirection(DcMotorSimple.Direction.FORWARD);
-        robot.frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-        robot.backRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-        robot.backLeftMotor.setDirection(DcMotorSimple.Direction.FORWARD);
 
         waitForStart();
         if (isStopRequested()) return;
@@ -51,7 +61,7 @@ public class LimelightAutoPositioning extends LinearOpMode {
             double strafe =  gamepad1.left_stick_x;
             double rotate =  gamepad1.right_stick_x;
 
-            LLResult result = robot.limelight.getLatestResult();
+            LLResult result = limelight.getLatestResult();
 
             int turretTicks = robot.turretMotor.getCurrentPosition();
             boolean visionEnabled = gamepad1.right_bumper;
