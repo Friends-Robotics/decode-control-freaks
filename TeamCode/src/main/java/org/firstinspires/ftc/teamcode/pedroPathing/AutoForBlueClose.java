@@ -95,8 +95,11 @@ public class AutoForBlueClose extends LinearOpMode { //FOR BLUE ALLIANCE CLOSE
             follower.update(); // Updates follower position and must be called every loop
             LLResult result = limelight.getLatestResult();
 
+            visionAlign = new VisionAlign();
+
             // Update visionAlign
-            visionAlign.update(result, true);
+            int turretTicks = robot.turretMotor.getCurrentPosition();
+            visionAlign.update(result, true, turretTicks);
             robot.turretMotor.setPower(visionAlign.turretRotatePower);
 
             switch (currentState) {

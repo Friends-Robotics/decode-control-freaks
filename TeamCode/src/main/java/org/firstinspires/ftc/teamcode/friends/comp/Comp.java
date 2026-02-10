@@ -140,9 +140,6 @@ public class Comp extends LinearOpMode {
 
         servoPosition = clamp(servoPosition, 0f, 1.0f);
 
-        if (currentGp2.left_trigger > 0.8 && currentGp2.right_trigger > 0.8) {
-            hwMap.turretServo.setPosition(servoPosition);
-        }
     }
 
     // =========================

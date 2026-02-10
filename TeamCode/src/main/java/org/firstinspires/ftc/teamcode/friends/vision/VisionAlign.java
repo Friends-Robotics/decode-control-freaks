@@ -52,7 +52,7 @@ public class VisionAlign {
     double TURRET_TOLERANCE = 1.0;
     double DRIVE_TOLERANCE  = 0.05;
 
-    double DESIRED_DISTANCE_METERS = 40 * 0.0254; // should be 70
+    double DESIRED_DISTANCE_METERS = 70 * 0.0254;
     double VISION_TIMEOUT = 0.4; //Vision doesnt compromise everything if it fails
     boolean timerStarted = false;
 
@@ -122,7 +122,7 @@ public class VisionAlign {
             );
 
             turretRotatePower = Math.signum(xError) * turretDirection *
-                    (minPower + Math.abs(xError * kP_rotate * scaledKP));
+                    (minPower + Math.abs(xError * kP_rotate));
 
             turretRotatePower = Range.clip(
                     turretRotatePower,
