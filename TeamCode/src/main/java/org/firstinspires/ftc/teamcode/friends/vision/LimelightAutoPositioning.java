@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode.friends.vision;
 
 import com.qualcomm.hardware.limelightvision.LLResult;
-import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -26,7 +25,6 @@ public class LimelightAutoPositioning extends LinearOpMode {
         visionAlign = new VisionAlign();
 
         // -------- Init --------
-        robot.limelight = hardwareMap.get(Limelight3A.class, "limelight");
         robot.limelight.setPollRateHz(100);
         robot.limelight.pipelineSwitch(0);
         robot.limelight.start();
