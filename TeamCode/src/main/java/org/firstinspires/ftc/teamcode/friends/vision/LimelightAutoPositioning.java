@@ -4,6 +4,7 @@ import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.Range;
 import org.firstinspires.ftc.teamcode.friends.hardwareMap;
 
@@ -34,6 +35,10 @@ public class LimelightAutoPositioning extends LinearOpMode {
 
         robot.turretMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         robot.turretMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        robot.frontRightMotor.setDirection(DcMotorSimple.Direction.FORWARD);
+        robot.frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        robot.backRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        robot.backLeftMotor.setDirection(DcMotorSimple.Direction.FORWARD);
 
         waitForStart();
         if (isStopRequested()) return;

@@ -90,6 +90,8 @@ public class hardwareMap {
         perpendicularEncoder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
     }
+
+
     //INTAKE
     public void startIntake() { intakeMotor.setPower(1.0);}
     public void stopIntake() { intakeMotor.setPower(0.0);}
