@@ -76,18 +76,6 @@ public class hardwareMap {
         turretMotor.setDirection(DcMotorSimple.Direction.FORWARD);
         turretMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
-        parallelEncoder = hardwaremap.get(DcMotorEx.class, "parallelEncoder"); //Added encoders
-        perpendicularEncoder = hardwaremap.get(DcMotorEx.class, "perpendicularEncoder");
-
-        imu = hardwaremap.get(IMU.class, "imu");
-
-        //Encoder Setup
-        parallelEncoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        perpendicularEncoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-        parallelEncoder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        perpendicularEncoder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
     }
 
 
