@@ -34,9 +34,6 @@ public class LimelightAutoPositioning extends LinearOpMode {
 
         visionAlign = new VisionAlign();
 
-
-
-
         // -------- Init --------
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
         limelight.setPollRateHz(100);
@@ -61,7 +58,6 @@ public class LimelightAutoPositioning extends LinearOpMode {
             LLResult result = limelight.getLatestResult();
 
             int turretTicks = robot.turretMotor.getCurrentPosition();
-            visionAlign.update(result, true, turretTicks);
 
             boolean turretLock = gamepad1.left_bumper;
             visionAlign.update(result, !turretLock, turretTicks);

@@ -10,8 +10,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 
 
 public class VisionAlign {
-
-    LimelightAutoPositioning pos;
+    
 
     /* -------- Outputs -------- */
     public double turretPower = 0;
