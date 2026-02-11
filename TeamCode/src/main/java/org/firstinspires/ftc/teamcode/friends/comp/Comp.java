@@ -90,7 +90,7 @@ public class Comp extends LinearOpMode {
 
         // APPLY
         if (intakeOn) {
-            hwMap.startIntake(intakePower);
+            hwMap.startIntake();
         } else {
             hwMap.stopIntake();
         }

@@ -34,6 +34,7 @@ public class hardwareMap {
     public Servo uptake1;
     public Servo uptake2;
     public Servo turretAngle;
+    public DcMotorEx turretMotor;
     public DcMotorEx shooterMotor1;
     public DcMotorEx shooterMotor2;
 
@@ -85,7 +86,9 @@ public class hardwareMap {
         perpendicularEncoder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
     //INTAKE
-    public void startIntake() { intakeMotor.setPower(1.0);}
+    public void startIntake() {
+        intakeMotor.setPower(0.8);
+    }
     public void stopIntake() { intakeMotor.setPower(0.0);}
 
     //FEEDER

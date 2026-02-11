@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.friends.computerVision;
+package org.firstinspires.ftc.teamcode.friends.vision;
 
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
