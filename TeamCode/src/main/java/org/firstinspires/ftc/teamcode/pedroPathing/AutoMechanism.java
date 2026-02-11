@@ -44,17 +44,24 @@ public class AutoMechanism extends LinearOpMode {
     int cycleIndex = 0; // This checks through the intakeposes array
     int ballsShot = 0;
 
-    Pose startPose = new Pose(48, 95, 0);
-    Pose shootPose = new Pose(48, 12, Math.toRadians(90));
+    Pose startPose = new Pose(56, 90, 135);
+    Pose shootPose = new Pose(56, 90, Math.toRadians(135));
 
     Pose[] intakePoses = { // Cycle index cycles through these poses
-            new Pose(24, 0, 0),
-            new Pose(12, 0, 0),
-            new Pose(0, 0, 0)
+            new Pose(35, 85, 180),
+            new Pose(35, 60, 180),
+            new Pose(35, 35, 180)
+    };
+    Pose[] intakePoses2 = { // Cycle index cycles through these poses
+            new Pose(15, 85, 180),
+            new Pose(15, 60, 180),
+            new Pose(15, 35, 180)
     };
 
     PathChain intakePath; // Paths are built on the fly and change every cycle
+    PathChain intakePath2;
     PathChain shootPath;
+
 
     @Override
     public void runOpMode() {
@@ -97,6 +104,7 @@ public class AutoMechanism extends LinearOpMode {
                             buildNewCycle();
                             //robot.startIntake();
                             follower.followPath(intakePath);
+                            follower.followPath(intakePath2);
                             currentState = AutoState.DRIVE_TO_INTAKE;
                             //Begins driving once all balls have been shot and starts intake motors
                         }
@@ -152,6 +160,7 @@ public class AutoMechanism extends LinearOpMode {
                         buildNewCycle();
                         //robot.startIntake();
                         follower.followPath(intakePath);
+                        follower.followPath(intakePath2);
                         currentState = AutoState.DRIVE_TO_INTAKE;
                     } else {
                         robot.stopShooter(); // Ends shooting
@@ -171,13 +180,18 @@ public class AutoMechanism extends LinearOpMode {
     private void buildNewCycle() { // Creates paths for the next cycle
         Pose currentPose = follower.getPose(); // Uses the robot's currentpose
         Pose intakePose = intakePoses[cycleIndex]; // selects the right intake target
+        Pose intakePose2 = intakePoses2[cycleIndex];
 
         intakePath = new PathBuilder(follower)
                 .addPath(new Path(new BezierCurve(currentPose, intakePose)))
                 .build(); // Builds the path to the intake
 
+        intakePath2 = new PathBuilder(follower)
+                .addPath(new Path(new BezierCurve(intakePose, intakePose2)))
+                .build(); // Builds the path to the end of the intake
+
         shootPath = new PathBuilder(follower)
-                .addPath(new Path(new BezierCurve(intakePose, shootPose)))
+                .addPath(new Path(new BezierCurve(intakePose2, shootPose)))
                 .build(); // Same as above but for shooter
     }
 }
