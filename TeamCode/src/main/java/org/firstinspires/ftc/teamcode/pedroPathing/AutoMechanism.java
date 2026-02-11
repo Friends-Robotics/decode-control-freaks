@@ -95,7 +95,7 @@ public class AutoMechanism extends LinearOpMode {
                         } else {
                             ballsShot = 0;
                             buildNewCycle();
-                            robot.startIntake();
+                            //robot.startIntake();
                             follower.followPath(intakePath);
                             currentState = AutoState.DRIVE_TO_INTAKE;
                             //Begins driving once all balls have been shot and starts intake motors
@@ -150,7 +150,7 @@ public class AutoMechanism extends LinearOpMode {
                 case DONE:
                     if (cycleIndex < MAX_CYCLES) { // Checks if there are more cycles remaining
                         buildNewCycle();
-                        robot.startIntake();
+                        //robot.startIntake();
                         follower.followPath(intakePath);
                         currentState = AutoState.DRIVE_TO_INTAKE;
                     } else {

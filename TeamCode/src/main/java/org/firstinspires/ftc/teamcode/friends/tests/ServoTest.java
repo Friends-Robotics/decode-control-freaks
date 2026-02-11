@@ -7,17 +7,12 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 @TeleOp(name = "Servo Test")
 public class ServoTest extends LinearOpMode {
-    Servo servo1;
-    Servo servo2;
-
-    double servoPosition = 0.0; // use double for servo positions
+    Servo servo;
+    double servoPosition = 0.0;
 
     @Override
     public void runOpMode() {
-        servo1 = hardwareMap.get(Servo.class, "Servo1");
-        servo2 = hardwareMap.get(Servo.class, "Servo2");
-
-        servo2.setDirection(Servo.Direction.REVERSE);
+        servo = hardwareMap.get(Servo.class, "Servo");
 
         waitForStart();
         if (isStopRequested()) return;
@@ -30,15 +25,14 @@ public class ServoTest extends LinearOpMode {
             currentGamepad.copy(gamepad1);
 
             if (currentGamepad.dpad_up && !previousGamepad.dpad_up) {
-                servoPosition = 0.36;
+                servoPosition += 0.01;
             }
 
             if (currentGamepad.dpad_down && !previousGamepad.dpad_down) {
-                servoPosition = 0.65;
+                servoPosition -= 0.01;
             }
 
-            servo1.setPosition(servoPosition);
-            servo2.setPosition(servoPosition);
+            servo.setPosition(servoPosition);
 
             telemetry.addData("Servo Position", servoPosition);
             telemetry.update();
