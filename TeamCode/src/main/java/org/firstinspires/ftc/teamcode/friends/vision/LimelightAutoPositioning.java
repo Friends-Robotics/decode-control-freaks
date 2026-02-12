@@ -35,7 +35,7 @@ public class LimelightAutoPositioning extends LinearOpMode {
         visionAlign = new VisionAlign();
 
         // -------- Init --------
-        limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        limelight = hardwareMap.get(Limelight3A.class, "limelight"); //Make sure to name the Ethernet Device "limelight"
         limelight.setPollRateHz(100);
         limelight.start();
         limelight.pipelineSwitch(0);
