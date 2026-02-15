@@ -69,6 +69,9 @@ public class TurretMechanism {
     }
 
     // Tuning helpers
+    public double getKP(){ return this.kP; }
     public void setKP(double kp){ this.kP = kp; }
+
+    public double getKD() { return this.kD; }
     public void setKD(double kd){ this.kD = kd; }
 }
