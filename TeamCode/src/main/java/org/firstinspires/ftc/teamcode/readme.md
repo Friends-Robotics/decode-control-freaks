@@ -9,3 +9,5 @@ TODO
 7. Servo feeders
 8. Portfolio
 9. Get Auto Offsets
+10. Tracking turret
+11. TeleOp shooter timings automated
