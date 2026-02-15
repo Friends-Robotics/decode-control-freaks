@@ -88,8 +88,12 @@ public class LimelightAutoPositioning extends LinearOpMode {
             telemetry.addData("Vision Active", gamepad1.right_bumper);
             telemetry.addData("Turret Angle  Power", visionAlign.turretPower);
             telemetry.addData("Drive Power", visionAlign.drivePower);
-            telemetry.addData("Rotate Power", visionAlign.turretRotatePower);
             telemetry.addData("Locked", turretLock );
+            telemetry.addData("State", visionAlign.currentState);
+            telemetry.addData("TurretAngle", visionAlign.currentTurretAngle);
+            telemetry.addData("LastXError", visionAlign.lastXError);
+            telemetry.addData("TurretPower", visionAlign.turretRotatePower);
+            telemetry.update();
             telemetry.update();
 
         }
