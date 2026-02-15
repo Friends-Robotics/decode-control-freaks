@@ -4,6 +4,7 @@ import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 import org.firstinspires.ftc.teamcode.friends.hardwareMap;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
@@ -22,8 +23,6 @@ public class LimelightAutoPositioning extends LinearOpMode {
     VisionAlign visionAlign;
     public Limelight3A limelight;
 
-
-
     // -------- Vision Outputs --------
 
 
@@ -39,7 +38,6 @@ public class LimelightAutoPositioning extends LinearOpMode {
         limelight.setPollRateHz(100);
         limelight.start();
         limelight.pipelineSwitch(0);
-
 
         robot.turretMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         robot.turretMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -91,13 +89,9 @@ public class LimelightAutoPositioning extends LinearOpMode {
             telemetry.addData("Turret Angle  Power", visionAlign.turretPower);
             telemetry.addData("Drive Power", visionAlign.drivePower);
             telemetry.addData("Rotate Power", visionAlign.turretRotatePower);
+            telemetry.addData("Locked", turretLock );
             telemetry.update();
 
-            /*
-            OpMode threw an unexpected exception.
-            java.lang.NullPointerException: attempt to read from field 'com.qualcomm.hardware.limelightvision.Limelight3A
-            org.firstinspires.ftc.teamcode.friends.hardwareMap.limelight' on a null object reference
-             */
         }
     }
 }

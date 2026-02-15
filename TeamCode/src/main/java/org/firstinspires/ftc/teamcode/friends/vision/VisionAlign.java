@@ -10,7 +10,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 
 
 public class VisionAlign {
-    
+
 
     /* -------- Outputs -------- */
     public double turretPower = 0;
@@ -32,10 +32,8 @@ public class VisionAlign {
 
     //--Reverse Motor--
 
-    int reverseCount = 0;
     double lastXError = 0;
-    int turretDirection = 1;   // +1 or -1
-    boolean directionLocked = false;
+    double turretDirection = 1;   // +1 or -1
 
 
     /* -------- Constants -------- */
@@ -47,139 +45,139 @@ public class VisionAlign {
 
     double MAX_TURRET_POWER = 0.35;
     double MAX_DRIVE_POWER  = 0.4;
-    double MAX_ROTATE_TURRET_POWER = 0.25;
+    double MAX_ROTATE_TURRET_POWER = 0.5;
 
     double ROTATE_TOLERANCE = 0.03; //Allows there to be some error
     double TURRET_TOLERANCE = 1.0;
     double DRIVE_TOLERANCE  = 0.05;
 
     double DESIRED_DISTANCE_METERS = 70 * 0.0254;
-    double VISION_TIMEOUT = 0.4; //Vision doesnt compromise everything if it fails
-    boolean timerStarted = false;
+    double INITIAL_SEARCH_TIME = 0.35;  // how long to continue last direction
+    double searchPower = 0.18;
+    ElapsedTime searchTimer = new ElapsedTime();
 
 
 
-    ElapsedTime timer = new ElapsedTime();
+    // -------- STATE MACHINE ------
+    enum State {
+        IDLE,
+        TRACK,
+        SEARCH
+    }
 
-    /*--- MAIN METHOD --- */
+    State currentState = State.IDLE;
 
-    public void update( LLResult results, boolean enable, int turretEncoderTicks) {
+    // Search settings
+    double LOST_DELAY = 0.25; // small delay before starting search
+    ElapsedTime lostTimer = new ElapsedTime();
+
+    public void update(LLResult results, boolean enabled, int turretEncoderTicks) {
 
         currentTurretAngle = turretEncoderTicks / TICKS_PER_DEGREE;
-        turretPower = 0;
-        drivePower  = 0;
+
         turretRotatePower = 0;
+        drivePower = 0;
 
-        if (!enable) {
-            timer.reset();   // give vision time to recover
-            timerStarted = false;
-            directionLocked = false;
-            lastXError = 0;
+        // ---------------- STATE TRANSITIONS ----------------
+
+        if (!enabled) {
+            currentState = State.IDLE;
             return;
         }
 
+        boolean tagValid = (results != null && results.isValid());
 
+        if (tagValid) {
+            currentState = State.TRACK;
+            lostTimer.reset();
+        } else {
+            if (currentState == State.TRACK) {
+                lostTimer.reset();
+            }
 
-        if (!timerStarted) {
-            timer.reset();
-            timerStarted = true;
+            if (lostTimer.seconds() > LOST_DELAY) {
+                currentState = State.SEARCH;
+                searchTimer.reset();
+            }
         }
 
-        if (timer.seconds() > VISION_TIMEOUT) return;
+        // ---------------- STATE LOGIC ----------------
 
+        switch (currentState) {
 
-        if (results == null || !results.isValid()) {
-            directionLocked = false;
-            lastXError = 0;
-            return;
-        }
+            case IDLE:
+                turretRotatePower = 0;
+                break;
 
+            case TRACK:
 
-        Pose3D pose = results.getBotpose();
+                double xError = results.getTx();
+                lastXError = xError;   // store last known direction
 
-        /* ---------- Rotating Turret ---------- */
-        double xError = results.getTx();
-
-       // Auto-detect motor direction (flip once if error worsens)
-
-        if (!directionLocked && Math.abs(lastXError) > ROTATE_TOLERANCE) {
-            if (Math.abs(xError) > Math.abs(lastXError)) {
-                reverseCount++;
-                if (reverseCount > 3) {
-                    turretDirection *= -1;
-                    directionLocked = true;
+                if (Math.abs(xError) > ROTATE_TOLERANCE) {
+                    turretRotatePower =
+                            Range.clip(
+                                    xError * kP_rotate,
+                                    -MAX_ROTATE_TURRET_POWER,
+                                    MAX_ROTATE_TURRET_POWER
+                            );
                 }
-            } else reverseCount = 0;
+
+                // Distance control
+                Pose3D pose = results.getBotpose();
+                if (pose != null) {
+                    double distanceError =
+                            pose.getPosition().z - DESIRED_DISTANCE_METERS;
+
+                    if (Math.abs(distanceError) > DRIVE_TOLERANCE) {
+                        drivePower =
+                                Range.clip(
+                                        distanceError * kP_drive,
+                                        -MAX_DRIVE_POWER,
+                                        MAX_DRIVE_POWER
+                                );
+                    }
+                }
+
+                break;
+
+            case SEARCH:
+
+                // First phase: continue in last seen direction
+                if (searchTimer.seconds() < INITIAL_SEARCH_TIME) {
+
+                    turretDirection = Math.signum(lastXError);
+
+                    // If lastXError was 0, default to right
+                    if (turretDirection == 0) turretDirection = 1;
+
+                    turretRotatePower = searchPower * turretDirection;
+
+                } else {
+
+                    // Second phase: full sweep between limits
+                    turretRotatePower = searchPower * turretDirection;
+
+                    if (currentTurretAngle >= MAX_TURRET_ANGLE) {
+                        turretDirection = -1;
+                    }
+
+                    if (currentTurretAngle <= MIN_TURRET_ANGLE) {
+                        turretDirection = 1;
+                    }
+                }
+
+                break;
         }
 
+        // ---------------- SOFT LIMIT PROTECTION ----------------
 
-        // Proportional control with direction applied
-        double minPower = 0.06;
-
-        if (Math.abs(xError) > ROTATE_TOLERANCE) {
-
-            scaledKP = Range.clip(
-                    Math.abs(xError) / 0.25,// at 25cm use 100% of kp power
-                    0.2,
-                    1.0
-            );
-
-            turretRotatePower = Math.signum(xError) * turretDirection *
-                    (minPower + Math.abs(xError * kP_rotate * scaledKP));
-
-            turretRotatePower = Range.clip(
-                    turretRotatePower,
-                    -MAX_ROTATE_TURRET_POWER,
-                    MAX_ROTATE_TURRET_POWER
-            );
-        }
-
-        /* ---------- Software Angle Limit ---------- */
-
-        // Trying to rotate past max
         if (currentTurretAngle >= MAX_TURRET_ANGLE && turretRotatePower > 0) {
             turretRotatePower = 0;
         }
 
-        // Trying to rotate past min
         if (currentTurretAngle <= MIN_TURRET_ANGLE && turretRotatePower < 0) {
             turretRotatePower = 0;
-        }
-        //Slows down as it get close to limit
-        double limitBuffer = 10.0; // degrees
-
-        if (currentTurretAngle > MAX_TURRET_ANGLE - limitBuffer) {
-            double scale = (MAX_TURRET_ANGLE - currentTurretAngle) / limitBuffer;
-            turretRotatePower *= Range.clip(scale, 0.0, 1.0);
-        }
-
-        if (currentTurretAngle < MIN_TURRET_ANGLE + limitBuffer) {
-            double scale = (currentTurretAngle - MIN_TURRET_ANGLE) / limitBuffer;
-            turretRotatePower *= Range.clip(scale, 0.0, 1.0);
-        }
-
-        lastXError = xError;
-
-        /* ---------- TURRET ---------- */
-        /*double yawError = -pose.getOrientation().getYaw(); //Turret yaw is opposite to camera yaw
-        if (Math.abs(yawError) > TURRET_TOLERANCE) {
-            turretPower = Range.clip(
-                    yawError * kP_turret,
-                    -MAX_TURRET_POWER,
-                    MAX_TURRET_POWER
-            );
-        }
-        */
-        /* ---------- DISTANCE ---------- */
-        double distanceError =
-                pose.getPosition().z - DESIRED_DISTANCE_METERS;
-
-        if (Math.abs(distanceError) > DRIVE_TOLERANCE) {
-            drivePower = Range.clip(
-                    distanceError * kP_drive,
-                    -MAX_DRIVE_POWER,
-                    MAX_DRIVE_POWER
-            );
         }
     }
 }
