@@ -76,6 +76,13 @@ public class hardwareMap {
         turretMotor.setDirection(DcMotorSimple.Direction.FORWARD);
         turretMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
+        parallelEncoder = hardwaremap.get(DcMotorEx.class,"parallelEncoder");
+        perpendicularEncoder = hardwaremap.get(DcMotorEx.class, "perpendicularEncoder");
+
+        parallelEncoder.setDirection(DcMotor.Direction.FORWARD);
+        perpendicularEncoder.setDirection(DcMotor.Direction.FORWARD); // Depends on how the encoders are mounted 
+
+
     }
 
 

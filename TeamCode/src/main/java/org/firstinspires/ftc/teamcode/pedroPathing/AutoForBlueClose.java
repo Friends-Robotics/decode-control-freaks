@@ -38,6 +38,7 @@ public class AutoForBlueClose extends LinearOpMode { //FOR BLUE ALLIANCE CLOSE
         DRIVE_TO_SHOOT,
         SPIN_UP_SHOOTER,
         FEED_BALL,
+        PARKING,
         DONE
     }
 
@@ -57,6 +58,7 @@ public class AutoForBlueClose extends LinearOpMode { //FOR BLUE ALLIANCE CLOSE
     Pose startPose = new Pose(16, 130, 135);
     Pose shootPose = new Pose(60, 84, Math.toRadians(135)); // At this position the goal is 70 inches away
 
+    Pose parkPose = new Pose(60, 108, 135);
     Pose[] intakePoses = { // Cycle index cycles through these poses
             new Pose(35, 85, 180),
             new Pose(35, 60, 180),
@@ -72,6 +74,7 @@ public class AutoForBlueClose extends LinearOpMode { //FOR BLUE ALLIANCE CLOSE
     PathChain intakePath2;
     PathChain shootPath;
     PathChain StartShootPath;
+    PathChain ParkPath;
 
 
 
@@ -223,6 +226,14 @@ public class AutoForBlueClose extends LinearOpMode { //FOR BLUE ALLIANCE CLOSE
                     }
                     break;
 
+                case PARKING:
+                    if(cycleIndex >= MAX_CYCLES)
+                    {
+                        buildNewCycle();
+                        follower.followPath(ParkPath);
+                    }
+                    break;
+
                 /* ---------- LOOP ---------- */
 
                 case DONE:
@@ -233,7 +244,8 @@ public class AutoForBlueClose extends LinearOpMode { //FOR BLUE ALLIANCE CLOSE
                         follower.followPath(intakePath2);
                         currentState = AutoState.DRIVE_TO_INTAKE;
                     } else {
-                        robot.stopShooter(); // Ends shooting
+                        robot.stopShooter();// Ends shooting
+                        currentState = AutoState.PARKING;
                     }
                     break;
             }
@@ -252,6 +264,7 @@ public class AutoForBlueClose extends LinearOpMode { //FOR BLUE ALLIANCE CLOSE
         Pose currentPose = follower.getPose(); // Uses the robot's currentpose
         Pose intakePose = intakePoses[cycleIndex]; // selects the right intake target
         Pose intakePose2 = intakePoses2[cycleIndex];
+        Pose parkingPose = parkPose;
 
         intakePath = new PathBuilder(follower)
                 .addPath(new Path(new BezierCurve(currentPose, intakePose)))
@@ -267,6 +280,9 @@ public class AutoForBlueClose extends LinearOpMode { //FOR BLUE ALLIANCE CLOSE
 
         StartShootPath = new PathBuilder(follower)
                 .addPath(new Path(new BezierCurve(startPose, shootPose)))
+                .build();
+        ParkPath = new PathBuilder(follower)
+                .addPath(new Path(new BezierCurve(currentPose, parkingPose)))
                 .build();
 
     }
