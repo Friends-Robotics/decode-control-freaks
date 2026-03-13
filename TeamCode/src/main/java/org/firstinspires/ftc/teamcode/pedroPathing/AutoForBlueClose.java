@@ -26,6 +26,8 @@ public class AutoForBlueClose extends LinearOpMode { //FOR BLUE ALLIANCE CLOSE
     Follower follower; // a Pedropathing thing that allows the robot to "follow" the paths
     Limelight3A limelight;
     VisionAlign visionAlign;
+    Constants constants;
+
 
 
     enum AutoState { //Fun stuff
@@ -51,7 +53,7 @@ public class AutoForBlueClose extends LinearOpMode { //FOR BLUE ALLIANCE CLOSE
     static final double FEED_TIME = 0.4;
 
     int VisionCount = 0;
-    static final int MAX_CYCLES = 3; // Does runs through the state machine 3 times
+    static final int MAX_CYCLES = 3; // runs through the state machine 3 times
     int cycleIndex = 0; // This checks through the intakeposes array
     int ballsShot = 0;
 
@@ -84,6 +86,7 @@ public class AutoForBlueClose extends LinearOpMode { //FOR BLUE ALLIANCE CLOSE
         robot = new hardwareMap(hardwareMap); // Starts robot hardware
         follower = Constants.createFollower(hardwareMap); // Creates pedro follower
         follower.setPose(startPose);
+        buildNewCycle();
 
         telemetry.addLine("Ready");
         telemetry.update();
@@ -176,8 +179,11 @@ public class AutoForBlueClose extends LinearOpMode { //FOR BLUE ALLIANCE CLOSE
                             buildNewCycle();
                             robot.startIntake();
                             follower.followPath(intakePath);
-                            follower.followPath(intakePath2);
-                            currentState = AutoState.DRIVE_TO_INTAKE;
+                            if(!follower.isBusy())
+                            {
+                                follower.followPath(intakePath2);
+                                currentState = AutoState.DRIVE_TO_INTAKE;
+                            }
                             //Begins driving once all balls have been shot and starts intake motors
                         }
                     }
@@ -229,7 +235,6 @@ public class AutoForBlueClose extends LinearOpMode { //FOR BLUE ALLIANCE CLOSE
                 case PARKING:
                     if(cycleIndex >= MAX_CYCLES)
                     {
-                        buildNewCycle();
                         follower.followPath(ParkPath);
                     }
                     break;
