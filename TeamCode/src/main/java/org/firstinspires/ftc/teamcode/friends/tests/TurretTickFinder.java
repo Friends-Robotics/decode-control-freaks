@@ -12,7 +12,7 @@ public class TurretTickFinder extends LinearOpMode {
     @Override
     public void runOpMode() {
 
-        turretMotor = hardwareMap.get(DcMotor.class, "turret");
+        turretMotor = hardwareMap.get(DcMotor.class, "Turret");
 
         turretMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         turretMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);

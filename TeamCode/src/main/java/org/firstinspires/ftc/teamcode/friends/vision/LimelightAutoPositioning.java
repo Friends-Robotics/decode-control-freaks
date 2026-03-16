@@ -94,7 +94,7 @@ public class LimelightAutoPositioning extends LinearOpMode {
             telemetry.addData("LastXError", visionAlign.lastXError);
             telemetry.addData("TurretPower", visionAlign.turretRotatePower);
             telemetry.update();
-            telemetry.update();
+
 
         }
     }

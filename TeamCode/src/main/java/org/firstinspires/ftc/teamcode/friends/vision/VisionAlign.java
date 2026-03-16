@@ -20,11 +20,10 @@ public class VisionAlign {
     /* ---------- Turret Angle Limits ---------- */
 
     // degrees
-    double MIN_TURRET_ANGLE = -90.0;
-    double MAX_TURRET_ANGLE =  90.0;
-    int turretEncoderOffset = -45;
-    int rightTicks = 150;
-    int leftTicks = -240;
+    double MIN_TURRET_ANGLE = -85.0;
+    double MAX_TURRET_ANGLE =  85.0;
+    int rightTicks = 193;
+    int leftTicks = -193;
 
     // encoder conversion
      double TICKS_PER_DEGREE = (rightTicks - leftTicks) / 180.0;   // need to calibrate
@@ -41,22 +40,21 @@ public class VisionAlign {
 
     /* -------- Constants -------- */
 
-    double scaledKP = 0;
-    double kP_rotate = 0.6; // scales x-error → strafe power; higher = faster, lower = smoother
-    double kP_turret = 0.015;
-    double kP_drive  = 0.7;
 
-    double MAX_TURRET_POWER = 0.35;
-    double MAX_DRIVE_POWER  = 0.4;
-    double MAX_ROTATE_TURRET_POWER = 0.1;
+    double kP_rotate = 0.45; // scales x-error → strafe power; higher = faster, lower = smoother
 
-    double ROTATE_TOLERANCE = 0.03; //Allows there to be some error
-    double TURRET_TOLERANCE = 1.0;
+    double kP_drive  = 0.8;
+
+    double MAX_DRIVE_POWER  = 0.7;
+    double MAX_ROTATE_TURRET_POWER = 0.07;
+
+    double ROTATE_TOLERANCE = 0.15; //Allows there to be some error
+
     double DRIVE_TOLERANCE  = 0.05;
 
     double DESIRED_DISTANCE_METERS = 70 * 0.0254;
     double INITIAL_SEARCH_TIME = 0.35;  // how long to continue last direction
-    double searchPower = 0.05;
+    double searchPower = 0.06;
     ElapsedTime searchTimer = new ElapsedTime();
 
 
@@ -76,7 +74,7 @@ public class VisionAlign {
 
     public void update(LLResult results, boolean enabled, int turretEncoderTicks) {
 
-        currentTurretAngle = (turretEncoderTicks - turretEncoderOffset) / TICKS_PER_DEGREE;
+        currentTurretAngle = (turretEncoderTicks) / TICKS_PER_DEGREE;
 
         turretRotatePower = 0;
         drivePower = 0;
@@ -94,13 +92,11 @@ public class VisionAlign {
             currentState = State.TRACK;
             lostTimer.reset();
         } else {
-            if (currentState == State.TRACK) {
-                lostTimer.reset();
-            }
-
             if (lostTimer.seconds() > LOST_DELAY) {
-                currentState = State.SEARCH;
-                searchTimer.reset();
+                if (currentState != State.SEARCH) {
+                    currentState = State.SEARCH;
+                    searchTimer.reset();
+                }
             }
         }
 
@@ -127,19 +123,14 @@ public class VisionAlign {
                 }
 
                 // Distance control
-                Pose3D pose = results.getBotpose();
-                if (pose != null) {
-                    double distanceError =
-                            pose.getPosition().z - DESIRED_DISTANCE_METERS;
+                double targetArea = results.getTa();
 
-                    if (Math.abs(distanceError) > DRIVE_TOLERANCE) {
-                        drivePower =
-                                Range.clip(
-                                        distanceError * kP_drive,
-                                        -MAX_DRIVE_POWER,
-                                        MAX_DRIVE_POWER
-                                );
-                    }
+                double desiredArea = 3.5;
+
+                double areaError = desiredArea - targetArea;
+
+                if (Math.abs(areaError) > 0.2) {
+                    drivePower = Range.clip(areaError * 0.2, -MAX_DRIVE_POWER, MAX_DRIVE_POWER);
                 }
 
                 break;
@@ -158,16 +149,22 @@ public class VisionAlign {
 
                 } else {
 
-                    // Second phase: full sweep between limits
+                    // Second phase: sweep between limits
                     turretRotatePower = searchPower * turretDirection;
 
-                    if (currentTurretAngle >= MAX_TURRET_ANGLE) {
+                   // Flip direction if we hit limits
+                    if (currentTurretAngle >= MAX_TURRET_ANGLE && turretDirection > 0) {
                         turretDirection = -1;
-                    }
-
-                    if (currentTurretAngle <= MIN_TURRET_ANGLE) {
+                    } else if (currentTurretAngle <= MIN_TURRET_ANGLE && turretDirection < 0) {
                         turretDirection = 1;
                     }
+
+                    // Apply soft limits to prevent overshoot
+                    turretRotatePower = Range.clip(
+                            turretRotatePower,
+                            (currentTurretAngle <= MIN_TURRET_ANGLE) ? 0 : -MAX_ROTATE_TURRET_POWER,
+                            (currentTurretAngle >= MAX_TURRET_ANGLE) ? 0 : MAX_ROTATE_TURRET_POWER
+                    );
                 }
 
                 break;
@@ -175,12 +172,13 @@ public class VisionAlign {
 
         // ---------------- SOFT LIMIT PROTECTION ----------------
 
-        if (currentTurretAngle >= MAX_TURRET_ANGLE && turretRotatePower > 0) {
+        if (currentTurretAngle >= MAX_TURRET_ANGLE && turretRotatePower > 0 ) {
             turretRotatePower = 0;
         }
 
-        if (currentTurretAngle <= MIN_TURRET_ANGLE && turretRotatePower < 0) {
+        if (currentTurretAngle <= MIN_TURRET_ANGLE && turretRotatePower < 0 ) {
             turretRotatePower = 0;
         }
     }
+
 }
