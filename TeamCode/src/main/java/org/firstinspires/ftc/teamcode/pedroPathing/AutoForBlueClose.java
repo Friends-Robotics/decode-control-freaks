@@ -233,7 +233,7 @@ public class AutoForBlueClose extends LinearOpMode { //FOR BLUE ALLIANCE CLOSE
                     break;
 
                 case PARKING:
-                    if(cycleIndex >= MAX_CYCLES)
+                    if(cycleIndex >= MAX_CYCLES && !follower.isBusy())
                     {
                         follower.followPath(ParkPath);
                     }
@@ -258,6 +258,12 @@ public class AutoForBlueClose extends LinearOpMode { //FOR BLUE ALLIANCE CLOSE
             telemetry.addData("State", currentState);
             telemetry.addData("Cycle", cycleIndex);
             telemetry.addData("Pose", follower.getPose());
+
+            Pose pose = follower.getPose();
+            telemetry.addData("X", pose.getX());
+            telemetry.addData("Y", pose.getY());
+            telemetry.addData("Heading", Math.toDegrees(pose.getHeading()));
+
             telemetry.update();
 
         }
