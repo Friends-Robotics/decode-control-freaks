@@ -21,9 +21,19 @@ public class hardwareMap {
         | BLM               | Back Left Wheel       | Control Hub Motor 2     |
         --------------------+-----------------------+--------------------------
         | FLM               | Front Left Wheel      | Control Hub Motor 3     |
-        -----------------------------------------------------------------------
-        | Intake            | Intake Motor          | Expansion Hub Motor 1   |
-        -----------------------------------------------------------------------
+        --------------------+-----------------------+--------------------------
+        | Intake            | Intake Motor          | Expansion Hub Motor 0   |
+        --------------------+-----------------------+--------------------------
+        | Uptake1           | Uptake Servo 1        | Control Hub Servo 0     |
+        --------------------+-----------------------+--------------------------
+        | TurretAngle       | Turret Angle Servo    | Expansion Hub Servo 0   |
+        --------------------+-----------------------+--------------------------
+        | TurretMotor       | Turret Motor          | Expansion Hub Motor 1   |
+        --------------------+-----------------------+--------------------------
+        | ShooterMotor1     | Shooter Motor 1       | Expansion Hub Motor 2   |
+        --------------------+-----------------------+--------------------------
+        | ShooterMotor2     | Shooter Motor 2       | Expansion Hub Motor 3   |
+        --------------------------------------------+--------------------------
      */
 
     public DcMotor frontLeftMotor;
@@ -31,8 +41,7 @@ public class hardwareMap {
     public DcMotor frontRightMotor;
     public DcMotor backRightMotor;
     public DcMotor intakeMotor;
-    public Servo uptake1;
-    public Servo uptake2;
+    public Servo uptakeServo;
     public Servo turretAngle;
     public DcMotorEx turretMotor;
     public DcMotorEx shooterMotor1;
@@ -48,7 +57,6 @@ public class hardwareMap {
 
 
     public hardwareMap(com.qualcomm.robotcore.hardware.HardwareMap hardwaremap) {
-
         frontRightMotor = hardwaremap.get(DcMotor.class, "FRM");
         frontRightMotor.setDirection(DcMotorSimple.Direction.FORWARD);
         frontLeftMotor = hardwaremap.get(DcMotor.class, "FLM");
@@ -60,8 +68,7 @@ public class hardwareMap {
 
         intakeMotor = hardwaremap.get(DcMotor.class, "Intake");
 
-        uptake1 = hardwaremap.get(Servo.class, "Uptake1");
-        uptake2 = hardwaremap.get(Servo.class, "Uptake2");
+        uptakeServo = hardwaremap.get(Servo.class, "Uptake");
 
         turretAngle = hardwaremap.get(Servo.class, "Turret Servo");
 
@@ -85,6 +92,7 @@ public class hardwareMap {
         parallelEncoder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         perpendicularEncoder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
+
     //INTAKE
     public void startIntake() {
         intakeMotor.setPower(0.8);
@@ -93,12 +101,10 @@ public class hardwareMap {
 
     //FEEDER
     public void feedBall() {
-        uptake1.setPosition(1.0);
-        uptake2.setPosition(1.0);
+        uptakeServo.setPosition(1.0);
     }
     public void resetFeeder() {
-        uptake1.setPosition(0.0);
-        uptake2.setPosition(0.0);
+        uptakeServo.setPosition(0.0);
     }
 
     //SHOOTER

@@ -11,7 +11,6 @@ public class Comp extends LinearOpMode {
 
     private hardwareMap hwMap;
 
-    // States
     private double speedModifier = 0.8;
     private double intakePower = 0.8;
     private boolean intakeOn = false;
@@ -42,7 +41,6 @@ public class Comp extends LinearOpMode {
             sendTelemetry();
         }
     }
-
     private void updateGamepads() {
         previousGp1.copy(currentGp1);
         currentGp1.copy(gamepad1);
@@ -71,24 +69,18 @@ public class Comp extends LinearOpMode {
         hwMap.backRightMotor.setPower(br * speedModifier);
     }
     private void intake() {
-
-        // Direction control (edge detection)
         if (currentGp1.right_trigger > 0.8 && previousGp1.right_trigger <= 0.8) {
             intakePower = -0.8;
-            intakeOn = true;   // <<< force enable when direction pressed
         }
 
         if (currentGp1.left_trigger > 0.8 && previousGp1.left_trigger <= 0.8) {
             intakePower = 0.8;
-            intakeOn = true;  // <<< force enable when direction pressed
         }
 
-        // TOGGLE (enable/disable)
         if (currentGp1.cross && !previousGp1.cross) {
             intakeOn = !intakeOn;
         }
 
-        // APPLY
         if (intakeOn) {
             hwMap.startIntake();
         } else {
@@ -97,15 +89,14 @@ public class Comp extends LinearOpMode {
     }
     private void uptake(){
         if (currentGp2.dpad_up && !previousGp2.dpad_up) {
-            uptakeServoPosition = 0.65;
+            uptakeServoPosition = 0.35;
         }
 
         if (currentGp2.dpad_down && !previousGp2.dpad_down) {
-            uptakeServoPosition = 0.3;
+            uptakeServoPosition = 0;
         }
 
-        hwMap.uptake1.setPosition(uptakeServoPosition);
-        hwMap.uptake2.setPosition(uptakeServoPosition);
+        hwMap.uptakeServo.setPosition(uptakeServoPosition);
     }
     private void shoot() {
 
