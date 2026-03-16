@@ -6,6 +6,8 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
+
+import org.firstinspires.ftc.teamcode.friends.comp.OneController;
 import org.firstinspires.ftc.teamcode.friends.hardwareMap;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 
@@ -93,6 +95,7 @@ public class LimelightAutoPositioning extends LinearOpMode {
             telemetry.addData("TurretAngle", visionAlign.currentTurretAngle);
             telemetry.addData("LastXError", visionAlign.lastXError);
             telemetry.addData("TurretPower", visionAlign.turretRotatePower);
+            telemetry.addData("Ta", result.getTa());
             telemetry.update();
 
 

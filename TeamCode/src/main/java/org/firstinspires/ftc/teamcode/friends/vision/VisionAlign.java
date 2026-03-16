@@ -41,20 +41,21 @@ public class VisionAlign {
     /* -------- Constants -------- */
 
 
-    double kP_rotate = 0.45; // scales x-error → strafe power; higher = faster, lower = smoother
+    double kP_rotate = 0.7; // scales x-error → strafe power; higher = faster, lower = smoother
 
-    double kP_drive  = 0.8;
+    double kP_drive  = 3.5;
 
-    double MAX_DRIVE_POWER  = 0.7;
-    double MAX_ROTATE_TURRET_POWER = 0.07;
+    double MAX_DRIVE_POWER  = 0.6;
+    double MAX_ROTATE_TURRET_POWER = 0.15;
 
-    double ROTATE_TOLERANCE = 0.15; //Allows there to be some error
+    double ROTATE_TOLERANCE = 0.2; //Allows there to be some error
 
-    double DRIVE_TOLERANCE  = 0.05;
+    double DRIVE_TOLERANCE  = 0.2;
+    //Desired Shooting Distance is 60 inches at camera
 
-    double DESIRED_DISTANCE_METERS = 70 * 0.0254;
+
     double INITIAL_SEARCH_TIME = 0.35;  // how long to continue last direction
-    double searchPower = 0.06;
+    double searchPower = 0.15;
     ElapsedTime searchTimer = new ElapsedTime();
 
 
@@ -125,12 +126,18 @@ public class VisionAlign {
                 // Distance control
                 double targetArea = results.getTa();
 
-                double desiredArea = 3.5;
+                double desiredArea = 1.14; // % of tag occupied at 60 inches
 
                 double areaError = desiredArea - targetArea;
 
-                if (Math.abs(areaError) > 0.2) {
-                    drivePower = Range.clip(areaError * 0.2, -MAX_DRIVE_POWER, MAX_DRIVE_POWER);
+                if (Math.abs(areaError) > DRIVE_TOLERANCE) {
+                    drivePower = Range.clip(areaError * kP_drive, -MAX_DRIVE_POWER, MAX_DRIVE_POWER);
+                }
+                if (Math.abs(areaError) < 0.2) {
+                    drivePower = 0;
+                }
+                if (results == null || !results.isValid()) {
+                    drivePower = 0;
                 }
 
                 break;
