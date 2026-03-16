@@ -22,9 +22,12 @@ public class VisionAlign {
     // degrees
     double MIN_TURRET_ANGLE = -90.0;
     double MAX_TURRET_ANGLE =  90.0;
+    int turretEncoderOffset = -45;
+    int rightTicks = 150;
+    int leftTicks = -240;
 
     // encoder conversion
-    double TICKS_PER_DEGREE = 0.389;  // need to calibrate
+     double TICKS_PER_DEGREE = (rightTicks - leftTicks) / 180.0;   // need to calibrate
     //TICKS_PER_DEGREE = (rightTicks - leftTicks) / (angleRangeDegrees);
 
     double currentTurretAngle = 0;
@@ -73,7 +76,7 @@ public class VisionAlign {
 
     public void update(LLResult results, boolean enabled, int turretEncoderTicks) {
 
-        currentTurretAngle = turretEncoderTicks / TICKS_PER_DEGREE;
+        currentTurretAngle = (turretEncoderTicks - turretEncoderOffset) / TICKS_PER_DEGREE;
 
         turretRotatePower = 0;
         drivePower = 0;
