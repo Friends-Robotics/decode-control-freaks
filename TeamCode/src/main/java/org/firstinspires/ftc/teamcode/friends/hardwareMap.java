@@ -36,10 +36,8 @@ public class hardwareMap {
     public DcMotor turretMotor;
 
     //Constants
-    private double targetRPM = 2000;
-    public static final double TICKS_PER_REV = 28;
-
-
+    public double targetRPM = 2000;
+    public static final double TICKS_PER_REV = 15;
 
     public hardwareMap(com.qualcomm.robotcore.hardware.HardwareMap hardwaremap) {
 
@@ -58,10 +56,12 @@ public class hardwareMap {
         shooterMotor1 = hardwaremap.get(DcMotorEx.class, "Shooter1");
         shooterMotor1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         shooterMotor1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        shooterMotor1.setDirection(DcMotorSimple.Direction.FORWARD);
 
         shooterMotor2 = hardwaremap.get(DcMotorEx.class, "Shooter2");
         shooterMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         shooterMotor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        shooterMotor1.setDirection(DcMotorSimple.Direction.FORWARD);
 
         turretMotor = hardwaremap.get(DcMotorEx.class, "Turret");
         turretMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -70,6 +70,9 @@ public class hardwareMap {
 
     }
 
+    public hardwareMap(){
+
+    }
 
     //INTAKE
     public void startIntake() { intakeMotor.setPower(1.0);}
@@ -86,6 +89,7 @@ public class hardwareMap {
         shooterMotor1.setVelocity(ticksPerSecond);
         shooterMotor2.setVelocity(ticksPerSecond);
     }
+
     public double getShooterRPM() {
         return (shooterMotor1.getVelocity() * 60.0) / TICKS_PER_REV;
     }

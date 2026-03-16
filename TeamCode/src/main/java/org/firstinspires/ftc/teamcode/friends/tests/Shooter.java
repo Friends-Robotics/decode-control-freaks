@@ -3,22 +3,24 @@ package org.firstinspires.ftc.teamcode.friends.tests;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.Range;
+
+import org.firstinspires.ftc.teamcode.friends.hardwareMap;
+
 @TeleOp(name = "Shooter Test")
 public class Shooter extends LinearOpMode {
+    hardwareMap robot;
     private static float shooterPower = 0.0f;
     private static float turretPower = 0.0f;
     private static float servoPosition = 0.0f;
 
     @Override
     public void runOpMode() throws InterruptedException {
-        DcMotor motor1 = hardwareMap.dcMotor.get("Motor1");
-        DcMotor motor2 = hardwareMap.dcMotor.get("Motor2");
-        DcMotor turretMotor = hardwareMap.dcMotor.get("turretMotor");
 
-        Servo servo = hardwareMap.servo.get("Servo");
-        servo.setDirection(Servo.Direction.FORWARD);
+        robot = new hardwareMap(hardwareMap);
 
         waitForStart();
 
@@ -33,27 +35,24 @@ public class Shooter extends LinearOpMode {
 
             /// Shooting
             if(gamepad1.touchpad) {
-                motor1.setPower(shooterPower);
-                motor2.setPower(shooterPower);
+                robot.setShooterRPM(robot.targetRPM);
             } else {
-                motor1.setPower(0.0f);
-                motor2.setPower(0.0f);
+                robot.stopShooter();
             }
-
             if (currentGamepad1.dpad_up && !previousGamepad1.dpad_up) {
-                shooterPower += 0.1f;
+                robot.targetRPM += 100f;
             }
             if (currentGamepad1.dpad_down && !previousGamepad1.dpad_down){
-                shooterPower -= 0.1f;
+                robot.targetRPM -= 100f;
             }
 
-            shooterPower = Math.min(1.0f, shooterPower);
-            shooterPower = Math.max(-1.0f, shooterPower);
+            robot.targetRPM = Range.clip(robot.targetRPM, 0, 6000);
+
 
             /// Shooter Angle
 
             if(currentGamepad1.left_trigger == 1.0 && currentGamepad1.right_trigger == 1.0)
-                servo.setPosition(servoPosition);
+                robot.feeder.setPosition(servoPosition);
 
             if(currentGamepad1.triangle && !(previousGamepad1.triangle))
                 servoPosition += 0.05f;
@@ -65,7 +64,8 @@ public class Shooter extends LinearOpMode {
 
             /// Turret Movement
 
-            turretMotor.setPower(turretPower);
+            robot.
+                    turretMotor.setPower(turretPower);
 
             if(currentGamepad1.left_bumper && !(previousGamepad1.left_bumper))
                 turretPower -= 0.1f;
@@ -75,6 +75,17 @@ public class Shooter extends LinearOpMode {
             turretPower = Math.min(1.0f, turretPower);
             turretPower = Math.max(0.0f, turretPower);
 
+            if (gamepad1.b) {
+                telemetry.addLine("REVOLUTION RECORDED");
+                telemetry.addData("RPM", robot.getShooterRPM());
+                telemetry.update();
+
+                sleep(5000);
+            }
+
+            telemetry.addData("Target RPM", robot.targetRPM);
+            telemetry.addData("Current RPM", robot.getShooterRPM());
+            telemetry.addData("At Speed", robot.shooterAtSpeed(50));
             telemetry.addData("Power: ", shooterPower);
             telemetry.addData("Angle: ", servoPosition);
             telemetry.update();
