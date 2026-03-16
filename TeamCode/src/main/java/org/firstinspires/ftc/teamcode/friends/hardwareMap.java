@@ -37,11 +37,6 @@ public class hardwareMap {
     public DcMotorEx shooterMotor2;
     public DcMotor turretMotor;
 
-
-    public DcMotorEx parallelEncoder, perpendicularEncoder; //For pinpoint
-    public IMU imu;
-
-
     //Constants
     private double targetRPM = 2000;
     public static final double TICKS_PER_REV = 28;
@@ -62,7 +57,6 @@ public class hardwareMap {
         feeder = hardwaremap.get(Servo.class, "Feeder");
 
 
-
         shooterMotor1 = hardwaremap.get(DcMotorEx.class, "Shooter1");
         shooterMotor1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         shooterMotor1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
@@ -75,13 +69,6 @@ public class hardwareMap {
         turretMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         turretMotor.setDirection(DcMotorSimple.Direction.FORWARD);
         turretMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-
-        parallelEncoder = hardwaremap.get(DcMotorEx.class,"parallelEncoder");
-        perpendicularEncoder = hardwaremap.get(DcMotorEx.class, "perpendicularEncoder");
-
-        parallelEncoder.setDirection(DcMotor.Direction.FORWARD);
-        perpendicularEncoder.setDirection(DcMotor.Direction.FORWARD); // Depends on how the encoders are mounted 
-
 
     }
 
