@@ -45,7 +45,7 @@ public class VisionAlign {
 
     double MAX_TURRET_POWER = 0.35;
     double MAX_DRIVE_POWER  = 0.4;
-    double MAX_ROTATE_TURRET_POWER = 0.5;
+    double MAX_ROTATE_TURRET_POWER = 0.1;
 
     double ROTATE_TOLERANCE = 0.03; //Allows there to be some error
     double TURRET_TOLERANCE = 1.0;
@@ -53,7 +53,7 @@ public class VisionAlign {
 
     double DESIRED_DISTANCE_METERS = 70 * 0.0254;
     double INITIAL_SEARCH_TIME = 0.35;  // how long to continue last direction
-    double searchPower = 0.18;
+    double searchPower = 0.05;
     ElapsedTime searchTimer = new ElapsedTime();
 
 

@@ -1,10 +1,8 @@
 package org.firstinspires.ftc.teamcode.friends;
 
-import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 
 /**
@@ -78,10 +76,8 @@ public class hardwareMap {
     public void stopIntake() { intakeMotor.setPower(0.0);}
 
     //FEEDER
-    public void prepfeedBall() {feeder.setPosition(0.65);}//0.33 0.65
-    public void feedBall() {feeder.setPosition(0.33);}//0.33 0.65
-
-    public void resetFeeder() {feeder.setPosition(0.0);}
+    public void resetFeed() {feeder.setPosition(0.0);}// Lowered
+    public void feedBall() {feeder.setPosition(0.35);} // High
 
     //SHOOTER
     public void setShooterRPM(double rpm){

@@ -51,7 +51,7 @@ public class AutoForBlueClose extends LinearOpMode { //FOR BLUE ALLIANCE CLOSE
 
     static final double TARGET_RPM = 2000;
     static final double RPM_TOLERANCE = 100;
-    static final double FEED_TIME = 0.4;
+    static final double FEED_TIME = 2.5;
 
     int VisionCount = 0;
     static final int MAX_CYCLES = 3; // runs through the state machine 3 times
@@ -102,7 +102,7 @@ public class AutoForBlueClose extends LinearOpMode { //FOR BLUE ALLIANCE CLOSE
         telemetry.update();
         waitForStart(); // PRESS START
 
-        robot.prepfeedBall();
+        robot.resetFeed();
         robot.setShooterRPM(TARGET_RPM); // Allows the shooter to be sped up before auto
         stateTimer.reset();
 
@@ -181,12 +181,11 @@ public class AutoForBlueClose extends LinearOpMode { //FOR BLUE ALLIANCE CLOSE
 
                 case PRELOAD_FEED:
                     if (stateTimer.seconds() > FEED_TIME) { //Waits until feeder has been on long enough
-                        robot.prepfeedBall(); // Lowers feeder
-                        ballsShot++; // Counts ball
+                        robot.resetFeed(); // Lowers feeder
+                        ballsShot = 3; // Counts ball
 
-                        if (ballsShot < 3) {
-                            currentState = AutoState.PRELOAD_SPIN_UP;
-                        } else {
+                        if(ballsShot == 3)
+                        {
                             ballsShot = 0;
                             buildNewCycle();
                             robot.startIntake();
@@ -220,7 +219,6 @@ public class AutoForBlueClose extends LinearOpMode { //FOR BLUE ALLIANCE CLOSE
                 case SPIN_UP_SHOOTER:
                     if (robot.shooterAtSpeed(RPM_TOLERANCE)) {
                         robot.feedBall();
-                        robot.prepfeedBall();
                         stateTimer.reset();
                         currentState = AutoState.FEED_BALL;
                     }
@@ -228,12 +226,10 @@ public class AutoForBlueClose extends LinearOpMode { //FOR BLUE ALLIANCE CLOSE
 
                 case FEED_BALL:
                     if (stateTimer.seconds() > FEED_TIME) {
-                        robot.resetFeeder();
-                        ballsShot++;
+                        robot.resetFeed();
+                        ballsShot = 3;
 
-                        if (ballsShot < 3) {
-                            currentState = AutoState.SPIN_UP_SHOOTER;
-                        } else {
+                        if (ballsShot == 3) {
                             ballsShot = 0;
                             cycleIndex++;
                             currentState = AutoState.DONE;
