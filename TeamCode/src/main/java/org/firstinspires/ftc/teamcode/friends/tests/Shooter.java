@@ -11,7 +11,7 @@ import org.firstinspires.ftc.teamcode.friends.hardwareMap;
 public class Shooter extends LinearOpMode {
     hardwareMap robot;
     private static float turretPower = 0.0f;;
-    private double hoodPos = 1;
+    private double hoodPos = 0;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -52,10 +52,10 @@ public class Shooter extends LinearOpMode {
             ;
             robot.hood.setPosition(hoodPos);
 
-            if (currentGamepad1.triangle && !(previousGamepad1.triangle) && hoodPos < 2)
-                hoodPos += 0.05;
-            else if (currentGamepad1.square && !(previousGamepad1.square) && hoodPos > 1)
-                hoodPos -= 0.05;
+            if (currentGamepad1.triangle && !(previousGamepad1.triangle) && hoodPos < 1)
+                hoodPos += 0.01;
+            else if (currentGamepad1.square && !(previousGamepad1.square) && hoodPos > 0)
+                hoodPos -= 0.01;
 
             /// Turret Movement
 

@@ -6,20 +6,28 @@ import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathBuilder;
 import com.pedropathing.paths.PathChain;
+import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.teamcode.friends.hardwareMap;
+import org.firstinspires.ftc.teamcode.friends.vision.VisionAlign;
 
 @Autonomous(name = "Pedro Multi-Ball")
-public class AutoForRedClose extends LinearOpMode { //FOR RED ALLIANCE CLOSE
+public class AutoForRedClose extends LinearOpMode { //FOR BLUE ALLIANCE CLOSE
 
     hardwareMap robot; // Uses the Hardware map in teleOp
     Follower follower; // a Pedropathing thing that allows the robot to "follow" the paths
+    Limelight3A limelight;
+    VisionAlign visionAlign;
 
     enum AutoState { //Fun stuff
 
+        VISION_ALIGN,
         PRELOAD_DRIVE_TO_SHOOT,
         PRELOAD_SPIN_UP,
         PRELOAD_FEED,
@@ -27,6 +35,7 @@ public class AutoForRedClose extends LinearOpMode { //FOR RED ALLIANCE CLOSE
         DRIVE_TO_SHOOT,
         SPIN_UP_SHOOTER,
         FEED_BALL,
+        PARKING,
         DONE
     }
 
@@ -34,66 +43,131 @@ public class AutoForRedClose extends LinearOpMode { //FOR RED ALLIANCE CLOSE
 
     ElapsedTime stateTimer = new ElapsedTime(); // Controls the feeder duration without using sleep()
 
-    static final double TARGET_RPM = 2000; //RPM needs to be changed
+    static final double TARGET_RPM = 2000;
     static final double RPM_TOLERANCE = 100;
-    static final double FEED_TIME = 0.4;
+    static final double FEED_TIME = 2.5;
 
-    static final int MAX_CYCLES = 3; // Does runs through the state machine 3 times
+    int VisionCount = 0;
+    static final int MAX_CYCLES = 3; // runs through the state machine 3 times
     int cycleIndex = 0; // This checks through the intakeposes array
     int ballsShot = 0;
 
-    Pose startPose = new Pose(122, 121, 40);
-    Pose shootPose = new Pose(90, 85, Math.toRadians(40)); // At this position the goal is 70 inches away
+    Pose startPose = new Pose(119, 119, Math.toRadians(45));
+    Pose shootPose = new Pose(105, 105, Math.toRadians(45)); // At this position the goal is 70 inches away
 
+    Pose parkPose = new Pose(105, 112, Math.toRadians(45));
     Pose[] intakePoses = { // Cycle index cycles through these poses
-            new Pose(105, 85, 180),
-            new Pose(105, 60, 180),
-            new Pose(105, 35, 180)
+            new Pose(100, 85, Math.toRadians(90)),
+            new Pose(100, 60, Math.toRadians(90)),
+            new Pose(100, 35, Math.toRadians(90)),
     };
     Pose[] intakePoses2 = { // Cycle index cycles through these poses
-            new Pose(128, 85, 180),
-            new Pose(138, 60, 180),
-            new Pose(148, 35, 180)
+            new Pose(120, 85, Math.toRadians(90)),
+            new Pose(120, 60, Math.toRadians(90)),
+            new Pose(120, 35, Math.toRadians(90)),
     };
 
-    PathChain intakePath; // Paths are built on the fly and change every cycle
-    PathChain intakePath2;
+    PathChain intakeFullPath;
     PathChain shootPath;
     PathChain StartShootPath;
+    PathChain ParkPath;
 
 
 
     @Override
     public void runOpMode() {
 
+        limelight = hardwareMap.get(Limelight3A.class, "limelight"); //Make sure to name the Ethernet Device "limelight"
+        limelight.setPollRateHz(100);
+        limelight.start();
+        limelight.pipelineSwitch(0);
+
+        robot.turretMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        robot.turretMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
         robot = new hardwareMap(hardwareMap); // Starts robot hardware
         follower = Constants.createFollower(hardwareMap); // Creates pedro follower
         follower.setPose(startPose);
+        buildNewCycle();
+
+        visionAlign = new VisionAlign();
 
         telemetry.addLine("Ready");
         telemetry.update();
-        waitForStart(); // PRESS START queue geometry dash
+        waitForStart(); // PRESS START
 
-        robot.prepfeedBall();
+        robot.resetFeed();
         robot.setShooterRPM(TARGET_RPM); // Allows the shooter to be sped up before auto
         stateTimer.reset();
 
 
         while (opModeIsActive()) {
             follower.update(); // Updates follower position and must be called every loop
+            LLResult result = limelight.getLatestResult();
+
+
+            // Update visionAlign
+            int turretTicks = robot.turretMotor.getCurrentPosition();
+            visionAlign.update(result, true, turretTicks);
+            robot.turretMotor.setPower(visionAlign.turretRotatePower);
 
             switch (currentState) {
 
                 /* ---------- PRELOAD ---------- */
 
+                case VISION_ALIGN:
+                    if(!follower.isBusy())
+                    {
+                        /*------Mecanum Drive------*/
+
+                        double drive  = visionAlign.drivePowerClose;
+                        double strafe = 0;
+                        double rotate = 0; // lock rotation while aligning
+
+                        double fl = drive + strafe + rotate;
+                        double fr = drive - strafe - rotate;
+                        double bl = drive - strafe + rotate;
+                        double br = drive + strafe - rotate;
+
+                        fl = Range.clip(fl, -1, 1);
+                        fr = Range.clip(fr, -1, 1);
+                        bl = Range.clip(bl, -1, 1);
+                        br = Range.clip(br, -1, 1);
+
+                        robot.frontLeftMotor.setPower(fl);
+                        robot.frontRightMotor.setPower(fr);
+                        robot.backLeftMotor.setPower(bl);
+                        robot.backRightMotor.setPower(br);
+
+                        // If aligned within tolerance, move to shooter spin-up
+                        if (/*Math.abs(visionAlign.turretPower) < 0.05 &&8*/
+                                Math.abs(visionAlign.turretRotatePower) < 0.05 &&
+                                        Math.abs(visionAlign.drivePowerClose) < 0.05 &&
+                                        VisionCount == 0 ) {
+
+                            currentState = AutoState.PRELOAD_SPIN_UP;
+                            VisionCount++;
+                        }
+                        else if (/*Math.abs(visionAlign.turretPower) < 0.05 &&*/
+                                Math.abs(visionAlign.turretRotatePower) < 0.05 &&
+                                        Math.abs(visionAlign.drivePowerClose) < 0.05 &&
+                                        VisionCount > 0 ) {
+
+                            currentState = AutoState.SPIN_UP_SHOOTER;
+                        }
+
+                        break;
+                    }
+
+
                 case PRELOAD_DRIVE_TO_SHOOT:
                     follower.followPath(StartShootPath);
-                    currentState = AutoState.PRELOAD_SPIN_UP;
+                    currentState = AutoState.VISION_ALIGN;
                     break;
+
                 case PRELOAD_SPIN_UP:
                     if (robot.shooterAtSpeed(RPM_TOLERANCE) && !follower.isBusy()) { // Waits until shooter is at speed
-                        robot.feedBall();
-                        robot.prepfeedBall();
+                        robot.feedBall();//Raises feeder
                         stateTimer.reset(); // Allows the state timer to be used in other states
                         currentState = AutoState.PRELOAD_FEED; //Switches state
                     }
@@ -101,19 +175,18 @@ public class AutoForRedClose extends LinearOpMode { //FOR RED ALLIANCE CLOSE
 
                 case PRELOAD_FEED:
                     if (stateTimer.seconds() > FEED_TIME) { //Waits until feeder has been on long enough
-                        robot.resetFeeder(); // Stops feeder
-                        ballsShot++; // Counts ball
+                        robot.resetFeed(); // Lowers feeder
+                        ballsShot = 3; // Counts ball
 
-                        if (ballsShot < 3) {
-                            currentState = AutoState.PRELOAD_SPIN_UP;
-                        } else {
+                        if(ballsShot == 3)
+                        {
                             ballsShot = 0;
                             buildNewCycle();
                             robot.startIntake();
-                            follower.followPath(intakePath);
-                            follower.followPath(intakePath2);
+                            follower.followPath(intakeFullPath);
                             currentState = AutoState.DRIVE_TO_INTAKE;
-                            //Begins driving once all balls have been shot and starts intake motorss
+
+                            //Begins driving once all balls have been shot and starts intake motors
                         }
                     }
                     break;
@@ -131,7 +204,7 @@ public class AutoForRedClose extends LinearOpMode { //FOR RED ALLIANCE CLOSE
 
                 case DRIVE_TO_SHOOT:
                     if (!follower.isBusy()) {
-                        currentState = AutoState.SPIN_UP_SHOOTER;
+                        currentState = AutoState.VISION_ALIGN;
                     } // Waits until robot arrives
                     break;
 
@@ -140,7 +213,6 @@ public class AutoForRedClose extends LinearOpMode { //FOR RED ALLIANCE CLOSE
                 case SPIN_UP_SHOOTER:
                     if (robot.shooterAtSpeed(RPM_TOLERANCE)) {
                         robot.feedBall();
-                        robot.prepfeedBall();
                         stateTimer.reset();
                         currentState = AutoState.FEED_BALL;
                     }
@@ -148,16 +220,21 @@ public class AutoForRedClose extends LinearOpMode { //FOR RED ALLIANCE CLOSE
 
                 case FEED_BALL:
                     if (stateTimer.seconds() > FEED_TIME) {
-                        robot.resetFeeder();
-                        ballsShot++;
+                        robot.resetFeed();
+                        ballsShot = 3;
 
-                        if (ballsShot < 3) {
-                            currentState = AutoState.SPIN_UP_SHOOTER;
-                        } else {
+                        if (ballsShot == 3) {
                             ballsShot = 0;
                             cycleIndex++;
                             currentState = AutoState.DONE;
                         }
+                    }
+                    break;
+
+                case PARKING:
+                    if(cycleIndex >= MAX_CYCLES && !follower.isBusy())
+                    {
+                        follower.followPath(ParkPath);
                     }
                     break;
 
@@ -167,11 +244,11 @@ public class AutoForRedClose extends LinearOpMode { //FOR RED ALLIANCE CLOSE
                     if (cycleIndex < MAX_CYCLES) { // Checks if there are more cycles remaining
                         buildNewCycle();
                         robot.startIntake();
-                        follower.followPath(intakePath);
-                        follower.followPath(intakePath2);
+                        follower.followPath(intakeFullPath);
                         currentState = AutoState.DRIVE_TO_INTAKE;
                     } else {
-                        robot.stopShooter(); // Ends shooting
+                        robot.stopShooter();// Ends shooting
+                        currentState = AutoState.PARKING;
                     }
                     break;
             }
@@ -179,7 +256,14 @@ public class AutoForRedClose extends LinearOpMode { //FOR RED ALLIANCE CLOSE
             telemetry.addData("State", currentState);
             telemetry.addData("Cycle", cycleIndex);
             telemetry.addData("Pose", follower.getPose());
+
+            Pose pose = follower.getPose();
+            telemetry.addData("X", pose.getX());
+            telemetry.addData("Y", pose.getY());
+            telemetry.addData("Heading", Math.toDegrees(pose.getHeading()));
+
             telemetry.update();
+
         }
     }
 
@@ -187,16 +271,15 @@ public class AutoForRedClose extends LinearOpMode { //FOR RED ALLIANCE CLOSE
 
     private void buildNewCycle() { // Creates paths for the next cycle
         Pose currentPose = follower.getPose(); // Uses the robot's currentpose
+        if (cycleIndex >= intakePoses.length) return;
         Pose intakePose = intakePoses[cycleIndex]; // selects the right intake target
         Pose intakePose2 = intakePoses2[cycleIndex];
+        Pose parkingPose = parkPose;
 
-        intakePath = new PathBuilder(follower)
+        intakeFullPath = new PathBuilder(follower)
                 .addPath(new Path(new BezierCurve(currentPose, intakePose)))
-                .build(); // Builds the path to the intake
-
-        intakePath2 = new PathBuilder(follower)
                 .addPath(new Path(new BezierCurve(intakePose, intakePose2)))
-                .build(); // Builds the path to the end of the intake
+                .build();
 
         shootPath = new PathBuilder(follower)
                 .addPath(new Path(new BezierCurve(intakePose2, shootPose)))
@@ -205,6 +288,10 @@ public class AutoForRedClose extends LinearOpMode { //FOR RED ALLIANCE CLOSE
         StartShootPath = new PathBuilder(follower)
                 .addPath(new Path(new BezierCurve(startPose, shootPose)))
                 .build();
+        ParkPath = new PathBuilder(follower)
+                .addPath(new Path(new BezierCurve(currentPose, parkingPose)))
+                .build();
 
     }
+
 }

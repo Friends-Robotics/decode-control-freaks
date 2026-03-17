@@ -25,30 +25,7 @@ public class PinpointCalibration extends LinearOpMode {
 
         // Reset position & calibration
         pinpoint.resetPosAndIMU();
-
-        // -------- STEP 1 --------
-        telemetry.addLine("STEP 1: Keep robot STILL");
-        telemetry.update();
-        sleep(3000);
-
-        // -------- STEP 2 --------
-        telemetry.addLine("STEP 2: Push robot FORWARD 24-48 inches");
-        telemetry.update();
-        sleep(5000);
-
-        // -------- STEP 3 --------
-        telemetry.addLine("STEP 3: Push robot SIDEWAYS 24-48 inches");
-        telemetry.update();
-        sleep(5000);
-
-        // -------- STEP 4 --------
-        telemetry.addLine("STEP 4: Rotate robot slowly 360 degrees");
-        telemetry.update();
-        sleep(7000);
-
-        telemetry.addLine("Calibration Done!");
-        telemetry.update();
-        sleep(2000);
+        pinpoint.getPosition();;
 
         // -------- LIVE DATA --------
         while (opModeIsActive()) {

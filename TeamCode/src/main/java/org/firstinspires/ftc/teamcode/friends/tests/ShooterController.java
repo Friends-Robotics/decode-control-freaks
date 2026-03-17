@@ -21,9 +21,9 @@ public class ShooterController {
     int ballsToShoot = 0;
 
     // Tunables
-    double rampUpTime = 1.0;
+    double rampUpTime = 1.5;
     double feedTime = 0.25;
-    double spacingTime = 0.05;
+    double spacingTime = 0.10;
     double minRecoverTime = 0.15;
 
     double intakePower = 0.8;
@@ -40,6 +40,10 @@ public class ShooterController {
     }
 
     public void update(hardwareMap robot) {
+        double rpmScale = robot.targetShooterRPM / 3000;
+        double adjustedFeedTime = feedTime / rpmScale;
+        double adjustedSpacingTime = spacingTime / rpmScale;
+        double adjustedReversePower = reversePower / rpmScale;
 
         switch (currentState) {
 
@@ -52,7 +56,7 @@ public class ShooterController {
             case SPINNING_UP:
                 robot.setShooterRPM(robot.targetShooterRPM);
 
-                if (robot.shooterAtSpeed(40)) {
+                if (robot.shooterAtSpeed(100)&& timer.seconds() > 0.2) {
                     currentState = State.RAISING_RAMP;
                     timer.reset();
                 }
@@ -70,7 +74,7 @@ public class ShooterController {
             case FEEDING:
                 robot.intakeMotor.setPower(intakePower);
 
-                if (timer.seconds() > feedTime) {
+                if (timer.seconds() > adjustedFeedTime) {
                     robot.intakeMotor.setPower(0);
                     robot.resetFeed();
 
@@ -82,12 +86,12 @@ public class ShooterController {
 
             case SPACING:
                 if (ballsShot == 1) {
-                    robot.intakeMotor.setPower(reversePower);
+                    robot.intakeMotor.setPower(adjustedReversePower);
                 } else {
                     robot.intakeMotor.setPower(0); // no reverse
                 }
 
-                if (timer.seconds() > spacingTime) {
+                if (timer.seconds() > adjustedSpacingTime) {
                     robot.intakeMotor.setPower(0);
                     currentState = State.RECOVERING;
                     timer.reset();
@@ -97,7 +101,7 @@ public class ShooterController {
             case RECOVERING:
 
                 // wait until shooter actually recovers
-                if (robot.shooterAtSpeed(40) && timer.seconds() > minRecoverTime) {
+                if (robot.shooterAtSpeed(100) && timer.seconds() > minRecoverTime) {
 
                     ballsToShoot--;
 

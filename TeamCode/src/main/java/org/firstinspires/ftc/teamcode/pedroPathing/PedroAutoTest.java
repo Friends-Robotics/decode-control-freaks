@@ -28,7 +28,7 @@ public class PedroAutoTest extends LinearOpMode {
         // Path 1: Forward and right
         Pose[] path1 = new Pose[] {
                 new Pose(0, 0, 0),
-                new Pose(67, 0, 0),
+                new Pose(0, 0, 0),
                 new Pose(67, 67, Math.toRadians(90))
         };
 
