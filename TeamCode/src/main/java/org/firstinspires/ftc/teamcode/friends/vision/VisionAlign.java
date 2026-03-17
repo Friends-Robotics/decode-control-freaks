@@ -39,14 +39,14 @@ public class VisionAlign {
     /* -------- Constants -------- */
 
 
-    double kP_rotate = 0.5; // scales x-error → strafe power; higher = faster, lower = smoother
+    double kP_rotate = 0.7; // scales x-error → strafe power; higher = faster, lower = smoother
 
     double kP_drive  = 3.5;
 
     double MAX_DRIVE_POWER  = 0.6;
-    double MAX_ROTATE_TURRET_POWER = 0.15;
+    double MAX_ROTATE_TURRET_POWER = 0.10;
 
-    double ROTATE_TOLERANCE = 0.4; //Allows there to be some error
+    double ROTATE_TOLERANCE = 0.8; //Allows there to be some error
 
     double DRIVE_TOLERANCE  = 0.2;
     //Desired Shooting Distance is 60 inches at camera

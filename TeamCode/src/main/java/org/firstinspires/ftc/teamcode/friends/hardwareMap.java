@@ -43,9 +43,9 @@ public class hardwareMap {
     public hardwareMap(com.qualcomm.robotcore.hardware.HardwareMap hardwaremap) {
 
         frontRightMotor = hardwaremap.get(DcMotor.class, "FRM");
-        frontRightMotor.setDirection(DcMotorSimple.Direction.FORWARD);
+        frontRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         frontLeftMotor = hardwaremap.get(DcMotor.class, "FLM");
-        frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        frontLeftMotor.setDirection(DcMotorSimple.Direction.FORWARD);
         backRightMotor = hardwaremap.get(DcMotor.class, "BRM");
         backRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         backLeftMotor = hardwaremap.get(DcMotor.class, "BLM");
