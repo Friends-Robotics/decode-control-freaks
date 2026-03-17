@@ -36,7 +36,7 @@ public class hardwareMap {
     public DcMotor turretMotor;
 
     //Constants
-    public double targetShooterRPM = 3000;
+    public double targetShooterRPM = 3300;
     public static final double SHOOTER_TICKS_PER_REV = 15;
 
 
@@ -57,12 +57,12 @@ public class hardwareMap {
         shooterMotor1 = hardwaremap.get(DcMotorEx.class, "Shooter1");
         shooterMotor1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         shooterMotor1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        shooterMotor1.setDirection(DcMotorSimple.Direction.FORWARD);
+        shooterMotor1.setDirection(DcMotorSimple.Direction.REVERSE);
 
         shooterMotor2 = hardwaremap.get(DcMotorEx.class, "Shooter2");
         shooterMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         shooterMotor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        shooterMotor1.setDirection(DcMotorSimple.Direction.FORWARD);
+        shooterMotor2.setDirection(DcMotorSimple.Direction.REVERSE);
 
         turretMotor = hardwaremap.get(DcMotorEx.class, "Turret");
         turretMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -81,7 +81,7 @@ public class hardwareMap {
 
     //FEEDER
     public void resetFeed() {feeder.setPosition(0.0);}// Lowered
-    public void feedBall() {feeder.setPosition(0.35);} // High
+    public void feedBall() {feeder.setPosition(0.37);} // High
 
     //SHOOTER
     public void setShooterRPM(double rpm){

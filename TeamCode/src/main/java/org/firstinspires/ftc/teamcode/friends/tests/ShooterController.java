@@ -8,9 +8,10 @@ public class ShooterController {
     enum State {
         IDLE,
         SPINNING_UP,
-        FEEDING,
-        RECOVERING,
         RAISING_RAMP,
+        FEEDING,
+        SPACING,
+        RECOVERING
     }
 
     State currentState = State.IDLE;
@@ -19,12 +20,15 @@ public class ShooterController {
 
     int ballsToShoot = 0;
 
-    // Tunable timings
-
+    // Tunables
     double rampUpTime = 1.0;
-    double feedTime = 0.12;     // how long intake runs to push 1 ball
-    double recoverTime = 0.30;  // time between shots
-    double intakePower = 1.0;
+    double feedTime = 0.25;
+    double spacingTime = 0.05;
+    double minRecoverTime = 0.15;
+
+    double intakePower = 0.8;
+    double reversePower = -0.2;
+    int ballsShot = 0;
 
     public void startShooting(int count) {
         ballsToShoot = count;
@@ -44,11 +48,12 @@ public class ShooterController {
             case SPINNING_UP:
                 robot.setShooterRPM(robot.targetShooterRPM);
 
-                if (robot.shooterAtSpeed(50)) {
+                if (robot.shooterAtSpeed(40)) {
                     currentState = State.RAISING_RAMP;
                     timer.reset();
                 }
                 break;
+
             case RAISING_RAMP:
                 robot.feedBall();
 
@@ -65,6 +70,21 @@ public class ShooterController {
                     robot.intakeMotor.setPower(0);
                     robot.resetFeed();
 
+                    ballsShot++;
+                    currentState = State.SPACING; // 👈 go to spacing
+                    timer.reset();
+                }
+                break;
+
+            case SPACING:
+                if (ballsShot == 1) {
+                    robot.intakeMotor.setPower(reversePower);
+                } else {
+                    robot.intakeMotor.setPower(0); // no reverse
+                }
+
+                if (timer.seconds() > spacingTime) {
+                    robot.intakeMotor.setPower(0);
                     currentState = State.RECOVERING;
                     timer.reset();
                 }
@@ -72,7 +92,8 @@ public class ShooterController {
 
             case RECOVERING:
 
-                if (timer.seconds() > recoverTime) {
+                // wait until shooter actually recovers
+                if (robot.shooterAtSpeed(40) && timer.seconds() > minRecoverTime) {
 
                     ballsToShoot--;
 
@@ -80,11 +101,11 @@ public class ShooterController {
                         currentState = State.RAISING_RAMP;
                     } else {
                         currentState = State.IDLE;
-                        robot.intakeMotor.setPower(0);
                     }
 
                     timer.reset();
                 }
+
                 break;
         }
     }
