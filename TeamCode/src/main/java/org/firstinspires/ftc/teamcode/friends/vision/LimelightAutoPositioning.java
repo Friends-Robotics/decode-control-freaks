@@ -49,9 +49,9 @@ public class LimelightAutoPositioning extends LinearOpMode {
         while (opModeIsActive()) {
 
             // Driver inputs
-            double drive  = -gamepad1.left_stick_y;
-            double strafe =  gamepad1.left_stick_x;
-            double rotate =  gamepad1.right_stick_x;
+            double drive;
+            double strafe;
+            double rotate;
 
             LLResult result = limelight.getLatestResult();
 
