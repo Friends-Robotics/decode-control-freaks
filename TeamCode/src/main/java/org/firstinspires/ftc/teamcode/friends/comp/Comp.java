@@ -9,23 +9,23 @@ import org.firstinspires.ftc.teamcode.friends.hardwareMap;
 @TeleOp(name = "Comp")
 public class Comp extends LinearOpMode {
     // -------- Hardware --------
-    private static hardwareMap hwMap;
+    private static hardwareMap robot;
     // -------- State --------
-    private double speedModifier = 0.8;
+    public double speedModifier = 0.8;
     private float intakePower = -0.8f;
     private float shooterPower = 0.0f;
     private float turretPower = 0.0f;
     private float servoPosition = 0.0f;
 
     // -------- Gamepads --------
-    private final Gamepad currentGp1 = new Gamepad();
-    private final Gamepad previousGp1 = new Gamepad();
-    private final Gamepad currentGp2 = new Gamepad();
-    private final Gamepad previousGp2 = new Gamepad();
+    public final Gamepad currentGp1 = new Gamepad();
+    public final Gamepad previousGp1 = new Gamepad();
+    public final Gamepad currentGp2 = new Gamepad();
+    public final Gamepad previousGp2 = new Gamepad();
 
     @Override
     public void runOpMode() throws InterruptedException {
-        hwMap = new hardwareMap(hardwareMap);
+        robot = new hardwareMap(hardwareMap);
 
         waitForStart();
         if (isStopRequested()) return;
@@ -47,7 +47,7 @@ public class Comp extends LinearOpMode {
     // Initialization
     // =========================
 
-    private void updateGamepads() {
+    public void updateGamepads() {
         previousGp1.copy(currentGp1);
         currentGp1.copy(gamepad1);
 
@@ -59,7 +59,7 @@ public class Comp extends LinearOpMode {
     // Gamepad 1 — Drive
     // =========================
 
-    private void handleDrive() {
+    public void handleDrive() {
         if (currentGp1.touchpad && !previousGp1.touchpad) {
             speedModifier = (speedModifier == 0.8) ? 1.0 : 0.8;
         }
@@ -75,17 +75,17 @@ public class Comp extends LinearOpMode {
         double fr = (y - x - rx) / denominator;
         double br = (y + x - rx) / denominator;
 
-        hwMap.frontLeftMotor.setPower(fl * speedModifier);
-        hwMap.backLeftMotor.setPower(bl * speedModifier);
-        hwMap.frontRightMotor.setPower(fr * speedModifier);
-        hwMap.backRightMotor.setPower(br * speedModifier);
+        robot.frontLeftMotor.setPower(fl * speedModifier);
+        robot.backLeftMotor.setPower(bl * speedModifier);
+        robot.frontRightMotor.setPower(fr * speedModifier);
+        robot.backRightMotor.setPower(br * speedModifier);
     }
 
     // =========================
     // Gamepad 2 — Intake
     // =========================
 
-    private void handleIntake() {
+    public void handleIntake() {
         if (currentGp2.right_trigger > 0.8 && previousGp2.right_trigger <= 0.8) {
             intakePower = 0.8f;
         }
@@ -95,9 +95,9 @@ public class Comp extends LinearOpMode {
         }
 
         if (currentGp2.x) {
-            hwMap.intakeMotor.setPower(intakePower);
+            robot.intakeMotor.setPower(intakePower);
         } else {
-            hwMap.intakeMotor.setPower(0);
+            robot.intakeMotor.setPower(0);
         }
     }
 
@@ -117,11 +117,11 @@ public class Comp extends LinearOpMode {
         shooterPower = clamp(shooterPower, -1.0f, 1.0f);
 
         if (currentGp2.touchpad) {
-            hwMap.shooterMotor1.setPower(shooterPower);
-            hwMap.shooterMotor2.setPower(shooterPower);
+            robot.shooterMotor1.setPower(shooterPower);
+            robot.shooterMotor2.setPower(shooterPower);
         } else {
-            hwMap.shooterMotor1.setPower(0);
-            hwMap.shooterMotor2.setPower(0);
+            robot.shooterMotor1.setPower(0);
+            robot.shooterMotor2.setPower(0);
         }
     }
 
@@ -146,7 +146,7 @@ public class Comp extends LinearOpMode {
     // Gamepad 2 — Turret
     // =========================
 
-    private void handleTurret() {
+    public void handleTurret() {
         if (currentGp2.left_bumper && !previousGp2.left_bumper) {
             turretPower -= 0.1f;
         }
@@ -156,7 +156,7 @@ public class Comp extends LinearOpMode {
         }
 
         turretPower = clamp(turretPower, -1.0f, 1.0f);
-        hwMap.turretMotor.setPower(turretPower);
+        robot.turretMotor.setPower(turretPower);
     }
 
     // =========================
@@ -171,10 +171,10 @@ public class Comp extends LinearOpMode {
     // Telemetry
     // =========================
 
-    private void sendTelemetry() {
+    public void sendTelemetry() {
         telemetry.addData("Drive Speed", speedModifier);
         telemetry.addData("Intake Power", intakePower);
-        telemetry.addData("Shooter Power", shooterPower);
+        telemetry.addData("Shooter RPM", robot.getShooterRPM());
         telemetry.addData("Turret Power", turretPower);
         telemetry.addData("Servo Position", servoPosition);
         telemetry.update();

@@ -42,6 +42,7 @@ public class ShooterController {
 
             case IDLE:
                 robot.intakeMotor.setPower(0);
+                robot.stopShooter();
                 robot.resetFeed();
                 break;
 
@@ -71,7 +72,7 @@ public class ShooterController {
                     robot.resetFeed();
 
                     ballsShot++;
-                    currentState = State.SPACING; // 👈 go to spacing
+                    currentState = State.SPACING;
                     timer.reset();
                 }
                 break;
