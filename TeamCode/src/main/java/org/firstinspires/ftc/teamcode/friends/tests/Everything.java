@@ -37,9 +37,9 @@ public class Everything extends LinearOpMode {
             comp.sendTelemetry();
 
             //Vision + ALIGN
-            double drive  = -comp.currentGp1.left_stick_y;
-            double strafe =  comp.currentGp1.left_stick_x;
-            double rotate =  comp.currentGp1.right_stick_x;
+            double drives  = -comp.currentGp1.left_stick_y;
+            double strafes =  comp.currentGp1.left_stick_x;
+            double rotates =  comp.currentGp1.right_stick_x;
 
             if(!AutoShoot.isBusy() || !comp.currentGp2.dpad_right )
             {
@@ -47,9 +47,9 @@ public class Everything extends LinearOpMode {
             }
             if(!AutoShoot.isBusy() || !comp.currentGp2.dpad_right && comp.currentGp1.right_bumper)
             {
-                drive = vision.drivePowerClose;
-                strafe = 0;
-                rotate = 0;
+                drives = vision.drivePowerClose;
+                strafes = 0;
+                rotates = 0;
             }
 
             // Driver controls

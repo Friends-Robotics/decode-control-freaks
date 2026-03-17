@@ -65,26 +65,30 @@ public class LimelightAutoPositioning extends LinearOpMode {
                 strafe = 0;
                 rotate = 0;
             }
-            if (gamepad1.left_bumper && result != null && result.isValid() && !gamepad1.right_bumper) {
+            else if (gamepad1.left_bumper && result != null && result.isValid() && !gamepad1.right_bumper) {
                 drive  = visionAlign.drivePowerFar;
                 strafe = 0;
                 rotate = 0;
             }
+            else{
+                    // Manual control
+                    drive  = -gamepad1.left_stick_y;
+                    strafe = gamepad1.left_stick_x * 1.1;
+                    rotate = gamepad1.right_stick_x;
+            }
+
 
 
             robot.turretMotor.setPower(visionAlign.turretRotatePower);
 
             // -------- Mecanum Drive --------
-            double y  = -gamepad1.left_stick_y;
-            double x  = gamepad1.left_stick_x * 1.1;
-            double rx = gamepad1.right_stick_x;
 
-            double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
+            double denominator = Math.max(Math.abs(drive) + Math.abs(strafe) + Math.abs(rotate), 1);
 
-            double fl = (y + x + rx) / denominator;
-            double bl = (y - x + rx) / denominator;
-            double fr = (y - x - rx) / denominator;
-            double br = (y + x - rx) / denominator;
+            double fl = (drive + strafe + rotate) / denominator;
+            double bl = (drive - strafe + rotate) / denominator;
+            double fr = (drive - strafe - rotate) / denominator;
+            double br = (drive + strafe - rotate) / denominator;
 
             robot.frontLeftMotor.setPower(fl);
             robot.backLeftMotor.setPower(bl);
