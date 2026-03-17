@@ -4,10 +4,8 @@ import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
-import org.firstinspires.ftc.teamcode.friends.comp.OneController;
 import org.firstinspires.ftc.teamcode.friends.hardwareMap;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 
@@ -59,14 +57,20 @@ public class LimelightAutoPositioning extends LinearOpMode {
 
             int turretTicks = robot.turretMotor.getCurrentPosition();
 
-            boolean turretLock = gamepad1.left_bumper;
+            boolean turretLock = gamepad1.triangle;
             visionAlign.update(result, !turretLock, turretTicks);
 
-            if (gamepad1.right_bumper && result != null && result.isValid()) {
-                drive  = visionAlign.drivePower;
+            if (gamepad1.right_bumper && result != null && result.isValid() && !gamepad1.left_bumper) {
+                drive  = visionAlign.drivePowerClose;
                 strafe = 0;
                 rotate = 0;
             }
+            if (gamepad1.left_bumper && result != null && result.isValid() && !gamepad1.right_bumper) {
+                drive  = visionAlign.drivePowerFar;
+                strafe = 0;
+                rotate = 0;
+            }
+
 
             robot.turretMotor.setPower(visionAlign.turretRotatePower);
 
@@ -89,7 +93,7 @@ public class LimelightAutoPositioning extends LinearOpMode {
             // -------- Telemetry --------
             telemetry.addData("Vision Active", gamepad1.right_bumper);
             telemetry.addData("Turret Angle  Power", visionAlign.turretPower);
-            telemetry.addData("Drive Power", visionAlign.drivePower);
+            telemetry.addData("Drive Power", visionAlign.drivePowerClose);
             telemetry.addData("Locked", turretLock );
             telemetry.addData("State", visionAlign.currentState);
             telemetry.addData("TurretAngle", visionAlign.currentTurretAngle);

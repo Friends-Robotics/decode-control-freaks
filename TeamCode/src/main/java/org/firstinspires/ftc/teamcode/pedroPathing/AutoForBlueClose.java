@@ -126,7 +126,7 @@ public class AutoForBlueClose extends LinearOpMode { //FOR BLUE ALLIANCE CLOSE
                     {
                         /*------Mecanum Drive------*/
 
-                        double drive  = visionAlign.drivePower;
+                        double drive  = visionAlign.drivePowerClose;
                         double strafe = 0;
                         double rotate = 0; // lock rotation while aligning
 
@@ -148,7 +148,7 @@ public class AutoForBlueClose extends LinearOpMode { //FOR BLUE ALLIANCE CLOSE
                         // If aligned within tolerance, move to shooter spin-up
                         if (/*Math.abs(visionAlign.turretPower) < 0.05 &&8*/
                                 Math.abs(visionAlign.turretRotatePower) < 0.05 &&
-                                        Math.abs(visionAlign.drivePower) < 0.05 &&
+                                        Math.abs(visionAlign.drivePowerClose) < 0.05 &&
                                         VisionCount == 0 ) {
 
                             currentState = AutoState.PRELOAD_SPIN_UP;
@@ -156,7 +156,7 @@ public class AutoForBlueClose extends LinearOpMode { //FOR BLUE ALLIANCE CLOSE
                         }
                         else if (/*Math.abs(visionAlign.turretPower) < 0.05 &&*/
                                 Math.abs(visionAlign.turretRotatePower) < 0.05 &&
-                                        Math.abs(visionAlign.drivePower) < 0.05 &&
+                                        Math.abs(visionAlign.drivePowerClose) < 0.05 &&
                                         VisionCount > 0 ) {
 
                             currentState = AutoState.SPIN_UP_SHOOTER;

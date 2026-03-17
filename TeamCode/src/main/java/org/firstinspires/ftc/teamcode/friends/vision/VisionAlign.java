@@ -5,16 +5,14 @@ import com.qualcomm.robotcore.util.Range;
 
 import com.qualcomm.hardware.limelightvision.LLResult;
 
-import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
-
-
 
 public class VisionAlign {
 
 
     /* -------- Outputs -------- */
     public double turretPower = 0;
-    public double drivePower  = 0;
+    public double drivePowerClose = 0;
+    public double drivePowerFar = 0;
     public double turretRotatePower = 0;
 
     /* ---------- Turret Angle Limits ---------- */
@@ -78,7 +76,7 @@ public class VisionAlign {
         currentTurretAngle = (turretEncoderTicks) / TICKS_PER_DEGREE;
 
         turretRotatePower = 0;
-        drivePower = 0;
+        drivePowerClose = 0;
 
         // ---------------- STATE TRANSITIONS ----------------
 
@@ -126,18 +124,33 @@ public class VisionAlign {
                 // Distance control
                 double targetArea = results.getTa();
 
-                double desiredArea = 1.14; // % of tag occupied at 60 inches
+                double desiredAreaClose = 1.14; // % of tag occupied at 60 inches
+                double desiredAreaFar =0.2874;
 
-                double areaError = desiredArea - targetArea;
+                double areaErrorClose = desiredAreaClose - targetArea;
+                double areaErrorFar = desiredAreaFar - targetArea;
 
-                if (Math.abs(areaError) > DRIVE_TOLERANCE) {
-                    drivePower = Range.clip(areaError * kP_drive, -MAX_DRIVE_POWER, MAX_DRIVE_POWER);
+                //DrivePower for close shooting
+
+                if (Math.abs(areaErrorClose) > DRIVE_TOLERANCE) {
+                    drivePowerClose = Range.clip(areaErrorClose * kP_drive, -MAX_DRIVE_POWER, MAX_DRIVE_POWER);
                 }
-                if (Math.abs(areaError) < 0.2) {
-                    drivePower = 0;
+                if (Math.abs(areaErrorClose) <= DRIVE_TOLERANCE) {
+                    drivePowerClose = 0;
                 }
                 if (results == null || !results.isValid()) {
-                    drivePower = 0;
+                    drivePowerClose = 0;
+                }
+
+                //DrivePower for far shooting
+                if (Math.abs(areaErrorFar) > DRIVE_TOLERANCE) {
+                    drivePowerFar = Range.clip(areaErrorFar * kP_drive, -MAX_DRIVE_POWER, MAX_DRIVE_POWER);
+                }
+                if (Math.abs(areaErrorFar) <= DRIVE_TOLERANCE) {
+                    drivePowerFar = 0;
+                }
+                if (results == null || !results.isValid()) {
+                    drivePowerFar = 0;
                 }
 
                 break;

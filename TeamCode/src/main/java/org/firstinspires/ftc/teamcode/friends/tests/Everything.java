@@ -47,7 +47,7 @@ public class Everything extends LinearOpMode {
             }
             if(!AutoShoot.isBusy() || !comp.currentGp2.dpad_right && comp.currentGp1.right_bumper)
             {
-                drive = vision.drivePower;
+                drive = vision.drivePowerClose;
                 strafe = 0;
                 rotate = 0;
             }
