@@ -2,10 +2,7 @@ package org.firstinspires.ftc.teamcode.friends.tests;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Gamepad;
-import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.teamcode.friends.hardwareMap;
@@ -21,6 +18,7 @@ public class Shooter extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
 
         robot = new hardwareMap(hardwareMap);
+        ShooterController shooterController = new ShooterController();
 
         waitForStart();
 
@@ -33,20 +31,22 @@ public class Shooter extends LinearOpMode {
             previousGamepad1.copy(currentGamepad1);
             currentGamepad1.copy(gamepad1);
 
-            /// Shooting
-            if(gamepad1.touchpad) {
-                robot.setShooterRPM(robot.targetRPM);
-            } else {
-                robot.stopShooter();
-            }
-            if (currentGamepad1.dpad_up && !previousGamepad1.dpad_up) {
-                robot.targetRPM += 100f;
-            }
-            if (currentGamepad1.dpad_down && !previousGamepad1.dpad_down){
-                robot.targetRPM -= 100f;
+            // SHOOTING
+            // Start shooting 3 balls
+            if (gamepad1.a && !shooterController.isBusy()) {
+                shooterController.startShooting(3);
             }
 
-            robot.targetRPM = Range.clip(robot.targetRPM, 0, 6000);
+            // Update every loop
+            shooterController.update(robot);
+            if (currentGamepad1.dpad_up && !previousGamepad1.dpad_up) {
+                robot.targetShooterRPM += 100f;
+            }
+            if (currentGamepad1.dpad_down && !previousGamepad1.dpad_down){
+                robot.targetShooterRPM -= 100f;
+            }
+
+            robot.targetShooterRPM = Range.clip(robot.targetShooterRPM, 0, 6000);
 
 
             /// Shooter Angle
@@ -83,7 +83,7 @@ public class Shooter extends LinearOpMode {
                 sleep(5000);
             }
 
-            telemetry.addData("Target RPM", robot.targetRPM);
+            telemetry.addData("Target RPM", robot.targetShooterRPM);
             telemetry.addData("Current RPM", robot.getShooterRPM());
             telemetry.addData("At Speed", robot.shooterAtSpeed(50));
             telemetry.addData("Power: ", shooterPower);
