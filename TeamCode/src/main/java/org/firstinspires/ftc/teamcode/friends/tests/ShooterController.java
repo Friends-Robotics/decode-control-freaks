@@ -40,7 +40,7 @@ public class ShooterController {
     }
 
     public void update(hardwareMap robot) {
-        double rpmScale = robot.targetShooterRPM / 3000;
+        double rpmScale = robot.targetShooterRPM / 3300; //3300 is the targetrpm for close shooting
         double adjustedFeedTime = feedTime / rpmScale;
         double adjustedSpacingTime = spacingTime / rpmScale;
         double adjustedReversePower = reversePower / rpmScale;
@@ -56,7 +56,7 @@ public class ShooterController {
             case SPINNING_UP:
                 robot.setShooterRPM(robot.targetShooterRPM);
 
-                if (robot.shooterAtSpeed(100)&& timer.seconds() > 0.2) {
+                if (robot.shooterAtSpeed(50)&& timer.seconds() > 0.2) {
                     currentState = State.RAISING_RAMP;
                     timer.reset();
                 }
@@ -101,7 +101,7 @@ public class ShooterController {
             case RECOVERING:
 
                 // wait until shooter actually recovers
-                if (robot.shooterAtSpeed(100) && timer.seconds() > minRecoverTime) {
+                if (robot.shooterAtSpeed(50) && timer.seconds() > minRecoverTime) {
 
                     ballsToShoot--;
 

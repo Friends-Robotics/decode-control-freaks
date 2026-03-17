@@ -2,72 +2,57 @@ package org.firstinspires.ftc.teamcode.pedroPathing;
 
 import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.Pose;
+import com.pedropathing.paths.Path;
+import com.pedropathing.paths.PathBuilder;
+import com.pedropathing.paths.PathChain;
+import com.pedropathing.follower.Follower;
 
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
-
-import com.pedropathing.paths.Path;
-import com.pedropathing.paths.PathBuilder;
-import com.pedropathing.paths.PathChain;
-
-import com.pedropathing.follower.Follower;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.teamcode.friends.hardwareMap;
 import org.firstinspires.ftc.teamcode.friends.vision.VisionAlign;
+import org.firstinspires.ftc.teamcode.friends.tests.ShooterController;
 
-@Autonomous(name = "Pedro Multi-Ball")
-public class AutoForBlueClose extends LinearOpMode { //FOR BLUE ALLIANCE CLOSE
+@Autonomous(name = "AutoBlueClose")
+public class AutoForBlueClose extends LinearOpMode {
 
-    hardwareMap robot; // Uses the Hardware map in teleOp
-    Follower follower; // a Pedropathing thing that allows the robot to "follow" the paths
+    // ---------- Hardware ----------
+    hardwareMap robot;
+    Follower follower;
     Limelight3A limelight;
     VisionAlign visionAlign;
+    ShooterController shooterController;
 
-
-
-
-    enum AutoState { //Fun stuff
-
+    // ---------- Autonomous states ----------
+    enum AutoState {
+        DRIVE_TO_PRELOAD,
         VISION_ALIGN,
-        PRELOAD_DRIVE_TO_SHOOT,
-        PRELOAD_SPIN_UP,
-        PRELOAD_FEED,
+        SHOOTING_CYCLE,
         DRIVE_TO_INTAKE,
         DRIVE_TO_SHOOT,
-        SPIN_UP_SHOOTER,
-        FEED_BALL,
         PARKING,
         DONE
     }
 
-    AutoState currentState = AutoState.PRELOAD_DRIVE_TO_SHOOT; // Makes sure the first state is the first state
+    AutoState currentState = AutoState.DRIVE_TO_PRELOAD;
+    ElapsedTime stateTimer = new ElapsedTime();
 
-    ElapsedTime stateTimer = new ElapsedTime(); // Controls the feeder duration without using sleep()
-
-    static final double TARGET_RPM = 2000;
-    static final double RPM_TOLERANCE = 100;
-    static final double FEED_TIME = 2.5;
-
-    int VisionCount = 0;
-    static final int MAX_CYCLES = 3; // runs through the state machine 3 times
-    int cycleIndex = 0; // This checks through the intakeposes array
-    int ballsShot = 0;
-
+    // ---------- Poses ----------
     Pose startPose = new Pose(16, 130, Math.toRadians(135));
-    Pose shootPose = new Pose(60, 84, Math.toRadians(135)); // At this position the goal is 70 inches away
-
+    Pose shootPose = new Pose(60, 84, Math.toRadians(135));
     Pose parkPose = new Pose(60, 108, Math.toRadians(135));
-    Pose[] intakePoses = { // Cycle index cycles through these poses
+
+    Pose[] intakePoses = {
             new Pose(35, 85, Math.toRadians(180)),
             new Pose(35, 60, Math.toRadians(180)),
             new Pose(35, 35, Math.toRadians(180)),
     };
-    Pose[] intakePoses2 = { // Cycle index cycles through these poses
+    Pose[] intakePoses2 = {
             new Pose(8, 85, Math.toRadians(180)),
             new Pose(8, 60, Math.toRadians(180)),
             new Pose(8, 35, Math.toRadians(180)),
@@ -78,131 +63,102 @@ public class AutoForBlueClose extends LinearOpMode { //FOR BLUE ALLIANCE CLOSE
     PathChain StartShootPath;
     PathChain ParkPath;
 
-
+    int cycleIndex = 0;
+    static final int MAX_CYCLES = 3;
 
     @Override
     public void runOpMode() {
 
-        limelight = hardwareMap.get(Limelight3A.class, "limelight"); //Make sure to name the Ethernet Device "limelight"
+        // ---------- Initialize ----------
+        robot = new hardwareMap(hardwareMap);
+        follower = Constants.createFollower(hardwareMap);
+        follower.setPose(startPose);
+
+        limelight = hardwareMap.get(Limelight3A.class, "limelight");
         limelight.setPollRateHz(100);
         limelight.start();
         limelight.pipelineSwitch(0);
 
-        robot.turretMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        robot.turretMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-        robot = new hardwareMap(hardwareMap); // Starts robot hardware
-        follower = Constants.createFollower(hardwareMap); // Creates pedro follower
-        follower.setPose(startPose);
-        buildNewCycle();
-
         visionAlign = new VisionAlign();
+        shooterController = new ShooterController();
+
+        robot.turretMotor.setMode(com.qualcomm.robotcore.hardware.DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        robot.turretMotor.setMode(com.qualcomm.robotcore.hardware.DcMotor.RunMode.RUN_USING_ENCODER);
+
+        buildNewCycle();
 
         telemetry.addLine("Ready");
         telemetry.update();
-        waitForStart(); // PRESS START
+        waitForStart();
 
-        robot.resetFeed();
-        robot.setShooterRPM(TARGET_RPM); // Allows the shooter to be sped up before auto
+        robot.startIntake(); // start intake if preload ball exists
         stateTimer.reset();
 
-
+        // ---------- Main loop ----------
         while (opModeIsActive()) {
-            follower.update(); // Updates follower position and must be called every loop
+
+            follower.update(); // updates pose via Pinpoint
             LLResult result = limelight.getLatestResult();
-
-
-            // Update visionAlign
             int turretTicks = robot.turretMotor.getCurrentPosition();
             visionAlign.update(result, true, turretTicks);
             robot.turretMotor.setPower(visionAlign.turretRotatePower);
 
+            // ---------- Shooter Controller update ----------
+            shooterController.update(robot);
+
             switch (currentState) {
 
-                /* ---------- PRELOAD ---------- */
+                case DRIVE_TO_PRELOAD:
+                    follower.followPath(StartShootPath);
+                    currentState = AutoState.VISION_ALIGN;
+                    break;
 
                 case VISION_ALIGN:
-                    if(!follower.isBusy())
-                    {
-                        /*------Mecanum Drive------*/
-
-                        double drive  = visionAlign.drivePowerClose;
+                    if (!follower.isBusy()) {
+                        double drive = visionAlign.drivePowerClose;
                         double strafe = 0;
-                        double rotate = 0; // lock rotation while aligning
+                        double rotate = 0;
 
-                        double fl = drive + strafe + rotate;
-                        double fr = drive - strafe - rotate;
-                        double bl = drive - strafe + rotate;
-                        double br = drive + strafe - rotate;
-
-                        fl = Range.clip(fl, -1, 1);
-                        fr = Range.clip(fr, -1, 1);
-                        bl = Range.clip(bl, -1, 1);
-                        br = Range.clip(br, -1, 1);
+                        double fl = Range.clip(drive + strafe + rotate, -1, 1);
+                        double fr = Range.clip(drive - strafe - rotate, -1, 1);
+                        double bl = Range.clip(drive - strafe + rotate, -1, 1);
+                        double br = Range.clip(drive + strafe - rotate, -1, 1);
 
                         robot.frontLeftMotor.setPower(fl);
                         robot.frontRightMotor.setPower(fr);
                         robot.backLeftMotor.setPower(bl);
                         robot.backRightMotor.setPower(br);
 
-                        // If aligned within tolerance, move to shooter spin-up
-                        if (/*Math.abs(visionAlign.turretPower) < 0.05 &&8*/
-                                Math.abs(visionAlign.turretRotatePower) < 0.05 &&
-                                        Math.abs(visionAlign.drivePowerClose) < 0.05 &&
-                                        VisionCount == 0 ) {
+                        if (Math.abs(visionAlign.turretRotatePower) < 0.05 &&
+                                Math.abs(visionAlign.drivePowerClose) < 0.05) {
 
-                            currentState = AutoState.PRELOAD_SPIN_UP;
-                            VisionCount++;
+                            // Start shooting cycle for 3 balls
+                            shooterController.startShooting(3, 1.0);
+                            currentState = AutoState.SHOOTING_CYCLE;
                         }
-                        else if (/*Math.abs(visionAlign.turretPower) < 0.05 &&*/
-                                Math.abs(visionAlign.turretRotatePower) < 0.05 &&
-                                        Math.abs(visionAlign.drivePowerClose) < 0.05 &&
-                                        VisionCount > 0 ) {
-
-                            currentState = AutoState.SPIN_UP_SHOOTER;
-                        }
-
-                        break;
-                    }
-
-
-                case PRELOAD_DRIVE_TO_SHOOT:
-                    follower.followPath(StartShootPath);
-                    currentState = AutoState.VISION_ALIGN;
-                    break;
-
-                case PRELOAD_SPIN_UP:
-                    if (robot.shooterAtSpeed(RPM_TOLERANCE) && !follower.isBusy()) { // Waits until shooter is at speed
-                        robot.feedBall();//Raises feeder
-                        stateTimer.reset(); // Allows the state timer to be used in other states
-                        currentState = AutoState.PRELOAD_FEED; //Switches state
                     }
                     break;
 
-                case PRELOAD_FEED:
-                    if (stateTimer.seconds() > FEED_TIME) { //Waits until feeder has been on long enough
-                        robot.resetFeed(); // Lowers feeder
-                        ballsShot = 3; // Counts ball
+                case SHOOTING_CYCLE:
+                    // Wait for ShooterController to finish
+                    if (!shooterController.isBusy()) {
 
-                        if(ballsShot == 3)
-                        {
-                            ballsShot = 0;
+                        // Start intake cycle
+                        if (cycleIndex < MAX_CYCLES) {
                             buildNewCycle();
                             robot.startIntake();
                             follower.followPath(intakeFullPath);
                             currentState = AutoState.DRIVE_TO_INTAKE;
-
-                            //Begins driving once all balls have been shot and starts intake motors
+                        } else {
+                            currentState = AutoState.PARKING;
                         }
                     }
                     break;
 
-                /* ---------- INTAKE ---------- */
-
                 case DRIVE_TO_INTAKE:
-                    if (!follower.isBusy()) { // Path finished
+                    if (!follower.isBusy()) {
                         robot.stopIntake();
-                        robot.setShooterRPM(TARGET_RPM); // Causes shooter to spin while it spins to the shooting position
+                        robot.setShooterRPM(robot.targetShooterRPM); // spin shooter while driving to shooting pos
                         follower.followPath(shootPath);
                         currentState = AutoState.DRIVE_TO_SHOOT;
                     }
@@ -210,77 +166,42 @@ public class AutoForBlueClose extends LinearOpMode { //FOR BLUE ALLIANCE CLOSE
 
                 case DRIVE_TO_SHOOT:
                     if (!follower.isBusy()) {
-                        currentState = AutoState.VISION_ALIGN;
-                    } // Waits until robot arrives
-                    break;
-
-                /* ---------- SHOOT ---------- */
-
-                case SPIN_UP_SHOOTER:
-                    if (robot.shooterAtSpeed(RPM_TOLERANCE)) {
-                        robot.feedBall();
-                        stateTimer.reset();
-                        currentState = AutoState.FEED_BALL;
-                    }
-                    break;
-
-                case FEED_BALL:
-                    if (stateTimer.seconds() > FEED_TIME) {
-                        robot.resetFeed();
-                        ballsShot = 3;
-
-                        if (ballsShot == 3) {
-                            ballsShot = 0;
-                            cycleIndex++;
-                            currentState = AutoState.DONE;
-                        }
+                        currentState = AutoState.VISION_ALIGN; // align and shoot next cycle
+                        cycleIndex++;
                     }
                     break;
 
                 case PARKING:
-                    if(cycleIndex >= MAX_CYCLES && !follower.isBusy())
-                    {
+                    if (!follower.isBusy()) {
                         follower.followPath(ParkPath);
+                        currentState = AutoState.DONE;
                     }
                     break;
 
-                /* ---------- LOOP ---------- */
-
                 case DONE:
-                    if (cycleIndex < MAX_CYCLES) { // Checks if there are more cycles remaining
-                        buildNewCycle();
-                        robot.startIntake();
-                        follower.followPath(intakeFullPath);
-                        currentState = AutoState.DRIVE_TO_INTAKE;
-                    } else {
-                        robot.stopShooter();// Ends shooting
-                        currentState = AutoState.PARKING;
-                    }
+                    robot.stopShooter();
+                    robot.stopIntake();
                     break;
             }
 
+            // ---------- Telemetry ----------
             telemetry.addData("State", currentState);
             telemetry.addData("Cycle", cycleIndex);
-            telemetry.addData("Pose", follower.getPose());
-
             Pose pose = follower.getPose();
             telemetry.addData("X", pose.getX());
             telemetry.addData("Y", pose.getY());
             telemetry.addData("Heading", Math.toDegrees(pose.getHeading()));
-
             telemetry.update();
-
         }
     }
 
-    /* ---------- PATH BUILDER ---------- */
-
-    private void buildNewCycle() { // Creates paths for the next cycle
-        Pose currentPose = follower.getPose(); // Uses the robot's currentpose
+    /* ---------- Build Paths ---------- */
+    private void buildNewCycle() {
+        Pose currentPose = follower.getPose();
         if (cycleIndex >= intakePoses.length) return;
-        Pose intakePose = intakePoses[cycleIndex]; // selects the right intake target
+
+        Pose intakePose = intakePoses[cycleIndex];
         Pose intakePose2 = intakePoses2[cycleIndex];
-        Pose parkingPose = parkPose;
 
         intakeFullPath = new PathBuilder(follower)
                 .addPath(new Path(new BezierCurve(currentPose, intakePose)))
@@ -289,15 +210,14 @@ public class AutoForBlueClose extends LinearOpMode { //FOR BLUE ALLIANCE CLOSE
 
         shootPath = new PathBuilder(follower)
                 .addPath(new Path(new BezierCurve(intakePose2, shootPose)))
-                .build(); // Same as above but for shooter
+                .build();
 
         StartShootPath = new PathBuilder(follower)
                 .addPath(new Path(new BezierCurve(startPose, shootPose)))
                 .build();
+
         ParkPath = new PathBuilder(follower)
-                .addPath(new Path(new BezierCurve(currentPose, parkingPose)))
+                .addPath(new Path(new BezierCurve(currentPose, parkPose)))
                 .build();
-
     }
-
 }
