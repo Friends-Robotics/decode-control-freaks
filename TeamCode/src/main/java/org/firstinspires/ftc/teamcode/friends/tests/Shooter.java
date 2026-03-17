@@ -10,9 +10,8 @@ import org.firstinspires.ftc.teamcode.friends.hardwareMap;
 @TeleOp(name = "Shooter Test")
 public class Shooter extends LinearOpMode {
     hardwareMap robot;
-    private static float shooterPower = 0.0f;
-    private static float turretPower = 0.0f;
-    private static float servoPosition = 0.0f;
+    private static float turretPower = 0.0f;;
+    private double hoodPos = 1;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -34,7 +33,7 @@ public class Shooter extends LinearOpMode {
             // SHOOTING
             // Start shooting 3 balls
             if (gamepad1.a && !shooterController.isBusy()) {
-                shooterController.startShooting(3);
+                shooterController.startShooting(3, hoodPos);
             }
 
             // Update every loop
@@ -42,7 +41,7 @@ public class Shooter extends LinearOpMode {
             if (currentGamepad1.dpad_up && !previousGamepad1.dpad_up) {
                 robot.targetShooterRPM += 100f;
             }
-            if (currentGamepad1.dpad_down && !previousGamepad1.dpad_down){
+            if (currentGamepad1.dpad_down && !previousGamepad1.dpad_down) {
                 robot.targetShooterRPM -= 100f;
             }
 
@@ -50,22 +49,17 @@ public class Shooter extends LinearOpMode {
 
 
             /// Shooter Angle
+            ;
+            robot.hood.setPosition(hoodPos);
 
-            if(currentGamepad1.left_trigger == 1.0 && currentGamepad1.right_trigger == 1.0)
-                robot.feeder.setPosition(servoPosition);
-
-            if(currentGamepad1.triangle && !(previousGamepad1.triangle))
-                servoPosition += 0.05f;
-            else if(currentGamepad1.cross && !(previousGamepad1.cross))
-                servoPosition -= 0.05f;
-
-            servoPosition = Math.min(1.0f, servoPosition);
-            servoPosition = Math.max(0f, servoPosition);
+            if (currentGamepad1.triangle && !(previousGamepad1.triangle) && hoodPos < 2)
+                hoodPos += 0.05;
+            else if (currentGamepad1.square && !(previousGamepad1.square) && hoodPos > 1)
+                hoodPos -= 0.05;
 
             /// Turret Movement
 
-            robot.
-                    turretMotor.setPower(turretPower);
+            robot.turretMotor.setPower(turretPower);
 
             if(currentGamepad1.left_bumper && !(previousGamepad1.left_bumper))
                 turretPower -= 0.1f;
@@ -85,9 +79,8 @@ public class Shooter extends LinearOpMode {
 
             telemetry.addData("Target RPM", robot.targetShooterRPM);
             telemetry.addData("Current RPM", robot.getShooterRPM());
-            telemetry.addData("At Speed", robot.shooterAtSpeed(50));
-            telemetry.addData("Power: ", shooterPower);
-            telemetry.addData("Angle: ", servoPosition);
+            telemetry.addData("At Speed", robot.shooterAtSpeed(50));;
+            telemetry.addData("Angle: ", hoodPos);
             telemetry.update();
         }
     }

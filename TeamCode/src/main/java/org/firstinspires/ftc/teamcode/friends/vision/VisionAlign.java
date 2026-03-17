@@ -41,14 +41,15 @@ public class VisionAlign {
 
     double kP_rotate = 0.7; // scales x-error → strafe power; higher = faster, lower = smoother
 
-    double kP_drive  = 3.5;
+    double kP_drive  = 0.8;
+    double kP_driveFar = 1;
 
     double MAX_DRIVE_POWER  = 0.6;
     double MAX_ROTATE_TURRET_POWER = 0.10;
 
     double ROTATE_TOLERANCE = 0.8; //Allows there to be some error
 
-    double DRIVE_TOLERANCE  = 0.2;
+    double DRIVE_TOLERANCE  = 0.05;
     //Desired Shooting Distance is 60 inches at camera
 
 
@@ -125,7 +126,7 @@ public class VisionAlign {
                 double targetArea = results.getTa();
 
                 double desiredAreaClose = 1.14; // % of tag occupied at 60 inches
-                double desiredAreaFar =0.2874;
+                double desiredAreaFar =0.3162;
 
                 double areaErrorClose = desiredAreaClose - targetArea;
                 double areaErrorFar = desiredAreaFar - targetArea;
@@ -143,8 +144,8 @@ public class VisionAlign {
                 }
 
                 //DrivePower for far shooting
-                if (Math.abs(areaErrorFar) > DRIVE_TOLERANCE) {
-                    drivePowerFar = Range.clip(areaErrorFar * kP_drive, -MAX_DRIVE_POWER, MAX_DRIVE_POWER);
+                if (Math.abs(areaErrorFar) >= DRIVE_TOLERANCE) {
+                    drivePowerFar = Range.clip(areaErrorFar * kP_driveFar, -MAX_DRIVE_POWER, MAX_DRIVE_POWER);
                 }
                 if (Math.abs(areaErrorFar) <= DRIVE_TOLERANCE) {
                     drivePowerFar = 0;

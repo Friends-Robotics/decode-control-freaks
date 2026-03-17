@@ -29,9 +29,12 @@ public class ShooterController {
     double intakePower = 0.8;
     double reversePower = -0.2;
     int ballsShot = 0;
+    double hoodPos = 0; // betweeen 1 and 2
 
-    public void startShooting(int count) {
+
+    public void startShooting(int count, double hood) {
         ballsToShoot = count;
+        hoodPos = hood;
         currentState = State.SPINNING_UP;
         timer.reset();
     }

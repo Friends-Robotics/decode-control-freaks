@@ -34,9 +34,10 @@ public class hardwareMap {
     public DcMotorEx shooterMotor1;
     public DcMotorEx shooterMotor2;
     public DcMotor turretMotor;
+    public Servo hood;
 
     //Constants
-    public double targetShooterRPM = 3300;
+    public double targetShooterRPM = 3300; //For close 4100 for far
     public static final double SHOOTER_TICKS_PER_REV = 15;
 
 
@@ -68,6 +69,8 @@ public class hardwareMap {
         turretMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         turretMotor.setDirection(DcMotorSimple.Direction.FORWARD);
         turretMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+
+        hood = hardwaremap.get(Servo.class, "HoodServo");
 
     }
 
