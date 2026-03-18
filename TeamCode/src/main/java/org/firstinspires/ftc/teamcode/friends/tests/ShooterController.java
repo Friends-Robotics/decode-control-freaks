@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.friends.tests;
 import org.firstinspires.ftc.teamcode.friends.hardwareMap;
+import org.firstinspires.ftc.teamcode.friends.comp.Comp;
+import org.firstinspires.ftc.teamcode.friends.vision.VisionAlign;
 
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -17,30 +19,31 @@ public class ShooterController {
     State currentState = State.IDLE;
 
     ElapsedTime timer = new ElapsedTime();
-
     int ballsToShoot = 0;
+    int ballsShot = 0;
 
     // Tunables
     double rampUpTime = 1.0;
     double feedTime = 0.25;
     double spacingTime = 0.10;
     double minRecoverTime = 0.15;
-
     double intakePower = 0.8;
     double reversePower = -0.25;
-    int ballsShot = 0;
-    double hoodPos = 0; // betweeen 1 and 2
 
+    public double hoodPos = 0; // servo position between 0 and 1
 
+    // --- Start shooting with count + hood angle ---
     public void startShooting(int count, double hood) {
         ballsToShoot = count;
+        ballsShot = 0;           // reset
         hoodPos = hood;
         currentState = State.SPINNING_UP;
         timer.reset();
     }
 
-    public void update(hardwareMap robot) {
-        double rpmScale = robot.targetShooterRPM / 3300; //3300 is the targetrpm for close shooting
+    // --- Main state machine ---
+    public void update(hardwareMap robot, Comp comp, VisionAlign vision) {
+        double rpmScale = robot.targetShooterRPM / 3300.0; // base RPM for close shot
         double adjustedFeedTime = feedTime / rpmScale;
         double adjustedSpacingTime = spacingTime / rpmScale;
         double adjustedReversePower = reversePower / rpmScale;
@@ -55,19 +58,22 @@ public class ShooterController {
 
             case SPINNING_UP:
                 robot.setShooterRPM(robot.targetShooterRPM);
+                robot.hood.setPosition(hoodPos);
 
-                if (robot.shooterAtSpeed(50)&& timer.seconds() > 0.2) {
+                if (robot.shooterAtSpeed(50) && timer.seconds() > 0.2) {
                     currentState = State.RAISING_RAMP;
                     timer.reset();
                 }
                 break;
 
             case RAISING_RAMP:
-                robot.feedBall();
-
-                if (timer.seconds() > rampUpTime) {
-                    currentState = State.FEEDING;
-                    timer.reset();
+                // Only feed if aligned
+                if (vision.isAligned) {
+                    robot.feedBall();
+                    if (timer.seconds() > rampUpTime) {
+                        currentState = State.FEEDING;
+                        timer.reset();
+                    }
                 }
                 break;
 
@@ -77,7 +83,6 @@ public class ShooterController {
                 if (timer.seconds() > adjustedFeedTime) {
                     robot.intakeMotor.setPower(0);
                     robot.resetFeed();
-
                     ballsShot++;
                     currentState = State.SPACING;
                     timer.reset();
@@ -88,7 +93,7 @@ public class ShooterController {
                 if (ballsShot == 1) {
                     robot.intakeMotor.setPower(adjustedReversePower);
                 } else {
-                    robot.intakeMotor.setPower(0); // no reverse
+                    robot.intakeMotor.setPower(0);
                 }
 
                 if (timer.seconds() > adjustedSpacingTime) {
@@ -99,21 +104,16 @@ public class ShooterController {
                 break;
 
             case RECOVERING:
-
-                // wait until shooter actually recovers
-                if (robot.shooterAtSpeed(50) && timer.seconds() > minRecoverTime) {
-
+                double movementPenalty = Math.abs(comp.drive) + Math.abs(comp.strafe); // moving correction
+                if (robot.shooterAtSpeed(50) && timer.seconds() > minRecoverTime + movementPenalty * 0.1) {
                     ballsToShoot--;
-
                     if (ballsToShoot > 0) {
                         currentState = State.RAISING_RAMP;
                     } else {
                         currentState = State.IDLE;
                     }
-
                     timer.reset();
                 }
-
                 break;
         }
     }

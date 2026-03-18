@@ -49,9 +49,9 @@ public class LimelightAutoPositioning extends LinearOpMode {
         while (opModeIsActive()) {
 
             // Driver inputs
-            double drive;
-            double strafe;
-            double rotate;
+            double drive = -gamepad1.left_stick_y;
+            double strafe = gamepad1.left_stick_x * 1.1;;
+            double rotate = gamepad1.right_stick_x;;
 
             LLResult result = limelight.getLatestResult();
 
@@ -70,14 +70,6 @@ public class LimelightAutoPositioning extends LinearOpMode {
                 strafe = 0;
                 rotate = 0;
             }
-            else{
-                    // Manual control
-                    drive  = -gamepad1.left_stick_y;
-                    strafe = gamepad1.left_stick_x * 1.1;
-                    rotate = gamepad1.right_stick_x;
-            }
-
-
 
             robot.turretMotor.setPower(visionAlign.turretRotatePower);
 

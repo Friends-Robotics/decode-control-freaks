@@ -23,6 +23,11 @@ public class Comp extends LinearOpMode {
     public final Gamepad currentGp2 = new Gamepad();
     public final Gamepad previousGp2 = new Gamepad();
 
+    //-----DRIVE----
+    public double drive;
+    public double strafe;
+    public double rotate;
+
     @Override
     public void runOpMode() throws InterruptedException {
         robot = new hardwareMap(hardwareMap);
@@ -33,7 +38,7 @@ public class Comp extends LinearOpMode {
         while (opModeIsActive()) {
             updateGamepads();
 
-            handleDrive();
+            applyDrive();
             handleIntake();
             handleShooter();
             handleShooterAngle();
@@ -59,21 +64,21 @@ public class Comp extends LinearOpMode {
     // Gamepad 1 — Drive
     // =========================
 
-    public void handleDrive() {
+    public void readDriveInputs() {
+        drive = -currentGp1.left_stick_y;
+        strafe = currentGp1.left_stick_x * 1.1;
+        rotate = currentGp1.right_stick_x;
+    }
+    public void applyDrive() {
         if (currentGp1.touchpad && !previousGp1.touchpad) {
             speedModifier = (speedModifier == 0.8) ? 1.0 : 0.8;
         }
+        double denominator = Math.max(Math.abs(drive) + Math.abs(strafe) + Math.abs(rotate), 1);
 
-        double y  = -currentGp1.left_stick_y;
-        double x  = currentGp1.left_stick_x * 1.1;
-        double rx = currentGp1.right_stick_x;
-
-        double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
-
-        double fl = (y + x + rx) / denominator;
-        double bl = (y - x + rx) / denominator;
-        double fr = (y - x - rx) / denominator;
-        double br = (y + x - rx) / denominator;
+        double fl = (drive + strafe + rotate) / denominator;
+        double bl = (drive - strafe + rotate) / denominator;
+        double fr = (drive - strafe - rotate) / denominator;
+        double br = (drive + strafe - rotate) / denominator;
 
         robot.frontLeftMotor.setPower(fl * speedModifier);
         robot.backLeftMotor.setPower(bl * speedModifier);

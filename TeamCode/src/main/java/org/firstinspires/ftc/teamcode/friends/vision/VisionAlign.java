@@ -9,77 +9,46 @@ import com.qualcomm.hardware.limelightvision.LLResult;
 public class VisionAlign {
 
 
-    /* -------- Outputs -------- */
     public double turretPower = 0;
     public double drivePowerClose = 0;
     public double drivePowerFar = 0;
     public double turretRotatePower = 0;
 
-    /* ---------- Turret Angle Limits ---------- */
-
-    // degrees
     double MIN_TURRET_ANGLE = -85.0;
-    double MAX_TURRET_ANGLE =  85.0;
+    double MAX_TURRET_ANGLE = 85.0;
     int rightTicks = 193;
     int leftTicks = -193;
-
-    // encoder conversion
-     double TICKS_PER_DEGREE = (rightTicks - leftTicks) / 180.0;   // need to calibrate
-    //TICKS_PER_DEGREE = (rightTicks - leftTicks) / (angleRangeDegrees);
-
+    double TICKS_PER_DEGREE = (rightTicks - leftTicks) / 180.0;
     double currentTurretAngle = 0;
 
+    public double lastXError = 0;
+    public boolean isAligned = false;
+    public double alignmentTolerance = 1.5;
+    double turretDirection = 1;
 
-    //--Reverse Motor--
-
-    double lastXError = 0;
-    double turretDirection = 1;   // +1 or -1
-
-
-    /* -------- Constants -------- */
-
-
-    double kP_rotate = 0.7; // scales x-error → strafe power; higher = faster, lower = smoother
-
-    double kP_drive  = 0.8;
+    double kP_rotate = 0.7;
+    double kP_drive = 0.8;
     double kP_driveFar = 1;
-
-    double MAX_DRIVE_POWER  = 0.6;
+    double MAX_DRIVE_POWER = 0.6;
     double MAX_ROTATE_TURRET_POWER = 0.10;
+    double ROTATE_TOLERANCE = 0.8;
+    double DRIVE_TOLERANCE = 0.05;
 
-    double ROTATE_TOLERANCE = 0.8; //Allows there to be some error
-
-    double DRIVE_TOLERANCE  = 0.05;
-    //Desired Shooting Distance is 60 inches at camera
-
-
-    double INITIAL_SEARCH_TIME = 0.35;  // how long to continue last direction
+    double INITIAL_SEARCH_TIME = 0.35;
     double searchPower = 0.15;
     ElapsedTime searchTimer = new ElapsedTime();
 
-
-
-    // -------- STATE MACHINE ------
-    enum State {
-        IDLE,
-        TRACK,
-        SEARCH
-    }
-
+    enum State { IDLE, TRACK, SEARCH }
     State currentState = State.IDLE;
 
-    // Search settings
-    double LOST_DELAY = 0.25; // small delay before starting search
+    double LOST_DELAY = 0.25;
     ElapsedTime lostTimer = new ElapsedTime();
 
     public void update(LLResult results, boolean enabled, int turretEncoderTicks) {
-
-        currentTurretAngle = (turretEncoderTicks) / TICKS_PER_DEGREE;
-
+        currentTurretAngle = turretEncoderTicks / TICKS_PER_DEGREE;
         turretRotatePower = 0;
         drivePowerClose = 0;
-
-        // ---------------- STATE TRANSITIONS ----------------
+        isAligned = false;
 
         if (!enabled) {
             currentState = State.IDLE;
@@ -87,119 +56,60 @@ public class VisionAlign {
         }
 
         boolean tagValid = (results != null && results.isValid());
-
         if (tagValid) {
             currentState = State.TRACK;
             lostTimer.reset();
-        } else {
-            if (lostTimer.seconds() > LOST_DELAY) {
-                if (currentState != State.SEARCH) {
-                    currentState = State.SEARCH;
-                    searchTimer.reset();
-                }
+        } else if (lostTimer.seconds() > LOST_DELAY) {
+            if (currentState != State.SEARCH) {
+                currentState = State.SEARCH;
+                searchTimer.reset();
             }
         }
 
-        // ---------------- STATE LOGIC ----------------
-
         switch (currentState) {
-
             case IDLE:
                 turretRotatePower = 0;
                 break;
 
             case TRACK:
-
                 double xError = results.getTx();
-                lastXError = xError;   // store last known direction
+                lastXError = xError;
 
                 if (Math.abs(xError) > ROTATE_TOLERANCE) {
-                    turretRotatePower =
-                            Range.clip(
-                                    xError * kP_rotate,
-                                    -MAX_ROTATE_TURRET_POWER,
-                                    MAX_ROTATE_TURRET_POWER
-                            );
+                    turretRotatePower = Range.clip(xError * kP_rotate, -MAX_ROTATE_TURRET_POWER, MAX_ROTATE_TURRET_POWER);
                 }
 
-                // Distance control
+                isAligned = Math.abs(lastXError) < alignmentTolerance;
+
+
                 double targetArea = results.getTa();
-
-                double desiredAreaClose = 1.14; // % of tag occupied at 60 inches
-                double desiredAreaFar =0.3162;
-
+                double desiredAreaClose = 1.14;
+                double desiredAreaFar = 0.3162;
                 double areaErrorClose = desiredAreaClose - targetArea;
                 double areaErrorFar = desiredAreaFar - targetArea;
 
-                //DrivePower for close shooting
-
-                if (Math.abs(areaErrorClose) > DRIVE_TOLERANCE) {
-                    drivePowerClose = Range.clip(areaErrorClose * kP_drive, -MAX_DRIVE_POWER, MAX_DRIVE_POWER);
-                }
-                if (Math.abs(areaErrorClose) <= DRIVE_TOLERANCE) {
-                    drivePowerClose = 0;
-                }
-                if (results == null || !results.isValid()) {
-                    drivePowerClose = 0;
-                }
-
-                //DrivePower for far shooting
-                if (Math.abs(areaErrorFar) >= DRIVE_TOLERANCE) {
-                    drivePowerFar = Range.clip(areaErrorFar * kP_driveFar, -MAX_DRIVE_POWER, MAX_DRIVE_POWER);
-                }
-                if (Math.abs(areaErrorFar) <= DRIVE_TOLERANCE) {
-                    drivePowerFar = 0;
-                }
-                if (results == null || !results.isValid()) {
-                    drivePowerFar = 0;
-                }
-
+                drivePowerClose = (Math.abs(areaErrorClose) > DRIVE_TOLERANCE) ? Range.clip(areaErrorClose * kP_drive, -MAX_DRIVE_POWER, MAX_DRIVE_POWER) : 0;
+                drivePowerFar   = (Math.abs(areaErrorFar) > DRIVE_TOLERANCE) ? Range.clip(areaErrorFar * kP_driveFar, -MAX_DRIVE_POWER, MAX_DRIVE_POWER) : 0;
                 break;
 
             case SEARCH:
-
-                // First phase: continue in last seen direction
                 if (searchTimer.seconds() < INITIAL_SEARCH_TIME) {
-
                     turretDirection = Math.signum(lastXError);
-
-                    // If lastXError was 0, default to right
                     if (turretDirection == 0) turretDirection = 1;
-
                     turretRotatePower = searchPower * turretDirection;
-
                 } else {
-
-                    // Second phase: sweep between limits
                     turretRotatePower = searchPower * turretDirection;
-
-                   // Flip direction if we hit limits
-                    if (currentTurretAngle >= MAX_TURRET_ANGLE && turretDirection > 0) {
-                        turretDirection = -1;
-                    } else if (currentTurretAngle <= MIN_TURRET_ANGLE && turretDirection < 0) {
-                        turretDirection = 1;
-                    }
-
-                    // Apply soft limits to prevent overshoot
-                    turretRotatePower = Range.clip(
-                            turretRotatePower,
+                    if (currentTurretAngle >= MAX_TURRET_ANGLE && turretDirection > 0) turretDirection = -1;
+                    else if (currentTurretAngle <= MIN_TURRET_ANGLE && turretDirection < 0) turretDirection = 1;
+                    turretRotatePower = Range.clip(turretRotatePower,
                             (currentTurretAngle <= MIN_TURRET_ANGLE) ? 0 : -MAX_ROTATE_TURRET_POWER,
-                            (currentTurretAngle >= MAX_TURRET_ANGLE) ? 0 : MAX_ROTATE_TURRET_POWER
-                    );
+                            (currentTurretAngle >= MAX_TURRET_ANGLE) ? 0 : MAX_ROTATE_TURRET_POWER);
                 }
-
                 break;
         }
 
-        // ---------------- SOFT LIMIT PROTECTION ----------------
-
-        if (currentTurretAngle >= MAX_TURRET_ANGLE && turretRotatePower > 0 ) {
-            turretRotatePower = 0;
-        }
-
-        if (currentTurretAngle <= MIN_TURRET_ANGLE && turretRotatePower < 0 ) {
-            turretRotatePower = 0;
-        }
+        // Soft limits
+        if (currentTurretAngle >= MAX_TURRET_ANGLE && turretRotatePower > 0) turretRotatePower = 0;
+        if (currentTurretAngle <= MIN_TURRET_ANGLE && turretRotatePower < 0) turretRotatePower = 0;
     }
-
 }

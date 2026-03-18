@@ -14,6 +14,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
+import org.firstinspires.ftc.teamcode.friends.comp.Comp;
 import org.firstinspires.ftc.teamcode.friends.hardwareMap;
 import org.firstinspires.ftc.teamcode.friends.vision.VisionAlign;
 import org.firstinspires.ftc.teamcode.friends.tests.ShooterController;
@@ -25,7 +26,8 @@ public class AutoForBlueClose extends LinearOpMode {
     hardwareMap robot;
     Follower follower;
     Limelight3A limelight;
-    VisionAlign visionAlign;
+    VisionAlign vision;
+    Comp comp;
     ShooterController shooterController;
 
     // ---------- Autonomous states ----------
@@ -79,7 +81,7 @@ public class AutoForBlueClose extends LinearOpMode {
         limelight.start();
         limelight.pipelineSwitch(0);
 
-        visionAlign = new VisionAlign();
+        vision = new VisionAlign();
         shooterController = new ShooterController();
 
         robot.turretMotor.setMode(com.qualcomm.robotcore.hardware.DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -100,11 +102,11 @@ public class AutoForBlueClose extends LinearOpMode {
             follower.update(); // updates pose via Pinpoint
             LLResult result = limelight.getLatestResult();
             int turretTicks = robot.turretMotor.getCurrentPosition();
-            visionAlign.update(result, true, turretTicks);
-            robot.turretMotor.setPower(visionAlign.turretRotatePower);
+            vision.update(result, true, turretTicks);
+            robot.turretMotor.setPower(vision.turretRotatePower);
 
             // ---------- Shooter Controller update ----------
-            shooterController.update(robot);
+            shooterController.update(robot, comp, vision);
 
             switch (currentState) {
 
@@ -115,7 +117,7 @@ public class AutoForBlueClose extends LinearOpMode {
 
                 case VISION_ALIGN:
                     if (!follower.isBusy()) {
-                        double drive = visionAlign.drivePowerClose;
+                        double drive = vision.drivePowerClose;
                         double strafe = 0;
                         double rotate = 0;
 
@@ -129,8 +131,8 @@ public class AutoForBlueClose extends LinearOpMode {
                         robot.backLeftMotor.setPower(bl);
                         robot.backRightMotor.setPower(br);
 
-                        if (Math.abs(visionAlign.turretRotatePower) < 0.05 &&
-                                Math.abs(visionAlign.drivePowerClose) < 0.05) {
+                        if (Math.abs(vision.turretRotatePower) < 0.05 &&
+                                Math.abs(vision.drivePowerClose) < 0.05) {
 
                             // Start shooting cycle for 3 balls
                             shooterController.startShooting(3, 1.0);
