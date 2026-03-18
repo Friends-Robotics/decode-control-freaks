@@ -51,7 +51,7 @@ public class AutoPathingTest extends LinearOpMode {
         follower.followPath(testPath);
 
         while (opModeIsActive() && follower.isBusy()) {
-            follower.update(); // must call this every loop
+            follower.update();
 
             // ---------- Telemetry ----------
             Pose pose = follower.getPose();

@@ -190,7 +190,7 @@ public class AutoForBlueClose extends LinearOpMode {
             Pose pose = follower.getPose();
             telemetry.addData("X", pose.getX());
             telemetry.addData("Y", pose.getY());
-            telemetry.addData("Heading", Math.toDegrees(pose.getHeading()));
+            telemetry.addData("Heading", Math.toRadians(pose.getHeading()));
             telemetry.update();
         }
     }

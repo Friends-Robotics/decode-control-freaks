@@ -21,13 +21,13 @@ public class ShooterController {
     int ballsToShoot = 0;
 
     // Tunables
-    double rampUpTime = 1.5;
+    double rampUpTime = 1.0;
     double feedTime = 0.25;
     double spacingTime = 0.10;
     double minRecoverTime = 0.15;
 
     double intakePower = 0.8;
-    double reversePower = -0.2;
+    double reversePower = -0.25;
     int ballsShot = 0;
     double hoodPos = 0; // betweeen 1 and 2
 
