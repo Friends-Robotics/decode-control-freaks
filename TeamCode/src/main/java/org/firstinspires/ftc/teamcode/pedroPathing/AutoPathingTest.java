@@ -26,7 +26,7 @@ public class AutoPathingTest extends LinearOpMode {
         // ---------- Initialize ----------
         robot = new hardwareMap(hardwareMap);
 
-        // Create Pedro follower using Pinpoint odometry
+        // Refers to constants file
         follower = Constants.createFollower(hardwareMap);
 
         // Set starting pose (field coordinates)
