@@ -24,6 +24,7 @@ public class LimelightAutoPositioning extends LinearOpMode {
     public Limelight3A limelight;
 
     // -------- Vision Outputs --------
+    int stepIndex = 0;
 
 
     @Override
@@ -70,6 +71,44 @@ public class LimelightAutoPositioning extends LinearOpMode {
                 strafe = 0;
                 rotate = 0;
             }
+            if(gamepad1.a)
+            {
+                stepIndex ++;
+            }
+            if(gamepad1.y)
+            {
+                stepIndex --;
+            }
+            if(gamepad1.dpad_right)
+            {
+                if(stepIndex == 0 )
+                {
+                    visionAlign.kP_rotate += 0.001;
+                }
+                if(stepIndex == 1)
+                {
+                    visionAlign.kP_rotate += 0.01;
+                }
+                if(stepIndex == 2)
+                {
+                    visionAlign.kP_rotate += 0.05;
+                }
+            }
+            if(gamepad1.dpad_left)
+            {
+                if(stepIndex == 0 )
+                {
+                    visionAlign.kP_rotate -= 0.001;
+                }
+                if(stepIndex == 1)
+                {
+                    visionAlign.kP_rotate -= 0.01;
+                }
+                if(stepIndex == 2)
+                {
+                    visionAlign.kP_rotate -= 0.05;
+                }
+            }
 
             robot.turretMotor.setPower(visionAlign.turretRotatePower);
 
@@ -98,6 +137,9 @@ public class LimelightAutoPositioning extends LinearOpMode {
             telemetry.addData("LastXError", visionAlign.lastXError);
             telemetry.addData("TurretPower", visionAlign.turretRotatePower);
             telemetry.addData("Ta", result.getTa());
+            telemetry.addData("Kp_rotate", visionAlign.kP_rotate);
+            telemetry.addLine("Modifier = 1 --> kp_rotate +-0.001, Modifier = 2 --> kp_rotate +-0.01, Modifier = 3 --> kp_rotate +-0.05,");
+            telemetry.addData("Kp Modifier", stepIndex);
             telemetry.update();
 
 
