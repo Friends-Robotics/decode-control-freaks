@@ -16,6 +16,7 @@ import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.teamcode.friends.comp.Comp;
 import org.firstinspires.ftc.teamcode.friends.hardwareMap;
+import org.firstinspires.ftc.teamcode.friends.tests.OdometryShooter;
 import org.firstinspires.ftc.teamcode.friends.vision.VisionAlign;
 import org.firstinspires.ftc.teamcode.friends.tests.ShooterController;
 
@@ -29,6 +30,7 @@ public class AutoForBlueClose extends LinearOpMode {
     VisionAlign vision;
     Comp comp;
     ShooterController shooterController;
+    OdometryShooter odometryShooter;
 
     // ---------- Autonomous states ----------
     enum AutoState {
@@ -83,6 +85,12 @@ public class AutoForBlueClose extends LinearOpMode {
 
         vision = new VisionAlign();
         shooterController = new ShooterController();
+        odometryShooter = new OdometryShooter(
+                0.01,    // kOdoAim
+                3300, 4100,   // CLOSE_RPM, FAR_RPM
+                60, 130,      // CLOSE_DIST, FAR_DIST
+                0.00, 0.25    // CLOSE_HOOD, FAR_HOOD
+        );
 
         robot.turretMotor.setMode(com.qualcomm.robotcore.hardware.DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         robot.turretMotor.setMode(com.qualcomm.robotcore.hardware.DcMotor.RunMode.RUN_USING_ENCODER);
@@ -100,10 +108,28 @@ public class AutoForBlueClose extends LinearOpMode {
         while (opModeIsActive()) {
 
             follower.update(); // updates pose via Pinpoint
+            Pose currentpose = follower.getPose();
             LLResult result = limelight.getLatestResult();
             int turretTicks = robot.turretMotor.getCurrentPosition();
             vision.update(result, true, turretTicks);
-            robot.turretMotor.setPower(vision.turretRotatePower);
+
+            // distance to goal
+            double distance = odometryShooter.getDistance(currentpose, shootPose);
+
+            // target RPM & hood position
+            double targetRPM = odometryShooter.getTargetRPM(distance);
+            double hoodPos = odometryShooter.getHoodPosition(distance);
+
+            // turret power = odometry + vision + optional driver input
+            double turretPower = odometryShooter.getTurretPower(
+                    currentpose,
+                    shootPose,
+                    vision.turretRotatePower,  // vision correction
+                    0, 0                        // no driver input in Auto
+            );
+
+            robot.turretMotor.setPower(turretPower);
+            robot.targetShooterRPM = 0.8 * robot.targetShooterRPM + 0.2 * targetRPM;
 
             // ---------- Shooter Controller update ----------
             shooterController.update(robot, comp, vision);
@@ -132,10 +158,11 @@ public class AutoForBlueClose extends LinearOpMode {
                         robot.backRightMotor.setPower(br);
 
                         if (Math.abs(vision.turretRotatePower) < 0.05 &&
-                                Math.abs(vision.drivePowerClose) < 0.05) {
+                                Math.abs(vision.drivePowerClose) < 0.05  &&
+                                robot.shooterAtSpeed(50)) {
 
                             // Start shooting cycle for 3 balls
-                            shooterController.startShooting(3, 1.0);
+                            shooterController.startShooting(3, hoodPos);
                             currentState = AutoState.SHOOTING_CYCLE;
                         }
                     }
@@ -189,10 +216,9 @@ public class AutoForBlueClose extends LinearOpMode {
             // ---------- Telemetry ----------
             telemetry.addData("State", currentState);
             telemetry.addData("Cycle", cycleIndex);
-            Pose pose = follower.getPose();
-            telemetry.addData("X", pose.getX());
-            telemetry.addData("Y", pose.getY());
-            telemetry.addData("Heading", Math.toRadians(pose.getHeading()));
+            telemetry.addData("X", currentpose.getX());
+            telemetry.addData("Y", currentpose.getY());
+            telemetry.addData("Heading", Math.toRadians(currentpose.getHeading()));
             telemetry.update();
         }
     }

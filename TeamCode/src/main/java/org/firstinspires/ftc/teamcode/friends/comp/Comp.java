@@ -134,7 +134,7 @@ public class Comp extends LinearOpMode {
     // Gamepad 2 — Shooter Angle
     // =========================
 
-    private void handleShooterAngle() {
+    public void handleShooterAngle() {
         if (currentGp2.triangle && !previousGp2.triangle) {
             servoPosition += 0.05f;
         }

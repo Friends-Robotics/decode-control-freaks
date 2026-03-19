@@ -1,12 +1,7 @@
 package org.firstinspires.ftc.teamcode.friends.tests;
 
-import android.graphics.Path;
-
 import com.pedropathing.follower.Follower;
-import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.Pose;
-import com.pedropathing.paths.PathBuilder;
-import com.pedropathing.paths.PathChain;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -27,23 +22,15 @@ public class Everything extends LinearOpMode {
     VisionAlign vision;
     ShooterController AutoShoot;
     Limelight3A limelight;
+    Follower follower;
 
     boolean AutoDriveActive = false;
 
-
     // --- Shooting zones ---
-    class ShootPose {
-        public double x, y, heading;
-        public ShootPose(double x, double y, double heading) {
-            this.x = x; this.y = y; this.heading = heading;
-        }
-    }
-    ShootPose closeZone = new ShootPose(24, 48, 45); // tune for field
-    ShootPose farZone   = new ShootPose(72, 48, 45); // tune for field
 
     @Override
     public void runOpMode() throws InterruptedException {
-        // --- Init ---
+
         robot = new hardwareMap(hardwareMap);
         comp = new Comp();
         vision = new VisionAlign();
@@ -56,13 +43,30 @@ public class Everything extends LinearOpMode {
 
         //ODOMETRY
 
+        follower = Constants.createFollower(hardwareMap);
+        follower.setStartingPose(new Pose(0, 0, 0)); // this is the same as the parking pose from the last auto
+
+        OdometryShooter odometryShooter = new OdometryShooter(
+                0.01,     // kOdoAim
+                3300, 4100,   // CLOSE_RPM, FAR_RPM
+                60, 130,      // CLOSE_DIST, FAR_DIST
+                0.00, 0.25    // CLOSE_HOOD, FAR_HOOD
+        );
+
+        // --- GOAL POSITION
+        Pose goalPose = new Pose(134, 139, 0); // example
+
+
+        //ODOMETRY
+
         while (opModeIsActive()) {
 
-            // --- Update driver gamepads ---
+            // --- Update driver gamepads
             comp.updateGamepads();
             comp.readDriveInputs();
+            AutoDriveActive = false;
 
-            // --- Vision processing ---
+            // --- Vision processing (secondary)
 
             LLResult result = limelight.getLatestResult();
             vision.update(result, true, robot.turretMotor.getCurrentPosition());
@@ -70,52 +74,68 @@ public class Everything extends LinearOpMode {
             // --- Determine auto-drive target ---
             if (comp.currentGp1.right_bumper && result != null && result.isValid()) {
                 comp.drive = vision.drivePowerClose;
-                comp.strafe = 0;
                 comp.rotate = 0;
                 AutoDriveActive = true;
             } else if (comp.currentGp1.left_bumper && result != null && result.isValid()) {
                 comp.drive = vision.drivePowerFar;
-                comp.strafe = 0;
                 comp.rotate = 0;
                 AutoDriveActive = true;
             }
-            comp.applyDrive();
 
-            // --- Dynamic shooter + hood using vision ---
-            if (result != null && result.isValid()) {
-                double ta = result.getTa();
+            // --- Dynamic shooter + hood using odometry
+            follower.update();
+            Pose robotPose = follower.getPose();
 
-                // Dynamic shooter velocity
-                double CLOSE_TA = 1.14, FAR_TA = 0.3162;
-                double CLOSE_VEL = 3300, FAR_VEL = 4100;
-                double slopeVel = (FAR_VEL - CLOSE_VEL) / (FAR_TA - CLOSE_TA);
-                double targetVelocity = CLOSE_VEL + slopeVel * (ta - CLOSE_TA);
-                robot.targetShooterRPM = 0.8 * robot.targetShooterRPM + 0.2 *
-                        Range.clip(targetVelocity, 2500, 5000);
+            // calculate distance
+            double distance = odometryShooter.getDistance(robotPose, goalPose);
 
-                // Dynamic hood
-                double CLOSE_HOOD = 0, FAR_HOOD = 0.25;
-                double slopeHood = ((FAR_HOOD - CLOSE_HOOD) / (FAR_TA - CLOSE_TA));
-                double hoodPos = Range.clip(CLOSE_HOOD + slopeHood * (ta - CLOSE_TA), 0, 0.3);
+            // calculate RPM & hood
+            double targetRPM = odometryShooter.getTargetRPM(distance);
+            double hoodPos = odometryShooter.getHoodPosition(distance);
 
-                // Alignment check
-                vision.isAligned = Math.abs(vision.lastXError) < 1.5;
+            // calculate turret power
+            double turretPower = odometryShooter.getTurretPower(
+                    robotPose,
+                    goalPose,
+                    vision.turretRotatePower,  // vision correction
+                    comp.rotate,
+                    comp.strafe
+            );
 
-                // Auto start shooting if driver holds A
-                if (!AutoShoot.isBusy() && comp.currentGp1.a) {
-                    AutoShoot.startShooting(3, hoodPos);
-                }
+            robot.turretMotor.setPower(turretPower);
+            robot.targetShooterRPM = 0.8 * robot.targetShooterRPM + 0.2 * targetRPM;
 
-                // Turret motion compensation
-                double turretPower = vision.turretRotatePower
-                        + comp.rotate * 0.25
-                        + comp.strafe * 0.15;
-                robot.turretMotor.setPower(turretPower);
+
+            // --- AUTO SHOOT ---
+            if (!AutoShoot.isBusy()
+                    && comp.currentGp1.a
+                    && vision.isAligned
+                    && robot.shooterAtSpeed(50)
+                    && Math.abs(comp.rotate) < 0.1) {
+
+                AutoShoot.startShooting(3, hoodPos);
             }
 
+            // --- TELEMETRY (FOR TUNING)
+            telemetry.addData("Distance", distance);
+            telemetry.addData("Target RPM", targetRPM);
+            telemetry.addData("Hood", hoodPos);
+
+            //Intake + drive
+            if(!AutoShoot.isBusy())
+            {
+                comp.handleIntake();
+                comp.applyDrive();
+            }
+            if(comp.currentGp2.dpad_right && !comp.previousGp2.dpad_right)
+            {
+                robot.turretMotor.setPower(0);
+                robot.hood.setPosition(0);
+                comp.handleTurret();
+                comp.handleShooterAngle();
+            }
             // --- Shooter state machine ---
             AutoShoot.update(robot, comp, vision);
-
             // --- Telemetry ---
             telemetry.addData("Shooter RPM", robot.getShooterRPM());
             telemetry.addData("Hood Pos", AutoShoot.hoodPos);

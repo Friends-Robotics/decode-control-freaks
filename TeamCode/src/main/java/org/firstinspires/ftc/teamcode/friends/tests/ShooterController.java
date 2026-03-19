@@ -6,6 +6,7 @@ import org.firstinspires.ftc.teamcode.friends.vision.VisionAlign;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 public class ShooterController {
+    OdometryShooter odometryShooter;
 
     enum State {
         IDLE,
@@ -17,7 +18,6 @@ public class ShooterController {
     }
 
     State currentState = State.IDLE;
-
     ElapsedTime timer = new ElapsedTime();
     int ballsToShoot = 0;
     int ballsShot = 0;
@@ -29,8 +29,8 @@ public class ShooterController {
     double minRecoverTime = 0.15;
     double intakePower = 0.8;
     double reversePower = -0.25;
+    public double hoodPos = 0;
 
-    public double hoodPos = 0; // servo position between 0 and 1
 
     // --- Start shooting with count + hood angle ---
     public void startShooting(int count, double hood) {
