@@ -30,13 +30,15 @@ public class ShooterController {
     double intakePower = 0.8;
     double reversePower = -0.25;
     public double hoodPos = 0;
+    double targetShooterRPM;
 
 
     // --- Start shooting with count + hood angle ---
-    public void startShooting(int count, double hood) {
+    public void startShooting(int count, double hood, double targetRPM) {
         ballsToShoot = count;
         ballsShot = 0;           // reset
         hoodPos = hood;
+        targetShooterRPM = targetRPM;
         currentState = State.SPINNING_UP;
         timer.reset();
     }
@@ -57,7 +59,7 @@ public class ShooterController {
                 break;
 
             case SPINNING_UP:
-                robot.setShooterRPM(robot.targetShooterRPM);
+                robot.setShooterRPM(targetShooterRPM);
                 robot.hood.setPosition(hoodPos);
 
                 if (robot.shooterAtSpeed(50) && timer.seconds() > 0.2) {

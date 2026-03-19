@@ -143,7 +143,8 @@ public class Comp extends LinearOpMode {
             servoPosition -= 0.05f;
         }
 
-        servoPosition = clamp(servoPosition, 0f, 1.0f);
+        servoPosition = clamp(servoPosition, 0f, 0.5f);
+        robot.hood.setPosition(servoPosition);
 
     }
 

@@ -37,7 +37,7 @@ public class Shooter extends LinearOpMode {
             // SHOOTING
             // Start shooting 3 balls
             if (gamepad1.a && !shooterController.isBusy()) {
-                shooterController.startShooting(3, hoodPos);
+                shooterController.startShooting(3, hoodPos, robot.targetShooterRPM);
             }
 
             // Update every loop

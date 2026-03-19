@@ -162,7 +162,7 @@ public class AutoForBlueClose extends LinearOpMode {
                                 robot.shooterAtSpeed(50)) {
 
                             // Start shooting cycle for 3 balls
-                            shooterController.startShooting(3, hoodPos);
+                            shooterController.startShooting(3, hoodPos, targetRPM);
                             currentState = AutoState.SHOOTING_CYCLE;
                         }
                     }

@@ -113,7 +113,7 @@ public class Everything extends LinearOpMode {
                     && robot.shooterAtSpeed(50)
                     && Math.abs(comp.rotate) < 0.1) {
 
-                AutoShoot.startShooting(3, hoodPos);
+                AutoShoot.startShooting(3, hoodPos, targetRPM);
             }
 
             // --- TELEMETRY (FOR TUNING)
@@ -127,6 +127,7 @@ public class Everything extends LinearOpMode {
                 comp.handleIntake();
                 comp.applyDrive();
             }
+            //Applies override for turret and hood
             if(comp.currentGp2.dpad_right && !comp.previousGp2.dpad_right)
             {
                 robot.turretMotor.setPower(0);
