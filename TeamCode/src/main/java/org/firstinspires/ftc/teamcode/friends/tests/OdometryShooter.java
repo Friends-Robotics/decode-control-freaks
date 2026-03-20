@@ -3,6 +3,8 @@ package org.firstinspires.ftc.teamcode.friends.tests;
 import com.qualcomm.robotcore.util.Range;
 import com.pedropathing.geometry.Pose;
 
+import org.firstinspires.ftc.teamcode.friends.vision.VisionAlign;
+
 public class OdometryShooter {
 
     // --- Turret limits ---
@@ -20,6 +22,7 @@ public class OdometryShooter {
     private final double CLOSE_HOOD;
     private final double FAR_HOOD;
 
+
     public OdometryShooter(double kOdoAim,double CLOSE_RPM, double FAR_RPM, double CLOSE_DIST, double FAR_DIST, double CLOSE_HOOD, double FAR_HOOD){
 
         this.kOdoAim = kOdoAim;
@@ -33,7 +36,7 @@ public class OdometryShooter {
 
 
     //Returns turret motor power, using odometry aiming + optional vision + driver inputs
-    public double getTurretPower(Pose robotPose, Pose goalPose, double visionCorrection, double compRotate, double compStrafe){
+    public double getTurretPower(Pose robotPose, Pose goalPose, double visionCorrection, double compRotate, double compStrafe, int turretTicks){
 
         // --- Calculate target angle ---
         double dx = goalPose.getX() - robotPose.getX();
@@ -51,10 +54,31 @@ public class OdometryShooter {
         desiredTurretAngle = Range.clip(desiredTurretAngle, MIN_TURRET_ANGLE, MAX_TURRET_ANGLE);
 
         // proportional odometry aiming
-        double odoTurretPower = Range.clip(desiredTurretAngle * kOdoAim, -0.2, 0.2);
+        double currentTurretAngle = turretTicks / VisionAlign.TurretConstants.TICKS_PER_DEGREE;
+        double error = desiredTurretAngle - currentTurretAngle;
+        double odoTurretPower = Range.clip(error * kOdoAim, -0.2, 0.2);
 
         // combine odometry, vision, and driver inputs
         return odoTurretPower + visionCorrection + compRotate * 0.25 + compStrafe * 0.15;
+    }
+
+    public static double getDriveRotatePower(Pose robotPose, Pose goalPose) {
+
+        double dx = goalPose.getX() - robotPose.getX();
+        double dy = goalPose.getY() - robotPose.getY();
+
+        double targetAngle = Math.toDegrees(Math.atan2(dy, dx));
+        double robotHeading = Math.toDegrees(robotPose.getHeading());
+
+        double error = targetAngle - robotHeading;
+
+        // normalize
+        while (error > 180) error -= 360;
+        while (error < -180) error += 360;
+
+        double kRotate = 0.01; // tune this
+
+        return Range.clip(error * kRotate, -0.4, 0.4);
     }
 
     //Returns distance to goal

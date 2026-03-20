@@ -16,9 +16,10 @@ public class VisionAlign {
 
     double MIN_TURRET_ANGLE = -85.0;
     double MAX_TURRET_ANGLE = 85.0;
-    int rightTicks = 193;
-    int leftTicks = -193;
-    double TICKS_PER_DEGREE = (rightTicks - leftTicks) / 180.0;
+
+    public class TurretConstants {
+        public static final double TICKS_PER_DEGREE = (193 - (-193)) / 180.0;
+    }
     double currentTurretAngle = 0;
 
     public double lastXError = 0;
@@ -34,7 +35,7 @@ public class VisionAlign {
     double ROTATE_TOLERANCE = 0.8;
     double DRIVE_TOLERANCE = 0.05;
 
-    double INITIAL_SEARCH_TIME = 0.35;
+    double INITIAL_SEARCH_TIME = 1.00;
     double searchPower = 0.15;
     ElapsedTime searchTimer = new ElapsedTime();
 
@@ -45,7 +46,7 @@ public class VisionAlign {
     ElapsedTime lostTimer = new ElapsedTime();
 
     public void update(LLResult results, boolean enabled, int turretEncoderTicks) {
-        currentTurretAngle = turretEncoderTicks / TICKS_PER_DEGREE;
+        currentTurretAngle = turretEncoderTicks / TurretConstants.TICKS_PER_DEGREE;
         turretRotatePower = 0;
         drivePowerClose = 0;
         isAligned = false;

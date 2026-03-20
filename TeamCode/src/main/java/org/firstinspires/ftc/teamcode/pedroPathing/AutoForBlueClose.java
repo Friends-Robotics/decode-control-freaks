@@ -120,12 +120,13 @@ public class AutoForBlueClose extends LinearOpMode {
             double targetRPM = odometryShooter.getTargetRPM(distance);
             double hoodPos = odometryShooter.getHoodPosition(distance);
 
-            // turret power = odometry + vision + optional driver input
+            // turret power = odometry + vision
             double turretPower = odometryShooter.getTurretPower(
                     currentpose,
                     shootPose,
                     vision.turretRotatePower,  // vision correction
-                    0, 0                        // no driver input in Auto
+                    0, 0, // no driver input in Auto
+                    robot.turretMotor.getCurrentPosition()
             );
 
             robot.turretMotor.setPower(turretPower);

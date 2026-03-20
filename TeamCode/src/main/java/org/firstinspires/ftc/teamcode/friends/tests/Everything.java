@@ -1,12 +1,14 @@
 package org.firstinspires.ftc.teamcode.friends.tests;
 
+
+
 import com.pedropathing.follower.Follower;
+import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.teamcode.friends.hardwareMap;
 import org.firstinspires.ftc.teamcode.friends.vision.VisionAlign;
@@ -43,8 +45,14 @@ public class Everything extends LinearOpMode {
 
         //ODOMETRY
 
+        boolean isBlue = false; // set this before match
+        boolean close = true; // also set for startingPose depending on what auto is ran
+
         follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose(new Pose(0, 0, 0)); // this is the same as the parking pose from the last auto
+        AutoDrive autoDrive = new AutoDrive(follower, isBlue, close);// this is the same as the parking pose from the last auto
+        follower.setStartingPose(autoDrive.AutoParkingPose);
+
+        Pose goalPose = autoDrive.getGoalPose();
 
         OdometryShooter odometryShooter = new OdometryShooter(
                 0.01,     // kOdoAim
@@ -53,34 +61,33 @@ public class Everything extends LinearOpMode {
                 0.00, 0.25    // CLOSE_HOOD, FAR_HOOD
         );
 
-        // --- GOAL POSITION
-        Pose goalPose = new Pose(134, 139, 0); // example
-
-
         //ODOMETRY
 
         while (opModeIsActive()) {
 
-            // --- Update driver gamepads
+
+            // --- Update Everything
             comp.updateGamepads();
             comp.readDriveInputs();
             AutoDriveActive = false;
 
-            // --- Vision processing (secondary)
-
             LLResult result = limelight.getLatestResult();
             vision.update(result, true, robot.turretMotor.getCurrentPosition());
 
-            // --- Determine auto-drive target ---
-            if (comp.currentGp1.right_bumper && result != null && result.isValid()) {
-                comp.drive = vision.drivePowerClose;
-                comp.rotate = 0;
-                AutoDriveActive = true;
-            } else if (comp.currentGp1.left_bumper && result != null && result.isValid()) {
-                comp.drive = vision.drivePowerFar;
-                comp.rotate = 0;
+            // --- Odometry autoDrive
+
+            if (comp.currentGp1.right_bumper && !AutoDriveActive) {
+                autoDrive = new AutoDrive(follower, isBlue, true);
+                autoDrive.driveToShoot();
                 AutoDriveActive = true;
             }
+
+            if (comp.currentGp1.left_bumper && !AutoDriveActive) {
+                autoDrive = new AutoDrive(follower, isBlue, false);
+                autoDrive.driveToShoot();
+                AutoDriveActive = true;
+            }
+
 
             // --- Dynamic shooter + hood using odometry
             follower.update();
@@ -99,21 +106,42 @@ public class Everything extends LinearOpMode {
                     goalPose,
                     vision.turretRotatePower,  // vision correction
                     comp.rotate,
-                    comp.strafe
+                    comp.strafe,
+                    robot.turretMotor.getCurrentPosition()
             );
 
-            robot.turretMotor.setPower(turretPower);
             robot.targetShooterRPM = 0.8 * robot.targetShooterRPM + 0.2 * targetRPM;
 
 
-            // --- AUTO SHOOT ---
-            if (!AutoShoot.isBusy()
-                    && comp.currentGp1.a
-                    && vision.isAligned
-                    && robot.shooterAtSpeed(50)
-                    && Math.abs(comp.rotate) < 0.1) {
+            // --- AUTO SHOOT --- no A button press
+            boolean readyToShoot =
+                    vision.isAligned &&
+                            robot.shooterAtSpeed(50) &&
+                            Math.abs(comp.rotate) < 0.1 &&
+                            Math.abs(comp.drive) < 0.1 &&
+                            Math.abs(comp.strafe) < 0.1;
 
+            if (!AutoShoot.isBusy() && readyToShoot) {
                 AutoShoot.startShooting(3, hoodPos, targetRPM);
+            }
+
+            if (AutoDriveActive && comp.currentGp1.right_bumper && !comp.previousGp1.right_bumper) {
+                follower.update();
+
+                if (!autoDrive.isBusy()) {
+                    AutoDriveActive = false;
+                }
+            } else {
+                if (!AutoShoot.isBusy()) {
+                    comp.applyDrive();
+                }
+            }
+
+            //AutoRotate
+            double autoRotate = OdometryShooter.getDriveRotatePower(robotPose, goalPose);
+
+            if (AutoDriveActive || AutoShoot.isBusy()) {
+                comp.rotate = autoRotate;
             }
 
             // --- TELEMETRY (FOR TUNING)
@@ -122,19 +150,21 @@ public class Everything extends LinearOpMode {
             telemetry.addData("Hood", hoodPos);
 
             //Intake + drive
-            if(!AutoShoot.isBusy())
-            {
+            if (!AutoShoot.isBusy()) {
                 comp.handleIntake();
                 comp.applyDrive();
             }
             //Applies override for turret and hood
-            if(comp.currentGp2.dpad_right && !comp.previousGp2.dpad_right)
-            {
-                robot.turretMotor.setPower(0);
+            boolean manualOverride = comp.currentGp2.dpad_right;
+
+            if (manualOverride) {
                 robot.hood.setPosition(0);
                 comp.handleTurret();
                 comp.handleShooterAngle();
+            } else {
+                robot.turretMotor.setPower(turretPower);
             }
+
             // --- Shooter state machine ---
             AutoShoot.update(robot, comp, vision);
             // --- Telemetry ---
@@ -145,10 +175,10 @@ public class Everything extends LinearOpMode {
             telemetry.addData("Vision Ta", result != null ? result.getTa() : 0);
             telemetry.addData("Aligned", vision.isAligned);
             telemetry.update();
+
+
         }
+
     }
-
-    // --- Simple odometry auto-drive ---
-
 
 }

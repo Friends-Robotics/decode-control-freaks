@@ -9,7 +9,7 @@ import org.firstinspires.ftc.teamcode.friends.hardwareMap;
 @TeleOp(name = "Comp")
 public class Comp extends LinearOpMode {
     // -------- Hardware --------
-    private static hardwareMap robot;
+    private hardwareMap robot;
     // -------- State --------
     public double speedModifier = 0.8;
     private float intakePower = -0.8f;
