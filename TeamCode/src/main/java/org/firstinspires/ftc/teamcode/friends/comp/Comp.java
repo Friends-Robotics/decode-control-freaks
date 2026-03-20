@@ -1,15 +1,12 @@
 package org.firstinspires.ftc.teamcode.friends.comp;
 
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.Gamepad;;
-
+import com.qualcomm.robotcore.hardware.Gamepad;
 import org.firstinspires.ftc.teamcode.friends.hardwareMap;
 
-@TeleOp(name = "Comp")
-public class Comp extends LinearOpMode {
+public class Comp {
     // -------- Hardware --------
     private hardwareMap robot;
+
     // -------- State --------
     public double speedModifier = 0.8;
     private float intakePower = -0.8f;
@@ -18,66 +15,46 @@ public class Comp extends LinearOpMode {
     private float servoPosition = 0.0f;
 
     // -------- Gamepads --------
-    public Gamepad currentGp1;
-    public Gamepad previousGp1;
-    public Gamepad currentGp2;
-    public Gamepad previousGp2;
+    public final Gamepad currentGp1 = new Gamepad();
+    public final Gamepad previousGp1 = new Gamepad();
+    public final Gamepad currentGp2 = new Gamepad();
+    public final Gamepad previousGp2 = new Gamepad();
 
     //-----DRIVE----
     public double drive;
     public double strafe;
     public double rotate;
 
-    @Override
-    public void runOpMode() throws InterruptedException {
-        robot = new hardwareMap(hardwareMap);
-
-        currentGp1 = gamepad1;
-        previousGp1 = new Gamepad(); // optional, just for storing previous state
-        currentGp2 = gamepad2;
-        previousGp2 = new Gamepad();
-
-        waitForStart();
-        if (isStopRequested()) return;
-
-        while (opModeIsActive()) {
-            UpdatesGamePads();
-
-            applyDrive();
-            handleIntake();
-            handleShooter();
-            handleShooterAngle();
-            handleTurret();
-
-            sendTelemetry();
-        }
+    // Constructor
+    public Comp(hardwareMap robot) {
+        this.robot = robot;
     }
 
     // =========================
-    // Initialization
+    // Gamepad Updates
     // =========================
-
-    public void UpdatesGamePads() {
+    public void updateGamepads(Gamepad gp1, Gamepad gp2) {
         previousGp1.copy(currentGp1);
-        currentGp1.copy(gamepad1);
+        currentGp1.copy(gp1);
 
         previousGp2.copy(currentGp2);
-        currentGp2.copy(gamepad2);
+        currentGp2.copy(gp2);
     }
 
     // =========================
-    // Gamepad 1 — Drive
+    // Drive
     // =========================
-
     public void readDriveInputs() {
         drive = -currentGp1.left_stick_y;
         strafe = currentGp1.left_stick_x * 1.1;
         rotate = currentGp1.right_stick_x;
     }
+
     public void applyDrive() {
         if (currentGp1.touchpad && !previousGp1.touchpad) {
             speedModifier = (speedModifier == 0.8) ? 1.0 : 0.8;
         }
+
         double denominator = Math.max(Math.abs(drive) + Math.abs(strafe) + Math.abs(rotate), 1);
 
         double fl = (drive + strafe + rotate) / denominator;
@@ -92,9 +69,8 @@ public class Comp extends LinearOpMode {
     }
 
     // =========================
-    // Gamepad 2 — Intake
+    // Intake
     // =========================
-
     public void handleIntake() {
         if (currentGp2.right_trigger > 0.8 && previousGp2.right_trigger <= 0.8) {
             intakePower = 0.8f;
@@ -112,17 +88,11 @@ public class Comp extends LinearOpMode {
     }
 
     // =========================
-    // Gamepad 2 — Shooter
+    // Shooter
     // =========================
-
-    private void handleShooter() {
-        if (currentGp2.dpad_up && !previousGp2.dpad_up) {
-            shooterPower += 0.1f;
-        }
-
-        if (currentGp2.dpad_down && !previousGp2.dpad_down) {
-            shooterPower -= 0.1f;
-        }
+    public void handleShooter() {
+        if (currentGp2.dpad_up && !previousGp2.dpad_up) shooterPower += 0.1f;
+        if (currentGp2.dpad_down && !previousGp2.dpad_down) shooterPower -= 0.1f;
 
         shooterPower = clamp(shooterPower, -1.0f, 1.0f);
 
@@ -136,58 +106,28 @@ public class Comp extends LinearOpMode {
     }
 
     // =========================
-    // Gamepad 2 — Shooter Angle
+    // Hood
     // =========================
-
     public void handleShooterAngle() {
-        if (currentGp2.triangle && !previousGp2.triangle) {
-            servoPosition += 0.05f;
-        }
-
-        if (currentGp2.cross && !previousGp2.cross) {
-            servoPosition -= 0.05f;
-        }
+        if (currentGp2.triangle && !previousGp2.triangle) servoPosition += 0.05f;
+        if (currentGp2.cross && !previousGp2.cross) servoPosition -= 0.05f;
 
         servoPosition = clamp(servoPosition, 0f, 0.5f);
         robot.hood.setPosition(servoPosition);
-
     }
 
     // =========================
-    // Gamepad 2 — Turret
+    // Turret
     // =========================
-
     public void handleTurret() {
-        if (currentGp2.left_bumper && !previousGp2.left_bumper) {
-            turretPower -= 0.1f;
-        }
-
-        if (currentGp2.right_bumper && !previousGp2.right_bumper) {
-            turretPower += 0.1f;
-        }
+        if (currentGp2.left_bumper && !previousGp2.left_bumper) turretPower -= 0.1f;
+        if (currentGp2.right_bumper && !previousGp2.right_bumper) turretPower += 0.1f;
 
         turretPower = clamp(turretPower, -1.0f, 1.0f);
         robot.turretMotor.setPower(turretPower);
     }
 
-    // =========================
-    // Utilities
-    // =========================
-
     private float clamp(float value, float min, float max) {
         return Math.max(min, Math.min(max, value));
-    }
-
-    // =========================
-    // Telemetry
-    // =========================
-
-    public void sendTelemetry() {
-        telemetry.addData("Drive Speed", speedModifier);
-        telemetry.addData("Intake Power", intakePower);
-        telemetry.addData("Shooter RPM", robot.getShooterRPM());
-        telemetry.addData("Turret Power", turretPower);
-        telemetry.addData("Servo Position", servoPosition);
-        telemetry.update();
     }
 }

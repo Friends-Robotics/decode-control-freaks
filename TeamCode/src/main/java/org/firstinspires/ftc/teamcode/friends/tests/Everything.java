@@ -35,7 +35,7 @@ public class Everything extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
 
         robot = new hardwareMap(hardwareMap);
-        comp = new Comp();
+        comp = new Comp(robot);
         vision = new VisionAlign();
         AutoShoot = new ShooterController();
 
@@ -70,11 +70,8 @@ public class Everything extends LinearOpMode {
 
 
             // --- Update Everything
-            drive  = -comp.currentGp1.left_stick_y;
-            strafe = comp.currentGp1.left_stick_x * 1.1;
-            rotate = comp.currentGp1.right_stick_x;
-            comp.UpdatesGamePads();
-            AutoDriveActive = false;
+            comp.updateGamepads(gamepad1, gamepad2);
+            comp.readDriveInputs();
 
             LLResult result = limelight.getLatestResult();
             vision.update(result, true, robot.turretMotor.getCurrentPosition());
