@@ -16,12 +16,13 @@ import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.teamcode.friends.comp.Comp;
 import org.firstinspires.ftc.teamcode.friends.hardwareMap;
+import org.firstinspires.ftc.teamcode.friends.tests.AutoDrive;
 import org.firstinspires.ftc.teamcode.friends.tests.OdometryShooter;
 import org.firstinspires.ftc.teamcode.friends.vision.VisionAlign;
 import org.firstinspires.ftc.teamcode.friends.tests.ShooterController;
 
-@Autonomous(name = "AutoBlueClose")
-public class AutoForBlueClose extends LinearOpMode {
+@Autonomous(name = "FullAutoAny")
+public class FullAutoAny extends LinearOpMode {
 
     // ---------- Hardware ----------
     hardwareMap robot;
@@ -31,10 +32,10 @@ public class AutoForBlueClose extends LinearOpMode {
     Comp comp;
     ShooterController shooterController;
     OdometryShooter odometryShooter;
+    AutoDrive AutoPoses;
 
     // ---------- Autonomous states ----------
     enum AutoState {
-        DRIVE_TO_PRELOAD,
         VISION_ALIGN,
         SHOOTING_CYCLE,
         DRIVE_TO_INTAKE,
@@ -43,23 +44,31 @@ public class AutoForBlueClose extends LinearOpMode {
         DONE
     }
 
-    AutoState currentState = AutoState.DRIVE_TO_PRELOAD;
+    AutoState currentState = AutoState.VISION_ALIGN;
     ElapsedTime stateTimer = new ElapsedTime();
 
     // ---------- Poses ----------
-    Pose startPose = new Pose(16, 130, Math.toRadians(135));
-    Pose shootPose = new Pose(60, 84, Math.toRadians(135));
-    Pose parkPose = new Pose(60, 108, Math.toRadians(135));
+    Pose startPose;
+    Pose shootPose;
+    Pose parkPose;
+
+    //Determine poses
+    double AutoForRedIntake1Offset; // Adds to the x value for Auto for blue
+    //Middle of field x value = 72;
+    double AutoForRedIntake2Offset;
+    boolean Red = true; // set before match;
+    boolean Close = true; // set before match
+    boolean PosesMirrored = false;
 
     Pose[] intakePoses = {
-            new Pose(35, 85, Math.toRadians(180)),
-            new Pose(35, 60, Math.toRadians(180)),
-            new Pose(35, 35, Math.toRadians(180)),
+            new Pose(42, 84, Math.toRadians(180)),
+            new Pose(42, 60, Math.toRadians(180)),
+            new Pose(42, 36, Math.toRadians(180)),
     };
     Pose[] intakePoses2 = {
-            new Pose(8, 85, Math.toRadians(180)),
-            new Pose(8, 60, Math.toRadians(180)),
-            new Pose(8, 35, Math.toRadians(180)),
+            new Pose(21, 84, Math.toRadians(180)),
+            new Pose(9, 60, Math.toRadians(180)),
+            new Pose(9, 36, Math.toRadians(180)),
     };
 
     PathChain intakeFullPath;
@@ -69,14 +78,13 @@ public class AutoForBlueClose extends LinearOpMode {
 
     int cycleIndex = 0;
     static final int MAX_CYCLES = 3;
-
     @Override
     public void runOpMode() {
 
         // ---------- Initialize ----------
         robot = new hardwareMap(hardwareMap);
         follower = Constants.createFollower(hardwareMap);
-        follower.setPose(startPose);
+        follower.setStartingPose(startPose);
 
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
         limelight.setPollRateHz(100);
@@ -91,6 +99,11 @@ public class AutoForBlueClose extends LinearOpMode {
                 60, 130,      // CLOSE_DIST, FAR_DIST
                 0.00, 0.25    // CLOSE_HOOD, FAR_HOOD
         );
+        AutoPoses = new AutoDrive(follower,Red,Close);
+        shootPose = AutoPoses.getShootPose();
+        parkPose = AutoPoses.getAutoParkingPose();
+        startPose = AutoPoses.getShootPose();// same
+
 
         robot.turretMotor.setMode(com.qualcomm.robotcore.hardware.DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         robot.turretMotor.setMode(com.qualcomm.robotcore.hardware.DcMotor.RunMode.RUN_USING_ENCODER);
@@ -101,7 +114,6 @@ public class AutoForBlueClose extends LinearOpMode {
         telemetry.update();
         waitForStart();
 
-        robot.startIntake(); // start intake if preload ball exists
         stateTimer.reset();
 
         // ---------- Main loop ----------
@@ -123,7 +135,7 @@ public class AutoForBlueClose extends LinearOpMode {
             // turret power = odometry + vision
             double turretPower = odometryShooter.getTurretPower(
                     currentpose,
-                    shootPose,
+                    AutoPoses.getShootPose(),
                     vision.turretRotatePower,  // vision correction
                     0, 0, // no driver input in Auto
                     robot.turretMotor.getCurrentPosition()
@@ -137,14 +149,16 @@ public class AutoForBlueClose extends LinearOpMode {
 
             switch (currentState) {
 
-                case DRIVE_TO_PRELOAD:
-                    follower.followPath(StartShootPath);
-                    currentState = AutoState.VISION_ALIGN;
-                    break;
-
                 case VISION_ALIGN:
                     if (!follower.isBusy()) {
-                        double drive = vision.drivePowerClose;
+                        double drive;
+                        if(Close){
+                            drive = vision.drivePowerClose;
+                        }
+                        else
+                        {
+                            drive = vision.drivePowerFar;
+                        }
                         double strafe = 0;
                         double rotate = 0;
 
@@ -166,6 +180,7 @@ public class AutoForBlueClose extends LinearOpMode {
                             shooterController.startShooting(3, hoodPos, targetRPM);
                             currentState = AutoState.SHOOTING_CYCLE;
                         }
+                        stateTimer.reset();
                     }
                     break;
 
@@ -229,6 +244,24 @@ public class AutoForBlueClose extends LinearOpMode {
         Pose currentPose = follower.getPose();
         if (cycleIndex >= intakePoses.length) return;
 
+        if (Red && !PosesMirrored) {
+            PosesMirrored = true;
+            for (int i = 0; i < intakePoses.length; i++) {
+                AutoForRedIntake1Offset = (72 -intakePoses[i].getX())*2;// 72 is centre of field
+                AutoForRedIntake2Offset = (72 -intakePoses2[i].getX())*2;
+                intakePoses2[i] = new Pose(
+                        intakePoses2[i].getX() + AutoForRedIntake2Offset,
+                        intakePoses2[i].getY(),
+                        intakePoses2[i].getHeading() + Math.toRadians(180)
+                );
+                intakePoses[i] = new Pose(
+                        intakePoses[i].getX() + AutoForRedIntake1Offset,
+                        intakePoses[i].getY(),
+                        intakePoses[i].getHeading() + Math.toRadians(180)
+                );
+            }
+        }
+
         Pose intakePose = intakePoses[cycleIndex];
         Pose intakePose2 = intakePoses2[cycleIndex];
 
@@ -239,10 +272,6 @@ public class AutoForBlueClose extends LinearOpMode {
 
         shootPath = new PathBuilder(follower)
                 .addPath(new Path(new BezierCurve(intakePose2, shootPose)))
-                .build();
-
-        StartShootPath = new PathBuilder(follower)
-                .addPath(new Path(new BezierCurve(startPose, shootPose)))
                 .build();
 
         ParkPath = new PathBuilder(follower)

@@ -50,7 +50,7 @@ public class Everything extends LinearOpMode {
 
         follower = Constants.createFollower(hardwareMap);
         AutoDrive autoDrive = new AutoDrive(follower, isBlue, close);// this is the same as the parking pose from the last auto
-        follower.setStartingPose(autoDrive.AutoParkingPose);
+        follower.setStartingPose(autoDrive.getAutoParkingPose());
 
         Pose goalPose = autoDrive.getGoalPose();
 

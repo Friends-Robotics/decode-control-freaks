@@ -9,15 +9,17 @@ import com.pedropathing.paths.Path;
 public class AutoDrive {
     private final Follower follower;
 
-    private Pose goalPose;
-    private Pose shootPose;
-    public Pose AutoParkingPose;
+    private final Pose goalPose;
+    private final Pose shootPose;
+    private final Pose AutoParkingPose;
+
 
     public AutoDrive(Follower follower, boolean isBlue, boolean close) {
         this.follower = follower;
 
         if (isBlue) {
             goalPose = new Pose(12, 135, 0);
+
             if(close)
             {
                 shootPose = new Pose(60, 90, Math.toRadians(135));
@@ -62,5 +64,9 @@ public class AutoDrive {
     public Pose getShootPose() {
         return shootPose;
     }
+    public Pose getAutoParkingPose(){
+        return AutoParkingPose;
+    }
+
 
 }
