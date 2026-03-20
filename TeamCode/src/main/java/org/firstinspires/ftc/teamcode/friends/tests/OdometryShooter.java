@@ -95,7 +95,7 @@ public class OdometryShooter {
         return CLOSE_RPM + slopeRPM * (distance - CLOSE_DIST);
     }
 
-    //returns hoodposition based on distance
+    //returns hoodPosition based on distance
     public double getHoodPosition(double distance) {
         distance = Range.clip(distance, CLOSE_DIST, FAR_DIST);
         double slopeHood = (FAR_HOOD - CLOSE_HOOD) / (FAR_DIST - CLOSE_DIST);
