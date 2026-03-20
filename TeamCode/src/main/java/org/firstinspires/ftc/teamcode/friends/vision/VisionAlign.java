@@ -80,8 +80,10 @@ public class VisionAlign {
                     turretRotatePower = Range.clip(xError * kP_rotate, -MAX_ROTATE_TURRET_POWER, MAX_ROTATE_TURRET_POWER);
                 }
 
-                isAligned = Math.abs(lastXError) < alignmentTolerance;
-
+                if(Math.abs(lastXError) < alignmentTolerance)
+                {
+                    isAligned = true;
+                }
 
                 double targetArea = results.getTa();
                 double desiredAreaClose = 1.14;

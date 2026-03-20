@@ -2,7 +2,7 @@ package org.firstinspires.ftc.teamcode.friends.comp;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.Gamepad;
+import com.qualcomm.robotcore.hardware.Gamepad;;
 
 import org.firstinspires.ftc.teamcode.friends.hardwareMap;
 
@@ -18,10 +18,10 @@ public class Comp extends LinearOpMode {
     private float servoPosition = 0.0f;
 
     // -------- Gamepads --------
-    public final Gamepad currentGp1 = new Gamepad();
-    public final Gamepad previousGp1 = new Gamepad();
-    public final Gamepad currentGp2 = new Gamepad();
-    public final Gamepad previousGp2 = new Gamepad();
+    public Gamepad currentGp1;
+    public Gamepad previousGp1;
+    public Gamepad currentGp2;
+    public Gamepad previousGp2;
 
     //-----DRIVE----
     public double drive;
@@ -32,11 +32,16 @@ public class Comp extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         robot = new hardwareMap(hardwareMap);
 
+        currentGp1 = gamepad1;
+        previousGp1 = new Gamepad(); // optional, just for storing previous state
+        currentGp2 = gamepad2;
+        previousGp2 = new Gamepad();
+
         waitForStart();
         if (isStopRequested()) return;
 
         while (opModeIsActive()) {
-            updateGamepads();
+            UpdatesGamePads();
 
             applyDrive();
             handleIntake();
@@ -52,7 +57,7 @@ public class Comp extends LinearOpMode {
     // Initialization
     // =========================
 
-    public void updateGamepads() {
+    public void UpdatesGamePads() {
         previousGp1.copy(currentGp1);
         currentGp1.copy(gamepad1);
 

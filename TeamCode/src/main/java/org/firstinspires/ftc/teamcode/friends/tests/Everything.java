@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode.friends.tests;
 
 
 import com.pedropathing.follower.Follower;
-import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
@@ -27,6 +26,8 @@ public class Everything extends LinearOpMode {
     Follower follower;
 
     boolean AutoDriveActive = false;
+    double drive, strafe, rotate;
+
 
     // --- Shooting zones ---
 
@@ -37,6 +38,8 @@ public class Everything extends LinearOpMode {
         comp = new Comp();
         vision = new VisionAlign();
         AutoShoot = new ShooterController();
+
+
 
         limelight = hardwareMap.get(Limelight3A.class, "limelight"); //Make sure to name the Ethernet Device "limelight"
         limelight.setPollRateHz(100);
@@ -67,8 +70,10 @@ public class Everything extends LinearOpMode {
 
 
             // --- Update Everything
-            comp.updateGamepads();
-            comp.readDriveInputs();
+            drive  = -comp.currentGp1.left_stick_y;
+            strafe = comp.currentGp1.left_stick_x * 1.1;
+            rotate = comp.currentGp1.right_stick_x;
+            comp.UpdatesGamePads();
             AutoDriveActive = false;
 
             LLResult result = limelight.getLatestResult();
@@ -134,6 +139,7 @@ public class Everything extends LinearOpMode {
             } else {
                 if (!AutoShoot.isBusy()) {
                     comp.applyDrive();
+                    comp.handleIntake();
                 }
             }
 
@@ -149,11 +155,7 @@ public class Everything extends LinearOpMode {
             telemetry.addData("Target RPM", targetRPM);
             telemetry.addData("Hood", hoodPos);
 
-            //Intake + drive
-            if (!AutoShoot.isBusy()) {
-                comp.handleIntake();
-                comp.applyDrive();
-            }
+
             //Applies override for turret and hood
             boolean manualOverride = comp.currentGp2.dpad_right;
 
@@ -174,10 +176,13 @@ public class Everything extends LinearOpMode {
             telemetry.addData("Drive Active", AutoDriveActive);
             telemetry.addData("Vision Ta", result != null ? result.getTa() : 0);
             telemetry.addData("Aligned", vision.isAligned);
+            telemetry.addData("Current Robot Pose", follower.getPose());
             telemetry.update();
 
 
         }
+
+
 
     }
 
