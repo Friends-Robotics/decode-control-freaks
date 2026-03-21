@@ -11,7 +11,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.friends.hardwareMap;
 import org.firstinspires.ftc.teamcode.friends.vision.VisionAlign;
-import org.firstinspires.ftc.teamcode.friends.comp.Comp;
+import org.firstinspires.ftc.teamcode.friends.comp.Helpers;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 
@@ -19,7 +19,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 public class Everything extends LinearOpMode {
 
     hardwareMap robot;
-    Comp comp;
+    Helpers helpers;
     VisionAlign vision;
     ShooterController AutoShoot;
     Limelight3A limelight;
@@ -35,7 +35,7 @@ public class Everything extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
 
         robot = new hardwareMap(hardwareMap);
-        comp = new Comp(robot);
+        helpers = new Helpers(robot);
         vision = new VisionAlign();
         AutoShoot = new ShooterController();
 
@@ -70,8 +70,8 @@ public class Everything extends LinearOpMode {
 
 
             // --- Update Everything
-            comp.updateGamepads(gamepad1, gamepad2);
-            comp.readDriveInputs();
+            helpers.updateGamepads(gamepad1, gamepad2);
+            helpers.readDriveInputs();
 
             LLResult result = limelight.getLatestResult();
             vision.update(result, true, robot.turretMotor.getCurrentPosition());
@@ -107,8 +107,8 @@ public class Everything extends LinearOpMode {
                     robotPose,
                     goalPose,
                     vision.turretRotatePower,  // vision correction
-                    comp.rotate,
-                    comp.strafe,
+                    helpers.rotate,
+                    helpers.strafe,
                     robot.turretMotor.getCurrentPosition()
             );
 
@@ -119,9 +119,9 @@ public class Everything extends LinearOpMode {
             boolean readyToShoot =
                     vision.isAligned &&
                             robot.shooterAtSpeed(50) &&
-                            Math.abs(comp.rotate) < 0.1 &&
-                            Math.abs(comp.drive) < 0.1 &&
-                            Math.abs(comp.strafe) < 0.1;
+                            Math.abs(helpers.rotate) < 0.1 &&
+                            Math.abs(helpers.drive) < 0.1 &&
+                            Math.abs(helpers.strafe) < 0.1;
 
             if (!AutoShoot.isBusy() && readyToShoot) {
                 AutoShoot.startShooting(3, hoodPos, targetRPM);
@@ -135,8 +135,8 @@ public class Everything extends LinearOpMode {
                 }
             } else {
                 if (!AutoShoot.isBusy()) {
-                    comp.applyDrive();
-                    comp.handleIntake();
+                    helpers.handleDrive();
+                    helpers.handleIntake();
                 }
             }
 
@@ -144,7 +144,7 @@ public class Everything extends LinearOpMode {
             double autoRotate = OdometryShooter.getDriveRotatePower(robotPose, goalPose);
 
             if (AutoDriveActive || AutoShoot.isBusy()) {
-                comp.rotate = autoRotate;
+                helpers.rotate = autoRotate;
             }
 
             // --- TELEMETRY (FOR TUNING)
@@ -158,14 +158,14 @@ public class Everything extends LinearOpMode {
 
             if (manualOverride) {
                 robot.hood.setPosition(0);
-                comp.handleTurret();
-                comp.handleShooterAngle();
+                helpers.handleTurret();
+                helpers.handleShooterAngle();
             } else {
                 robot.turretMotor.setPower(turretPower);
             }
 
             // --- Shooter state machine ---
-            AutoShoot.update(robot, comp, vision);
+            AutoShoot.update(robot, helpers, vision);
             // --- Telemetry ---
             telemetry.addData("Shooter RPM", robot.getShooterRPM());
             telemetry.addData("Hood Pos", AutoShoot.hoodPos);

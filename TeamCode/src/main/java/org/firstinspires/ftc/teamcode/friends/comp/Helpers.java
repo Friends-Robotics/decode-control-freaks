@@ -3,36 +3,28 @@ package org.firstinspires.ftc.teamcode.friends.comp;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import org.firstinspires.ftc.teamcode.friends.hardwareMap;
 
-public class Comp {
-    // -------- Hardware --------
-    private hardwareMap robot;
+public class Helpers {
+    private final hardwareMap robot;
 
-    // -------- State --------
     public double speedModifier = 0.8;
     private float intakePower = -0.8f;
     private float shooterPower = 0.0f;
     private float turretPower = 0.0f;
     private float servoPosition = 0.0f;
 
-    // -------- Gamepads --------
     public final Gamepad currentGp1 = new Gamepad();
     public final Gamepad previousGp1 = new Gamepad();
     public final Gamepad currentGp2 = new Gamepad();
     public final Gamepad previousGp2 = new Gamepad();
 
-    //-----DRIVE----
     public double drive;
     public double strafe;
     public double rotate;
 
-    // Constructor
-    public Comp(hardwareMap robot) {
+    public Helpers(hardwareMap robot) {
         this.robot = robot;
     }
 
-    // =========================
-    // Gamepad Updates
-    // =========================
     public void updateGamepads(Gamepad gp1, Gamepad gp2) {
         previousGp1.copy(currentGp1);
         currentGp1.copy(gp1);
@@ -41,16 +33,13 @@ public class Comp {
         currentGp2.copy(gp2);
     }
 
-    // =========================
-    // Drive
-    // =========================
     public void readDriveInputs() {
         drive = -currentGp1.left_stick_y;
         strafe = currentGp1.left_stick_x * 1.1;
         rotate = currentGp1.right_stick_x;
     }
 
-    public void applyDrive() {
+    public void handleDrive() {
         if (currentGp1.touchpad && !previousGp1.touchpad) {
             speedModifier = (speedModifier == 0.8) ? 1.0 : 0.8;
         }
@@ -68,9 +57,6 @@ public class Comp {
         robot.backRightMotor.setPower(br * speedModifier);
     }
 
-    // =========================
-    // Intake
-    // =========================
     public void handleIntake() {
         if (currentGp2.right_trigger > 0.8 && previousGp2.right_trigger <= 0.8) {
             intakePower = 0.8f;
@@ -87,9 +73,6 @@ public class Comp {
         }
     }
 
-    // =========================
-    // Shooter
-    // =========================
     public void handleShooter() {
         if (currentGp2.dpad_up && !previousGp2.dpad_up) shooterPower += 0.1f;
         if (currentGp2.dpad_down && !previousGp2.dpad_down) shooterPower -= 0.1f;
@@ -105,9 +88,6 @@ public class Comp {
         }
     }
 
-    // =========================
-    // Hood
-    // =========================
     public void handleShooterAngle() {
         if (currentGp2.triangle && !previousGp2.triangle) servoPosition += 0.05f;
         if (currentGp2.cross && !previousGp2.cross) servoPosition -= 0.05f;
@@ -116,9 +96,6 @@ public class Comp {
         robot.hood.setPosition(servoPosition);
     }
 
-    // =========================
-    // Turret
-    // =========================
     public void handleTurret() {
         if (currentGp2.left_bumper && !previousGp2.left_bumper) turretPower -= 0.1f;
         if (currentGp2.right_bumper && !previousGp2.right_bumper) turretPower += 0.1f;

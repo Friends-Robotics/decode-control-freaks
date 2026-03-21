@@ -1,6 +1,6 @@
 package org.firstinspires.ftc.teamcode.friends.tests;
 import org.firstinspires.ftc.teamcode.friends.hardwareMap;
-import org.firstinspires.ftc.teamcode.friends.comp.Comp;
+import org.firstinspires.ftc.teamcode.friends.comp.Helpers;
 import org.firstinspires.ftc.teamcode.friends.vision.VisionAlign;
 
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -44,7 +44,7 @@ public class ShooterController {
     }
 
     // --- Main state machine ---
-    public void update(hardwareMap robot, Comp comp, VisionAlign vision) {
+    public void update(hardwareMap robot, Helpers helpers, VisionAlign vision) {
         double rpmScale = robot.targetShooterRPM / 3300.0; // base RPM for close shot
         double adjustedFeedTime = feedTime / rpmScale;
         double adjustedSpacingTime = spacingTime / rpmScale;
@@ -106,7 +106,7 @@ public class ShooterController {
                 break;
 
             case RECOVERING:
-                double movementPenalty = Math.abs(comp.drive) + Math.abs(comp.strafe); // moving correction
+                double movementPenalty = Math.abs(helpers.drive) + Math.abs(helpers.strafe); // moving correction
                 if (robot.shooterAtSpeed(50) && timer.seconds() > minRecoverTime + movementPenalty * 0.1) {
                     ballsToShoot--;
                     if (ballsToShoot > 0) {
