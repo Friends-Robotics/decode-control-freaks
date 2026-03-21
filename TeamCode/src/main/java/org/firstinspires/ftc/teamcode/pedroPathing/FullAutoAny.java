@@ -61,14 +61,14 @@ public class FullAutoAny extends LinearOpMode {
     boolean PosesMirrored = false;
 
     Pose[] intakePoses = {
-            new Pose(42, 84, Math.toRadians(180)),
-            new Pose(42, 60, Math.toRadians(180)),
-            new Pose(42, 36, Math.toRadians(180)),
+            new Pose(84, 42, Math.toRadians(180)),
+            new Pose(60, 42, Math.toRadians(180)),
+            new Pose(36, 42, Math.toRadians(180)),
     };
     Pose[] intakePoses2 = {
-            new Pose(21, 84, Math.toRadians(180)),
-            new Pose(9, 60, Math.toRadians(180)),
-            new Pose(9, 36, Math.toRadians(180)),
+            new Pose(84, 21, Math.toRadians(180)),
+            new Pose(60, 9, Math.toRadians(180)),
+            new Pose(36, 9, Math.toRadians(180)),
     };
 
     PathChain intakeFullPath;
@@ -247,16 +247,16 @@ public class FullAutoAny extends LinearOpMode {
         if (Red && !PosesMirrored) {
             PosesMirrored = true;
             for (int i = 0; i < intakePoses.length; i++) {
-                AutoForRedIntake1Offset = (72 -intakePoses[i].getX())*2;// 72 is centre of field
-                AutoForRedIntake2Offset = (72 -intakePoses2[i].getX())*2;
+                AutoForRedIntake1Offset = (72 -intakePoses[i].getY())*2;// 72 is centre of field
+                AutoForRedIntake2Offset = (72 -intakePoses2[i].getY())*2;
                 intakePoses2[i] = new Pose(
-                        intakePoses2[i].getX() + AutoForRedIntake2Offset,
-                        intakePoses2[i].getY(),
+                        intakePoses2[i].getX(),
+                        intakePoses2[i].getY() + AutoForRedIntake2Offset,
                         intakePoses2[i].getHeading() + Math.toRadians(180)
                 );
                 intakePoses[i] = new Pose(
-                        intakePoses[i].getX() + AutoForRedIntake1Offset,
-                        intakePoses[i].getY(),
+                        intakePoses[i].getX(),
+                        intakePoses[i].getY() + AutoForRedIntake1Offset,
                         intakePoses[i].getHeading() + Math.toRadians(180)
                 );
             }

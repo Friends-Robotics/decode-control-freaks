@@ -79,16 +79,13 @@ public class Comp {
     public void handleIntake() {
         if (currentGp2.right_trigger > 0.8 && previousGp2.right_trigger <= 0.8) {
             intakePower = 0.8f;
+            robot.intakeMotor.setPower(intakePower);
         }
 
         if (currentGp2.left_trigger > 0.8 && previousGp2.left_trigger <= 0.8) {
             intakePower = -0.8f;
-        }
-
-        if (currentGp2.x) {
             robot.intakeMotor.setPower(intakePower);
-        } else {
-            robot.intakeMotor.setPower(0);
+
         }
     }
 

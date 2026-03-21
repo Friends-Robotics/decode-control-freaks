@@ -27,7 +27,6 @@ public class Everything extends LinearOpMode {
     Follower follower;
 
     boolean AutoDriveActive = false;
-    double drive, strafe, rotate;
 
 
     // --- Shooting zones ---
@@ -81,6 +80,8 @@ public class Everything extends LinearOpMode {
                 comp.updateGamepads(gamepad1, gamepad2);
                 comp.readDriveInputs();
 
+                //Update turret
+
                 // --- Update follower ONCE
                 follower.update();
                 Pose robotPose = follower.getPose();
@@ -131,7 +132,7 @@ public class Everything extends LinearOpMode {
                 double targetRPM = odometryShooter.getTargetRPM(distance);
                 double hoodPos = odometryShooter.getHoodPosition(distance);
 
-                double turretPower = odometryShooter.getTurretPower(
+                /*double turretPower = odometryShooter.getTurretPower(
                         robotPose,
                         goalPose,
                         vision.turretRotatePower,
@@ -139,6 +140,8 @@ public class Everything extends LinearOpMode {
                         comp.strafe,
                         robot.turretMotor.getCurrentPosition()
                 );
+
+                 */
 
                 robot.targetShooterRPM = 0.8 * robot.targetShooterRPM + 0.2 * targetRPM;
 
@@ -183,7 +186,7 @@ public class Everything extends LinearOpMode {
                     comp.handleTurret();
                     comp.handleShooterAngle();
                 } else {
-                    robot.turretMotor.setPower(turretPower);
+                    robot.turretMotor.setPower(vision.turretRotatePower);
                 }
 
                 // =========================

@@ -35,11 +35,12 @@ public class OdometryShooter {
     }
 
 
+
     //Returns turret motor power, using odometry aiming + optional vision + driver inputs
     public double getTurretPower(Pose robotPose, Pose goalPose, double visionCorrection, double compRotate, double compStrafe, int turretTicks){
 
         // --- Calculate target angle ---
-        double TurretOffset = 10;
+        double TurretOffset = 15;
         double dx = goalPose.getX() - robotPose.getX();
         double dy = goalPose.getY() - robotPose.getY();
         double targetAngle = Math.toDegrees(Math.atan2(dy, dx));
