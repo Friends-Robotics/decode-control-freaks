@@ -44,13 +44,13 @@ public class hardwareMap {
     public hardwareMap(com.qualcomm.robotcore.hardware.HardwareMap hardwaremap) {
 
         frontRightMotor = hardwaremap.get(DcMotor.class, "FRM");
-        frontRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        frontRightMotor.setDirection(DcMotorSimple.Direction.FORWARD);
         frontLeftMotor = hardwaremap.get(DcMotor.class, "FLM");
-        frontLeftMotor.setDirection(DcMotorSimple.Direction.FORWARD);
+        frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         backRightMotor = hardwaremap.get(DcMotor.class, "BRM");
-        backRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        backRightMotor.setDirection(DcMotorSimple.Direction.FORWARD);
         backLeftMotor = hardwaremap.get(DcMotor.class, "BLM");
-        backLeftMotor.setDirection(DcMotorSimple.Direction.FORWARD);
+        backLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         intakeMotor = hardwaremap.get(DcMotor.class, "Intake");
         feeder = hardwaremap.get(Servo.class, "Feeder");
 

@@ -17,14 +17,14 @@ public class VisionAlign {
     double MIN_TURRET_ANGLE = -85.0;
     double MAX_TURRET_ANGLE = 85.0;
 
-    public class TurretConstants {
+    public static class TurretConstants {
         public static final double TICKS_PER_DEGREE = (193 - (-193)) / 180.0;
     }
     double currentTurretAngle = 0;
 
     public double lastXError = 0;
     public boolean isAligned = false;
-    public double alignmentTolerance = 1.5;
+    public double alignmentTolerance = 5;
     double turretDirection = 1;
 
     double kP_rotate = 0.7;
@@ -79,8 +79,7 @@ public class VisionAlign {
                 if (Math.abs(xError) > ROTATE_TOLERANCE) {
                     turretRotatePower = Range.clip(xError * kP_rotate, -MAX_ROTATE_TURRET_POWER, MAX_ROTATE_TURRET_POWER);
                 }
-
-                if(Math.abs(lastXError) < alignmentTolerance)
+                if(Math.abs(xError) <= alignmentTolerance)
                 {
                     isAligned = true;
                 }

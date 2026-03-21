@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.friends.tests;
 
+import com.bylazar.field.Line;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.Pose;
@@ -45,10 +46,20 @@ public class AutoDrive {
         }
     }
 
+
+
     public void driveToShoot() {
+        Pose currentPose = follower.getPose();
+
+        Pose control = new Pose(
+                (currentPose.getX() + shootPose.getX()) / 2,
+                (currentPose.getY() + shootPose.getY()) / 2,
+                0
+        );
+
         follower.followPath(
                 new PathBuilder(follower)
-                        .addPath(new Path(new BezierCurve(follower.getPose(), shootPose)))
+                        .addPath(new Path(new BezierCurve(currentPose, control, shootPose)))
                         .build()
         );
     }

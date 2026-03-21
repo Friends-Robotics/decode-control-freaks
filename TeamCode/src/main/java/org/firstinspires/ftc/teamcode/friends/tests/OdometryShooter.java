@@ -39,12 +39,13 @@ public class OdometryShooter {
     public double getTurretPower(Pose robotPose, Pose goalPose, double visionCorrection, double compRotate, double compStrafe, int turretTicks){
 
         // --- Calculate target angle ---
+        double TurretOffset = 10;
         double dx = goalPose.getX() - robotPose.getX();
         double dy = goalPose.getY() - robotPose.getY();
         double targetAngle = Math.toDegrees(Math.atan2(dy, dx));
 
         double robotHeading = Math.toDegrees(robotPose.getHeading());
-        double desiredTurretAngle = targetAngle - robotHeading;
+        double desiredTurretAngle = targetAngle - robotHeading + TurretOffset;
 
 
         while (desiredTurretAngle > 180) desiredTurretAngle -= 360;
@@ -54,7 +55,7 @@ public class OdometryShooter {
         desiredTurretAngle = Range.clip(desiredTurretAngle, MIN_TURRET_ANGLE, MAX_TURRET_ANGLE);
 
         // proportional odometry aiming
-        double currentTurretAngle = turretTicks / VisionAlign.TurretConstants.TICKS_PER_DEGREE;
+        double currentTurretAngle = (turretTicks / VisionAlign.TurretConstants.TICKS_PER_DEGREE);
         double error = desiredTurretAngle - currentTurretAngle;
         double odoTurretPower = Range.clip(error * kOdoAim, -0.2, 0.2);
 

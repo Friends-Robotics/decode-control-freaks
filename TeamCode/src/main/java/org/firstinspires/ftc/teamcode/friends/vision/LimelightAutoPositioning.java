@@ -71,11 +71,11 @@ public class LimelightAutoPositioning extends LinearOpMode {
                 strafe = 0;
                 rotate = 0;
             }
-            if(gamepad1.a)
+            if(gamepad1.a && stepIndex < 2)
             {
                 stepIndex ++;
             }
-            if(gamepad1.y)
+            if(gamepad1.y && stepIndex > 0 )
             {
                 stepIndex --;
             }

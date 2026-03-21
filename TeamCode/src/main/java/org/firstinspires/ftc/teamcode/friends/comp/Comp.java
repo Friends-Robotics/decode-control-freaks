@@ -55,17 +55,22 @@ public class Comp {
             speedModifier = (speedModifier == 0.8) ? 1.0 : 0.8;
         }
 
-        double denominator = Math.max(Math.abs(drive) + Math.abs(strafe) + Math.abs(rotate), 1);
+        double denominator = Math.max(Math.abs(drive) + Math.abs(strafe) + Math.abs(rotate), 1.0);
 
         double fl = (drive + strafe + rotate) / denominator;
         double bl = (drive - strafe + rotate) / denominator;
         double fr = (drive - strafe - rotate) / denominator;
         double br = (drive + strafe - rotate) / denominator;
 
-        robot.frontLeftMotor.setPower(fl * speedModifier);
-        robot.backLeftMotor.setPower(bl * speedModifier);
-        robot.frontRightMotor.setPower(fr * speedModifier);
-        robot.backRightMotor.setPower(br * speedModifier);
+        fl = Math.max(-0.7, Math.min(fl, 0.7));
+        bl = Math.max(-0.7, Math.min(bl, 0.7));
+        fr = Math.max(-0.7, Math.min(fr, 0.7));
+        br = Math.max(-0.7, Math.min(br, 0.7));
+
+        robot.frontLeftMotor.setPower(fl);
+        robot.backLeftMotor.setPower(bl);
+        robot.frontRightMotor.setPower(fr);
+        robot.backRightMotor.setPower(br);
     }
 
     // =========================
