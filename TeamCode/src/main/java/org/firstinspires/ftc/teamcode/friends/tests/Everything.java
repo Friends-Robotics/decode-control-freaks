@@ -58,7 +58,7 @@ public class Everything extends LinearOpMode {
         Pose goalPose = autoDrive.getGoalPose();
 
         OdometryShooter odometryShooter = new OdometryShooter(
-                0.01,     // kOdoAim
+                0.05,     // kOdoAim
                 3300, 4100,   // CLOSE_RPM, FAR_RPM
                 60, 130,      // CLOSE_DIST, FAR_DIST
                 0.00, 0.25    // CLOSE_HOOD, FAR_HOOD
@@ -78,13 +78,13 @@ public class Everything extends LinearOpMode {
 
             // --- Odometry autoDrive
 
-            if (comp.currentGp1.right_bumper && !AutoDriveActive) {
+            if (gamepad1.right_bumper && !AutoDriveActive) {
                 autoDrive = new AutoDrive(follower, isBlue, true);
                 autoDrive.driveToShoot();
                 AutoDriveActive = true;
             }
 
-            if (comp.currentGp1.left_bumper && !AutoDriveActive) {
+            if (gamepad1.left_bumper && !AutoDriveActive) {
                 autoDrive = new AutoDrive(follower, isBlue, false);
                 autoDrive.driveToShoot();
                 AutoDriveActive = true;
@@ -127,7 +127,7 @@ public class Everything extends LinearOpMode {
                 AutoShoot.startShooting(3, hoodPos, targetRPM);
             }
 
-            if (AutoDriveActive && comp.currentGp1.right_bumper && !comp.previousGp1.right_bumper) {
+            if (AutoDriveActive && gamepad1.right_bumper) {
                 follower.update();
 
                 if (!autoDrive.isBusy()) {
@@ -154,7 +154,7 @@ public class Everything extends LinearOpMode {
 
 
             //Applies override for turret and hood
-            boolean manualOverride = comp.currentGp2.dpad_right;
+            boolean manualOverride = gamepad2.dpad_right;
 
             if (manualOverride) {
                 robot.hood.setPosition(0);
