@@ -116,7 +116,7 @@ public class FullAutoAny extends LinearOpMode {
         // ---------- Main loop ----------
         while (opModeIsActive()) {
 
-            comp = new Comp(robot);
+            comp = new Helpers(robot);
 
             follower.update(); // updates pose via Pinpoint
             Pose currentpose = follower.getPose();

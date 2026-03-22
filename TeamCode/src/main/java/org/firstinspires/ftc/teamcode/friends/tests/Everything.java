@@ -11,9 +11,9 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
+import org.firstinspires.ftc.teamcode.friends.comp.Helpers;
 import org.firstinspires.ftc.teamcode.friends.hardwareMap;
 import org.firstinspires.ftc.teamcode.friends.vision.VisionAlign;
-import org.firstinspires.ftc.teamcode.friends.comp.Comp;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 
@@ -21,7 +21,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 public class Everything extends LinearOpMode {
 
     hardwareMap robot;
-    Comp comp;
+    Helpers comp;
     VisionAlign vision;
     ShooterController AutoShoot;
     Limelight3A limelight;
@@ -42,7 +42,7 @@ public class Everything extends LinearOpMode {
         );
 
         robot = new hardwareMap(hardwareMap);
-        comp = new Comp(robot);
+        comp = new Helpers(robot);
         vision = new VisionAlign();
         AutoShoot = new ShooterController();
 

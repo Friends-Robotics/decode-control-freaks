@@ -39,7 +39,7 @@ public class Helpers {
         rotate = currentGp1.right_stick_x;
     }
 
-    public void handleDrive() {
+    public void applyDrive() {
         if (currentGp1.touchpad && !previousGp1.touchpad) {
             speedModifier = (speedModifier == 0.8) ? 1.0 : 0.8;
         }
