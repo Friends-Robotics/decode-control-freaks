@@ -27,6 +27,7 @@ public class VisionAlign {
     public double alignmentTolerance = 5;
     double turretDirection = 1;
 
+    double kP_angle = 0.02;
     double kP_rotate = 0.7;
     double kP_drive = 0.8;
     double kP_driveFar = 1;
@@ -34,6 +35,12 @@ public class VisionAlign {
     double MAX_ROTATE_TURRET_POWER = 0.10;
     double ROTATE_TOLERANCE = 0.8;
     double DRIVE_TOLERANCE = 0.05;
+
+    //----ODOMETRY Assist----
+    double odoAssistK = 0.1; // how much odometry helps during TRACK
+    double odoSearchK = 0.4; // stronger during SEARCH
+
+    double lastTargetAngle = 0; // for prediction
 
     double INITIAL_SEARCH_TIME = 1.00;
     double searchPower = 0.15;
@@ -45,7 +52,7 @@ public class VisionAlign {
     double LOST_DELAY = 0.25;
     ElapsedTime lostTimer = new ElapsedTime();
 
-    public void update(LLResult results, boolean enabled, int turretEncoderTicks) {
+    public void update(LLResult results, boolean enabled, int turretEncoderTicks, double odoTurretPower) {
         currentTurretAngle = turretEncoderTicks / TurretConstants.TICKS_PER_DEGREE;
         turretRotatePower = 0;
         drivePowerClose = 0;
@@ -60,6 +67,8 @@ public class VisionAlign {
         if (tagValid) {
             currentState = State.TRACK;
             lostTimer.reset();
+            // store last good target direction
+            lastTargetAngle = results.getTx();
         } else if (lostTimer.seconds() > LOST_DELAY) {
             if (currentState != State.SEARCH) {
                 currentState = State.SEARCH;
@@ -76,36 +85,60 @@ public class VisionAlign {
                 double xError = results.getTx();
                 lastXError = xError;
 
+                // --- Vision correction (primary) ---
+                double visionPower = 0;
                 if (Math.abs(xError) > ROTATE_TOLERANCE) {
-                    turretRotatePower = Range.clip(xError * kP_rotate, -MAX_ROTATE_TURRET_POWER, MAX_ROTATE_TURRET_POWER);
+                    visionPower = Range.clip(xError * kP_rotate,
+                            -MAX_ROTATE_TURRET_POWER, MAX_ROTATE_TURRET_POWER);
                 }
-                if(Math.abs(xError) <= alignmentTolerance)
-                {
+
+                // --- odometry assist ---
+                turretRotatePower = visionPower + (odoTurretPower * odoAssistK);
+
+                // Alignment check
+                if (Math.abs(xError) <= alignmentTolerance) {
                     isAligned = true;
                 }
 
+                // --- Distance control ----
                 double targetArea = results.getTa();
                 double desiredAreaClose = 1.14;
                 double desiredAreaFar = 0.3162;
+
                 double areaErrorClose = desiredAreaClose - targetArea;
                 double areaErrorFar = desiredAreaFar - targetArea;
 
-                drivePowerClose = (Math.abs(areaErrorClose) > DRIVE_TOLERANCE) ? Range.clip(areaErrorClose * kP_drive, -MAX_DRIVE_POWER, MAX_DRIVE_POWER) : 0;
-                drivePowerFar   = (Math.abs(areaErrorFar) > DRIVE_TOLERANCE) ? Range.clip(areaErrorFar * kP_driveFar, -MAX_DRIVE_POWER, MAX_DRIVE_POWER) : 0;
+                drivePowerClose = (Math.abs(areaErrorClose) > DRIVE_TOLERANCE)
+                        ? Range.clip(areaErrorClose * kP_drive, -MAX_DRIVE_POWER, MAX_DRIVE_POWER)
+                        : 0;
+
+                drivePowerFar = (Math.abs(areaErrorFar) > DRIVE_TOLERANCE)
+                        ? Range.clip(areaErrorFar * kP_driveFar, -MAX_DRIVE_POWER, MAX_DRIVE_POWER)
+                        : 0;
+
                 break;
 
+
+
             case SEARCH:
+
+                //Biases the turret to turn towards the last known direction
+                turretRotatePower += lastTargetAngle * 0.01;
+
+                // Use odometry to point toward goal instead of blind sweeping
+                double odoSearchPower = odoTurretPower * odoSearchK;
+
                 if (searchTimer.seconds() < INITIAL_SEARCH_TIME) {
-                    turretDirection = Math.signum(lastXError);
-                    if (turretDirection == 0) turretDirection = 1;
-                    turretRotatePower = searchPower * turretDirection;
+                    // Try odometry first (fast reacquire)
+                    turretRotatePower = odoSearchPower;
                 } else {
+                    // fallback to sweep if still no tag
                     turretRotatePower = searchPower * turretDirection;
-                    if (currentTurretAngle >= MAX_TURRET_ANGLE && turretDirection > 0) turretDirection = -1;
-                    else if (currentTurretAngle <= MIN_TURRET_ANGLE && turretDirection < 0) turretDirection = 1;
-                    turretRotatePower = Range.clip(turretRotatePower,
-                            (currentTurretAngle <= MIN_TURRET_ANGLE) ? 0 : -MAX_ROTATE_TURRET_POWER,
-                            (currentTurretAngle >= MAX_TURRET_ANGLE) ? 0 : MAX_ROTATE_TURRET_POWER);
+
+                    if (currentTurretAngle >= MAX_TURRET_ANGLE && turretDirection > 0)
+                        turretDirection = -1;
+                    else if (currentTurretAngle <= MIN_TURRET_ANGLE && turretDirection < 0)
+                        turretDirection = 1;
                 }
                 break;
         }

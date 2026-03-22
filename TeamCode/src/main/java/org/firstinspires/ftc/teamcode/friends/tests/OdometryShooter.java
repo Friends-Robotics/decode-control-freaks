@@ -37,7 +37,7 @@ public class OdometryShooter {
 
 
     //Returns turret motor power, using odometry aiming + optional vision + driver inputs
-    public double getTurretPower(Pose robotPose, Pose goalPose, double visionCorrection, double compRotate, double compStrafe, int turretTicks){
+    public double getTurretPower(Pose robotPose, Pose goalPose, int turretTicks){
 
         // --- Calculate target angle ---
         double TurretOffset = 15;
@@ -58,10 +58,9 @@ public class OdometryShooter {
         // proportional odometry aiming
         double currentTurretAngle = (turretTicks / VisionAlign.TurretConstants.TICKS_PER_DEGREE);
         double error = desiredTurretAngle - currentTurretAngle;
-        double odoTurretPower = Range.clip(error * kOdoAim, -0.2, 0.2);
+        double odoTurretPower = Range.clip(error * kOdoAim, -0.1, 0.1);
 
-        // combine odometry, vision, and driver inputs
-        return odoTurretPower + visionCorrection + compRotate * 0.25 + compStrafe * 0.15;
+        return odoTurretPower;
     }
 
     public static double getDriveRotatePower(Pose robotPose, Pose goalPose) {

@@ -123,7 +123,15 @@ public class FullAutoAny extends LinearOpMode {
             Pose currentpose = follower.getPose();
             LLResult result = limelight.getLatestResult();
             int turretTicks = robot.turretMotor.getCurrentPosition();
-            vision.update(result, true, turretTicks);
+
+            // turret power = odometry + vision
+            double odoTurretPower = odometryShooter.getTurretPower(
+                    currentpose,
+                    AutoPoses.getShootPose(),
+                    robot.turretMotor.getCurrentPosition()
+            );
+
+            vision.update(result, true, robot.turretMotor.getCurrentPosition(),odoTurretPower);
 
             // distance to goal
             double distance = odometryShooter.getDistance(currentpose, shootPose);
@@ -132,16 +140,7 @@ public class FullAutoAny extends LinearOpMode {
             double targetRPM = odometryShooter.getTargetRPM(distance);
             double hoodPos = odometryShooter.getHoodPosition(distance);
 
-            // turret power = odometry + vision
-            double turretPower = odometryShooter.getTurretPower(
-                    currentpose,
-                    AutoPoses.getShootPose(),
-                    vision.turretRotatePower,  // vision correction
-                    0, 0, // no driver input in Auto
-                    robot.turretMotor.getCurrentPosition()
-            );
-
-            robot.turretMotor.setPower(turretPower);
+            robot.turretMotor.setPower(vision.turretRotatePower);
             robot.targetShooterRPM = 0.8 * robot.targetShooterRPM + 0.2 * targetRPM;
 
             // ---------- Shooter Controller update ----------

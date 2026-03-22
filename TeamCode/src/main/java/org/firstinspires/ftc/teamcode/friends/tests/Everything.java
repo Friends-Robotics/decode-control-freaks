@@ -82,16 +82,24 @@ public class Everything extends LinearOpMode {
 
                 //Update turret
 
-                // --- Update follower ONCE
+                // --- Update follower ONCE NOT TWICE
                 follower.update();
                 Pose robotPose = follower.getPose();
 
+                double odoTurretPower = odometryShooter.getTurretPower(
+                        robotPose,
+                        goalPose,
+                        robot.turretMotor.getCurrentPosition()
+                );
+
+
                 // --- Vision update
                 LLResult result = limelight.getLatestResult();
-                vision.update(result, true, robot.turretMotor.getCurrentPosition());
+                vision.update(result, true, robot.turretMotor.getCurrentPosition(),odoTurretPower);
 
                 // --- Distance calc
                 double distance = odometryShooter.getDistance(robotPose, goalPose);
+
 
                 // =========================
                 // AUTO DRIVE TRIGGERS
@@ -132,17 +140,6 @@ public class Everything extends LinearOpMode {
                 double targetRPM = odometryShooter.getTargetRPM(distance);
                 double hoodPos = odometryShooter.getHoodPosition(distance);
 
-                /*double turretPower = odometryShooter.getTurretPower(
-                        robotPose,
-                        goalPose,
-                        vision.turretRotatePower,
-                        comp.rotate,
-                        comp.strafe,
-                        robot.turretMotor.getCurrentPosition()
-                );
-
-                 */
-
                 robot.targetShooterRPM = 0.8 * robot.targetShooterRPM + 0.2 * targetRPM;
 
                 // =========================
@@ -153,6 +150,7 @@ public class Everything extends LinearOpMode {
                                 Math.abs(comp.rotate) < 0.1 &&
                                 Math.abs(comp.drive) < 0.1 &&
                                 Math.abs(comp.strafe) < 0.1 &&
+                                Math.abs(vision.turretRotatePower) < 0.03 &&
                                 gamepad1.a;
 
                 if (!AutoShoot.isBusy() && readyToShoot) {
@@ -186,6 +184,7 @@ public class Everything extends LinearOpMode {
                     comp.handleTurret();
                     comp.handleShooterAngle();
                 } else {
+                    //Auto turret
                     robot.turretMotor.setPower(vision.turretRotatePower);
                 }
 
