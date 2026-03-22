@@ -8,98 +8,78 @@ import org.firstinspires.ftc.teamcode.friends.vision.VisionAlign;
 public class OdometryShooter {
 
     // --- Turret limits ---
-    private final double MAX_TURRET_ANGLE = 85; // same as vision
+    private final double MAX_TURRET_ANGLE = 85;
     private final double MIN_TURRET_ANGLE = -85;
 
-    // --- Proportional gain for odometry turret aiming ---
-    private final double kOdoAim;
+    // --- Goal offset (TAG → GOAL CENTER) ---
+    // Tune these (meters)
+    private final double TAG_TO_GOAL_X; // right (+) / left (-) 6
+    private final double TAG_TO_GOAL_Y; // forward/up (+) 2
 
-    // --- Shooting zones ---
-    private final double CLOSE_RPM;
-    private final double FAR_RPM;
-    private final double CLOSE_DIST;
-    private final double FAR_DIST;
-    private final double CLOSE_HOOD;
-    private final double FAR_HOOD;
-
-
-    public OdometryShooter(double kOdoAim,double CLOSE_RPM, double FAR_RPM, double CLOSE_DIST, double FAR_DIST, double CLOSE_HOOD, double FAR_HOOD){
-
-        this.kOdoAim = kOdoAim;
-        this.CLOSE_RPM = CLOSE_RPM;
-        this.FAR_RPM = FAR_RPM;
-        this.CLOSE_DIST = CLOSE_DIST;
-        this.FAR_DIST = FAR_DIST;
-        this.CLOSE_HOOD = CLOSE_HOOD;
-        this.FAR_HOOD = FAR_HOOD;
+    public OdometryShooter(double tagToGoalX, double tagToGoalY) {
+        this.TAG_TO_GOAL_X = tagToGoalX;
+        this.TAG_TO_GOAL_Y = tagToGoalY;
     }
 
+    // 🔥 MAIN METHOD: returns desired turret angle (degrees)
+    public double getTargetTurretAngle(Pose robotPose, Pose tagPose) {
 
+        // Vector robot → tag
+        double dx = tagPose.getX() - robotPose.getX();
+        double dy = tagPose.getY() - robotPose.getY();
 
-    //Returns turret motor power, using odometry aiming + optional vision + driver inputs
-    public double getTurretPower(Pose robotPose, Pose goalPose, int turretTicks){
+        // Add offset to get goal center
+        double dxGoal = dx + TAG_TO_GOAL_X;
+        double dyGoal = dy + TAG_TO_GOAL_Y;
 
-        // --- Calculate target angle ---
-        double TurretOffset = 15;
-        double dx = goalPose.getX() - robotPose.getX();
-        double dy = goalPose.getY() - robotPose.getY();
-        double targetAngle = Math.toDegrees(Math.atan2(dy, dx));
+        // Angle to goal (field frame)
+        double targetAngle = Math.toDegrees(Math.atan2(dyGoal, dxGoal));
 
+        // Robot heading
         double robotHeading = Math.toDegrees(robotPose.getHeading());
-        double desiredTurretAngle = targetAngle - robotHeading + TurretOffset;
 
+        // Convert to turret-relative angle
+        double desiredTurretAngle = targetAngle - robotHeading;
 
+        // Normalize to [-180, 180]
         while (desiredTurretAngle > 180) desiredTurretAngle -= 360;
         while (desiredTurretAngle < -180) desiredTurretAngle += 360;
 
-        // clamp to turret limits
-        desiredTurretAngle = Range.clip(desiredTurretAngle, MIN_TURRET_ANGLE, MAX_TURRET_ANGLE);
-
-        // proportional odometry aiming
-        double currentTurretAngle = (turretTicks / VisionAlign.TurretConstants.TICKS_PER_DEGREE);
-        double error = desiredTurretAngle - currentTurretAngle;
-        double odoTurretPower = Range.clip(error * kOdoAim, -0.1, 0.1);
-
-        return odoTurretPower;
+        // Clamp to turret limits
+        return Range.clip(desiredTurretAngle, MIN_TURRET_ANGLE, MAX_TURRET_ANGLE);
     }
 
-    public static double getDriveRotatePower(Pose robotPose, Pose goalPose) {
+    // --- Distance (for shooter tuning) ---
+    public double getDistanceToGoal(Pose robotPose, Pose tagPose) {
 
-        double dx = goalPose.getX() - robotPose.getX();
-        double dy = goalPose.getY() - robotPose.getY();
+        double dx = tagPose.getX() - robotPose.getX() + TAG_TO_GOAL_X;
+        double dy = tagPose.getY() - robotPose.getY() + TAG_TO_GOAL_Y;
 
-        double targetAngle = Math.toDegrees(Math.atan2(dy, dx));
-        double robotHeading = Math.toDegrees(robotPose.getHeading());
-
-        double error = targetAngle - robotHeading;
-
-        // normalize
-        while (error > 180) error -= 360;
-        while (error < -180) error += 360;
-
-        double kRotate = 0.01; // tune this
-
-        return Range.clip(error * kRotate, -0.4, 0.4);
-    }
-
-    //Returns distance to goal
-    public double getDistance(Pose robotPose, Pose goalPose) {
-        double dx = goalPose.getX() - robotPose.getX();
-        double dy = goalPose.getY() - robotPose.getY();
         return Math.hypot(dx, dy);
     }
 
-    // Returns shooterRPM based on distance
-    public double getTargetRPM(double distance) {
+    // --- Shooter tuning (same as before) ---
+    public double getTargetRPM(double distance,
+                               double CLOSE_RPM, double FAR_RPM,
+                               double CLOSE_DIST, double FAR_DIST) {
+
         distance = Range.clip(distance, CLOSE_DIST, FAR_DIST);
-        double slopeRPM = (FAR_RPM - CLOSE_RPM) / (FAR_DIST - CLOSE_DIST);
-        return CLOSE_RPM + slopeRPM * (distance - CLOSE_DIST);
+        double slope = (FAR_RPM - CLOSE_RPM) / (FAR_DIST - CLOSE_DIST);
+
+        return CLOSE_RPM + slope * (distance - CLOSE_DIST);
     }
 
-    //returns hoodPosition based on distance
-    public double getHoodPosition(double distance) {
+    public double getHoodPosition(double distance,
+                                  double CLOSE_HOOD, double FAR_HOOD,
+                                  double CLOSE_DIST, double FAR_DIST) {
+
         distance = Range.clip(distance, CLOSE_DIST, FAR_DIST);
-        double slopeHood = (FAR_HOOD - CLOSE_HOOD) / (FAR_DIST - CLOSE_DIST);
-        return Range.clip(CLOSE_HOOD + slopeHood * (distance - CLOSE_DIST), 0, 0.27);
+        double slope = (FAR_HOOD - CLOSE_HOOD) / (FAR_DIST - CLOSE_DIST);
+
+        return Range.clip(
+                CLOSE_HOOD + slope * (distance - CLOSE_DIST),
+                0,
+                0.27
+        );
     }
 }

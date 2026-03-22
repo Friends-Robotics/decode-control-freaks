@@ -61,14 +61,14 @@ public class FullAutoAny extends LinearOpMode {
     boolean PosesMirrored = false;
 
     Pose[] intakePoses = {
-            new Pose(84, 42, Math.toRadians(180)),
-            new Pose(60, 42, Math.toRadians(180)),
-            new Pose(36, 42, Math.toRadians(180)),
+            new Pose(42, 84, Math.toRadians(180)),
+            new Pose(42, 60, Math.toRadians(180)),
+            new Pose(42, 36, Math.toRadians(180)),
     };
     Pose[] intakePoses2 = {
-            new Pose(84, 21, Math.toRadians(180)),
-            new Pose(60, 9, Math.toRadians(180)),
-            new Pose(36, 9, Math.toRadians(180)),
+            new Pose(21, 84, Math.toRadians(180)),
+            new Pose(9, 60, Math.toRadians(180)),
+            new Pose(9, 36, Math.toRadians(180)),
     };
 
     PathChain intakeFullPath;
@@ -94,10 +94,7 @@ public class FullAutoAny extends LinearOpMode {
         vision = new VisionAlign();
         shooterController = new ShooterController();
         odometryShooter = new OdometryShooter(
-                0.01,    // kOdoAim
-                3300, 4100,   // CLOSE_RPM, FAR_RPM
-                60, 130,      // CLOSE_DIST, FAR_DIST
-                0.00, 0.25    // CLOSE_HOOD, FAR_HOOD
+              0.1524, 0.0508   // CLOSE_HOOD, FAR_HOOD
         );
         AutoPoses = new AutoDrive(follower,Red,Close);
         shootPose = AutoPoses.getShootPose();
@@ -119,28 +116,52 @@ public class FullAutoAny extends LinearOpMode {
         // ---------- Main loop ----------
         while (opModeIsActive()) {
 
+            comp = new Comp(robot);
+
             follower.update(); // updates pose via Pinpoint
             Pose currentpose = follower.getPose();
             LLResult result = limelight.getLatestResult();
             int turretTicks = robot.turretMotor.getCurrentPosition();
 
-            // turret power = odometry + vision
-            double odoTurretPower = odometryShooter.getTurretPower(
+            // =========================
+// VISION + ODOMETRY AIMING
+// =========================
+
+// Get target turret angle (goal center, not tag)
+            double targetAngle = odometryShooter.getTargetTurretAngle(
                     currentpose,
-                    AutoPoses.getShootPose(),
-                    robot.turretMotor.getCurrentPosition()
+                    shootPose
             );
 
-            vision.update(result, true, robot.turretMotor.getCurrentPosition(),odoTurretPower);
+// VisionAlign = main controller
+            vision.update(
+                    result,
+                    true,
+                    robot.turretMotor.getCurrentPosition(),
+                    targetAngle
+            );
 
-            // distance to goal
-            double distance = odometryShooter.getDistance(currentpose, shootPose);
-
-            // target RPM & hood position
-            double targetRPM = odometryShooter.getTargetRPM(distance);
-            double hoodPos = odometryShooter.getHoodPosition(distance);
-
+            // Apply turret power
             robot.turretMotor.setPower(vision.turretRotatePower);
+
+            // DISTANCE + SHOOTER
+
+            double distance = odometryShooter.getDistanceToGoal(currentpose, shootPose);
+
+            double targetRPM = odometryShooter.getTargetRPM(
+                    distance,
+                    3300, 4100,
+                    60, 130
+            );
+
+            double hoodPos = odometryShooter.getHoodPosition(
+                    distance,
+                    0.00, 0.25,
+                    60, 130
+            );
+
+// Smooth shooter RPM
+            robot.targetShooterRPM = 0.8 * robot.targetShooterRPM + 0.2 * targetRPM;
             robot.targetShooterRPM = 0.8 * robot.targetShooterRPM + 0.2 * targetRPM;
 
             // ---------- Shooter Controller update ----------
@@ -246,16 +267,16 @@ public class FullAutoAny extends LinearOpMode {
         if (Red && !PosesMirrored) {
             PosesMirrored = true;
             for (int i = 0; i < intakePoses.length; i++) {
-                AutoForRedIntake1Offset = (72 -intakePoses[i].getY())*2;// 72 is centre of field
-                AutoForRedIntake2Offset = (72 -intakePoses2[i].getY())*2;
+                AutoForRedIntake1Offset = (72 -intakePoses[i].getX())*2;// 72 is centre of field
+                AutoForRedIntake2Offset = (72 -intakePoses2[i].getX())*2;
                 intakePoses2[i] = new Pose(
-                        intakePoses2[i].getX(),
-                        intakePoses2[i].getY() + AutoForRedIntake2Offset,
+                        intakePoses2[i].getX() + AutoForRedIntake2Offset,
+                        intakePoses2[i].getY(),
                         intakePoses2[i].getHeading() + Math.toRadians(180)
                 );
                 intakePoses[i] = new Pose(
-                        intakePoses[i].getX(),
-                        intakePoses[i].getY() + AutoForRedIntake1Offset,
+                        intakePoses[i].getX() + AutoForRedIntake1Offset,
+                        intakePoses[i].getY(),
                         intakePoses[i].getHeading() + Math.toRadians(180)
                 );
             }

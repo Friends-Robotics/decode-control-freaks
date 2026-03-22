@@ -46,7 +46,7 @@ public class Comp {
     // =========================
     public void readDriveInputs() {
         drive = -currentGp1.left_stick_y;
-        strafe = currentGp1.left_stick_x * 1.1;
+        strafe = -currentGp1.left_stick_x;
         rotate = currentGp1.right_stick_x;
     }
 

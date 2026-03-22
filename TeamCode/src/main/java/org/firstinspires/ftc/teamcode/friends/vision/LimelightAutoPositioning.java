@@ -59,7 +59,7 @@ public class LimelightAutoPositioning extends LinearOpMode {
             int turretTicks = robot.turretMotor.getCurrentPosition();
 
             boolean turretLock = gamepad1.triangle;
-            visionAlign.update(result, !turretLock, turretTicks);
+
 
             if (gamepad1.right_bumper && result != null && result.isValid() && !gamepad1.left_bumper) {
                 drive  = visionAlign.drivePowerClose;

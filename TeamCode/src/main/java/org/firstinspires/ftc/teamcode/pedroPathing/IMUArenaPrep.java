@@ -34,7 +34,7 @@ public class IMUArenaPrep extends LinearOpMode {
         telemetry.update();
 
         // Recalibrate — robot must be stationary
-        pinpoint.recalibrateIMU();
+        pinpoint.resetPosAndIMU();
         sleep(1000);
 
         waitForStart();
@@ -53,7 +53,7 @@ public class IMUArenaPrep extends LinearOpMode {
             }
 
             telemetry.addData("Heading (deg)",
-                    pinpoint.getPosition().getHeading(AngleUnit.DEGREES));
+                    pinpoint.getPosition());
             telemetry.addLine("\nPress STOP when done.");
             telemetry.update();
         }

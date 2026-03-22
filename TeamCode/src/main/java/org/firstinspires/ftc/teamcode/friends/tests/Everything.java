@@ -4,6 +4,7 @@ package org.firstinspires.ftc.teamcode.friends.tests;
 
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
+import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -25,6 +26,7 @@ public class Everything extends LinearOpMode {
     ShooterController AutoShoot;
     Limelight3A limelight;
     Follower follower;
+    GoBildaPinpointDriver pinpoint;
 
     boolean AutoDriveActive = false;
 
@@ -33,6 +35,11 @@ public class Everything extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
+
+        pinpoint = hardwareMap.get(
+                GoBildaPinpointDriver.class,
+                "pinpoint"
+        );
 
         robot = new hardwareMap(hardwareMap);
         comp = new Comp(robot);
@@ -43,7 +50,7 @@ public class Everything extends LinearOpMode {
         robot.turretMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         robot.turretMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-
+        pinpoint.resetPosAndIMU();
 
         limelight = hardwareMap.get(Limelight3A.class, "limelight"); //Make sure to name the Ethernet Device "limelight"
         limelight.setPollRateHz(100);
@@ -51,6 +58,8 @@ public class Everything extends LinearOpMode {
         limelight.pipelineSwitch(0);
 
         //ODOMETRY
+
+        pinpoint.resetPosAndIMU();
 
         boolean IsBlue = false; // set this before match
         boolean close = true; // also set for startingPose depending on what auto is ran
@@ -62,153 +71,142 @@ public class Everything extends LinearOpMode {
 
         Pose goalPose = autoDrive.getGoalPose();
 
-
         OdometryShooter odometryShooter = new OdometryShooter(
-                0.05,     // kOdoAim
-                3300, 4100,   // CLOSE_RPM, FAR_RPM
-                60, 130,      // CLOSE_DIST, FAR_DIST
-                0.00, 0.25    // CLOSE_HOOD, FAR_HOOD
+                6 , 2
         );
 
         //ODOMETRY
 
         while (opModeIsActive()) {
 
-            while (opModeIsActive()) {
+            // =========================
+            // UPDATE INPUTS
+            // =========================
+            comp.updateGamepads(gamepad1, gamepad2);
+            comp.readDriveInputs();
 
-                // --- Update inputs
-                comp.updateGamepads(gamepad1, gamepad2);
-                comp.readDriveInputs();
+            // =========================
+            // UPDATE ODOMETRY
+            // =========================
+            follower.update();
+            Pose robotPose = follower.getPose();
 
-                //Update turret
+            // =========================
+            // VISION + TURRET AIMING
+            // =========================
+            LLResult result = limelight.getLatestResult();
 
-                // --- Update follower ONCE NOT TWICE
-                follower.update();
-                Pose robotPose = follower.getPose();
+            // Get dynamic turret angle (odometry + goal offset)
+            double targetAngle = odometryShooter.getTargetTurretAngle(robotPose, goalPose);
 
-                double odoTurretPower = odometryShooter.getTurretPower(
-                        robotPose,
-                        goalPose,
-                        robot.turretMotor.getCurrentPosition()
-                );
+            // VisionAlign = main controller
+            vision.update(
+                    result,
+                    true,
+                    robot.turretMotor.getCurrentPosition(),
+                    targetAngle
+            );
 
+            // Apply turret power
+            robot.turretMotor.setPower(vision.turretRotatePower);
 
-                // --- Vision update
-                LLResult result = limelight.getLatestResult();
-                vision.update(result, true, robot.turretMotor.getCurrentPosition(),odoTurretPower);
+            // =========================
+            // DISTANCE + SHOOTER CALC
+            // =========================
+            double distance = odometryShooter.getDistanceToGoal(robotPose, goalPose);
 
-                // --- Distance calc
-                double distance = odometryShooter.getDistance(robotPose, goalPose);
+            double targetRPM = odometryShooter.getTargetRPM(
+                    distance,
+                    3300, 4100,
+                    60, 130
+            );
 
+            double hoodPos = odometryShooter.getHoodPosition(
+                    distance,
+                    0.00, 0.25,
+                    60, 130
+            );
 
-                // =========================
-                // AUTO DRIVE TRIGGERS
-                // =========================
+            // Smooth RPM
+            robot.targetShooterRPM = 0.8 * robot.targetShooterRPM + 0.2 * targetRPM;
 
-                // RIGHT BUMPER → CLOSE (edge detect)
-                if (comp.currentGp1.right_bumper && !comp.previousGp1.right_bumper) {
-
-                    // prevent jitter if already close
-                    if (distance > 5) {
-                        autoDrive = new AutoDrive(follower, IsBlue, true);
-                        autoDrive.driveToShoot();
-                        AutoDriveActive = true;
-                    }
+            // =========================
+            // AUTO DRIVE TRIGGERS
+            // =========================
+            if (comp.currentGp1.right_bumper && !comp.previousGp1.right_bumper) {
+                if (distance > 5) {
+                    autoDrive = new AutoDrive(follower, IsBlue, true);
+                    autoDrive.driveToShoot();
+                    AutoDriveActive = true;
                 }
-
-                // LEFT BUMPER → FAR (edge detect)
-                if (comp.currentGp1.left_bumper && !comp.previousGp1.left_bumper) {
-
-                    if (distance > 5) {
-                        autoDrive = new AutoDrive(follower, IsBlue, false);
-                        autoDrive.driveToShoot();
-                        AutoDriveActive = true;
-                    }
-                }
-
-                // =========================
-                // STOP AUTO WHEN DONE
-                // =========================
-                if (AutoDriveActive && !follower.isBusy()) {
-                    AutoDriveActive = false;
-                }
-
-                // =========================
-                // SHOOTER CALCULATIONS
-                // =========================
-
-                double targetRPM = odometryShooter.getTargetRPM(distance);
-                double hoodPos = odometryShooter.getHoodPosition(distance);
-
-                robot.targetShooterRPM = 0.8 * robot.targetShooterRPM + 0.2 * targetRPM;
-
-                // =========================
-                // AUTO SHOOT
-                // =========================
-                boolean readyToShoot =
-                        vision.isAligned &&
-                                Math.abs(comp.rotate) < 0.1 &&
-                                Math.abs(comp.drive) < 0.1 &&
-                                Math.abs(comp.strafe) < 0.1 &&
-                                Math.abs(vision.turretRotatePower) < 0.03 &&
-                                gamepad1.a;
-
-                if (!AutoShoot.isBusy() && readyToShoot) {
-                    AutoShoot.startShooting(3, hoodPos, targetRPM);
-                }
-
-                // =========================
-                // DRIVE CONTROL (NO FIGHTING)
-                // =========================
-                if (!AutoDriveActive && !AutoShoot.isBusy()) {
-                    comp.applyDrive();
-                    comp.handleIntake();
-                }
-
-                // =========================
-                // AUTO ROTATE (only when useful)
-                // =========================
-                double autoRotate = OdometryShooter.getDriveRotatePower(robotPose, goalPose);
-
-                if ((AutoDriveActive || AutoShoot.isBusy()) && distance > 5) {
-                    comp.rotate = autoRotate;
-                }
-
-                // =========================
-                // TURRET / HOOD CONTROL
-                // =========================
-                boolean manualOverride = gamepad2.dpad_right;
-
-                if (manualOverride) {
-                    robot.hood.setPosition(0);
-                    comp.handleTurret();
-                    comp.handleShooterAngle();
-                } else {
-                    //Auto turret
-                    robot.turretMotor.setPower(vision.turretRotatePower);
-                }
-
-                // =========================
-                // SHOOTER STATE MACHINE
-                // =========================
-                AutoShoot.update(robot, comp, vision);
-
-                // =========================
-                // TELEMETRY
-                // =========================
-                telemetry.addData("Distance", distance);
-                telemetry.addData("Target RPM", targetRPM);
-                telemetry.addData("Hood", hoodPos);
-                telemetry.addData("Shooter RPM", robot.getShooterRPM());
-                telemetry.addData("Turret Power", robot.turretMotor.getPower());
-                telemetry.addData("Drive Active", AutoDriveActive);
-                telemetry.addData("Vision Ta", result != null ? result.getTa() : 0);
-                telemetry.addData("Aligned", vision.isAligned);
-                telemetry.addData("Pose", robotPose);
-                telemetry.update();
             }
+
+            if (comp.currentGp1.left_bumper && !comp.previousGp1.left_bumper) {
+                if (distance > 5) {
+                    autoDrive = new AutoDrive(follower, IsBlue, false);
+                    autoDrive.driveToShoot();
+                    AutoDriveActive = true;
+                }
+            }
+
+            if (AutoDriveActive && !follower.isBusy()) {
+                AutoDriveActive = false;
+            }
+
+            // =========================
+            // AUTO SHOOT LOGIC
+            // =========================
+            boolean readyToShoot =
+                    vision.isAligned &&
+                            Math.abs(comp.rotate) < 0.1 &&
+                            Math.abs(comp.drive) < 0.1 &&
+                            Math.abs(comp.strafe) < 0.1 &&
+                            Math.abs(vision.turretRotatePower) < 0.03 &&
+                            gamepad1.a;
+
+            if (!AutoShoot.isBusy() && readyToShoot) {
+                AutoShoot.startShooting(3, hoodPos, targetRPM);
+            }
+
+            // =========================
+            // DRIVE CONTROL
+            // =========================
+            if (!AutoDriveActive && !AutoShoot.isBusy()) {
+                comp.applyDrive();
+                comp.handleIntake();
+            }
+
+            // =========================
+            // MANUAL OVERRIDE
+            // =========================
+            boolean manualOverride = gamepad2.dpad_right;
+
+            if (manualOverride) {
+                robot.hood.setPosition(0);
+                comp.handleTurret();
+                comp.handleShooterAngle();
+            } else {
+                robot.turretMotor.setPower(vision.turretRotatePower);
+            }
+
+            // =========================
+            // SHOOTER STATE MACHINE
+            // =========================
+            AutoShoot.update(robot, comp, vision);
+
+            // =========================
+            // TELEMETRY
+            // =========================
+            telemetry.addData("Distance", distance);
+            telemetry.addData("Target RPM", targetRPM);
+            telemetry.addData("Hood", hoodPos);
+            telemetry.addData("Shooter RPM", robot.getShooterRPM());
+            telemetry.addData("Turret Power", robot.turretMotor.getPower());
+            telemetry.addData("Drive Active", AutoDriveActive);
+            telemetry.addData("Vision Ta", result != null ? result.getTa() : 0);
+            telemetry.addData("Aligned", vision.isAligned);
+            telemetry.addData("Pose", robotPose);
+            telemetry.update();
         }
-
     }
-
 }

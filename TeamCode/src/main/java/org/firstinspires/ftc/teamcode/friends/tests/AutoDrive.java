@@ -21,29 +21,29 @@ public class AutoDrive {
         this.follower = follower;
 
         if (isBlue) {
-            goalPose = new Pose(135, 12, 0);
+            goalPose = new Pose(12, 135, 0);
 
             if(close)
             {
-                shootPose = new Pose(90, 60, Math.toRadians(135));
-                AutoParkingPose = new Pose(108, 60, Math.toRadians(135));
+                shootPose = new Pose(60, 90, Math.toRadians(135));
+                AutoParkingPose = new Pose(60, 108, Math.toRadians(135));
             }
             else
             {
-                shootPose = new Pose(18,60, Math.toRadians(115));
-                AutoParkingPose = new Pose(12, 39, Math.toRadians(90));
+                shootPose = new Pose(60,18, Math.toRadians(115));
+                AutoParkingPose = new Pose(39, 12, Math.toRadians(90));
             }
         } else {
-            goalPose = new Pose(135, 132, 0); // don't need angle
+            goalPose = new Pose(132, 135, 0); // don't need angle
             if(close)
             {
-                shootPose = new Pose(90, 84, Math.toRadians(45));
-                AutoParkingPose = new Pose(109, 80, Math.toRadians(45));
+                shootPose = new Pose(84, 90, Math.toRadians(45));
+                AutoParkingPose = new Pose(80, 109, Math.toRadians(45));
             }
             else
             {
-                shootPose = new Pose(18, 84, Math.toRadians(65));
-                AutoParkingPose = new Pose(12, 109 ,Math.toRadians(90));
+                shootPose = new Pose(84, 18, Math.toRadians(65));
+                AutoParkingPose = new Pose(109, 12 ,Math.toRadians(90));
             }
         }
     }

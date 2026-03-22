@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.Range;
 import org.firstinspires.ftc.teamcode.friends.hardwareMap;
+import org.firstinspires.ftc.teamcode.friends.tests.OdometryShooter;
 
 @TeleOp(name = "AutoTurretTest")
 public class AutoTurretTrackingTest extends LinearOpMode{
@@ -14,6 +15,7 @@ public class AutoTurretTrackingTest extends LinearOpMode{
     hardwareMap robot;
     VisionAlign visionAlign;
     LimelightAutoPositioning pos;
+    OdometryShooter odometryShooter;
 
 
     @Override
@@ -27,15 +29,16 @@ public class AutoTurretTrackingTest extends LinearOpMode{
         pos.limelight.pipelineSwitch(0);
         pos.limelight.start();
 
+
         waitForStart();
         if (isStopRequested()) return;
 
         while (opModeIsActive()) {
 
+
             LLResult result = pos.limelight.getLatestResult();
             int turretTicks = robot.turretMotor.getCurrentPosition();
             boolean visionEnabled = gamepad1.right_bumper;
-            visionAlign.update(result, visionEnabled, turretTicks);
 
             if (gamepad1.right_bumper && result != null && result.isValid()) {
                 robot.turretMotor.setPower(visionAlign.turretRotatePower);

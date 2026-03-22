@@ -27,13 +27,13 @@ public class VisionAlign {
     public double alignmentTolerance = 5;
     double turretDirection = 1;
 
-    double kP_angle = 0.02;
+
     double kP_rotate = 0.7;
     double kP_drive = 0.8;
     double kP_driveFar = 1;
     double MAX_DRIVE_POWER = 0.6;
     double MAX_ROTATE_TURRET_POWER = 0.10;
-    double ROTATE_TOLERANCE = 0.8;
+    double ROTATE_TOLERANCE = 0.05;
     double DRIVE_TOLERANCE = 0.05;
 
     //----ODOMETRY Assist----
@@ -52,7 +52,7 @@ public class VisionAlign {
     double LOST_DELAY = 0.25;
     ElapsedTime lostTimer = new ElapsedTime();
 
-    public void update(LLResult results, boolean enabled, int turretEncoderTicks, double odoTurretPower) {
+    public void update(LLResult results, boolean enabled, int turretEncoderTicks, double odoTargetAngle) {
         currentTurretAngle = turretEncoderTicks / TurretConstants.TICKS_PER_DEGREE;
         turretRotatePower = 0;
         drivePowerClose = 0;
@@ -82,24 +82,30 @@ public class VisionAlign {
                 break;
 
             case TRACK:
-                double xError = results.getTx();
-                lastXError = xError;
+                double tx = results.getTx(); // vision horizontal offset
 
-                // --- Vision correction (primary) ---
-                double visionPower = 0;
-                if (Math.abs(xError) > ROTATE_TOLERANCE) {
-                    visionPower = Range.clip(xError * kP_rotate,
-                            -MAX_ROTATE_TURRET_POWER, MAX_ROTATE_TURRET_POWER);
-                }
+                // --- Combine odometry + vision ---
+                double finalTargetAngle = odoTargetAngle + tx;
 
-                // --- odometry assist ---
-                turretRotatePower = visionPower + (odoTurretPower * odoAssistK);
+                // Normalize
+                while (finalTargetAngle > 180) finalTargetAngle -= 360;
+                while (finalTargetAngle < -180) finalTargetAngle += 360;
 
-                // Alignment check
-                if (Math.abs(xError) <= alignmentTolerance) {
+                // --- Error ---
+                double error = finalTargetAngle - currentTurretAngle;
+
+                while (error > 180) error -= 360;
+                while (error < -180) error += 360;
+
+                // --- Control ---
+                turretRotatePower = Range.clip(error * 0.02,
+                        -MAX_ROTATE_TURRET_POWER,
+                        MAX_ROTATE_TURRET_POWER);
+
+                // --- Alignment check ---
+                if (Math.abs(tx) < alignmentTolerance) {
                     isAligned = true;
                 }
-
                 // --- Distance control ----
                 double targetArea = results.getTa();
                 double desiredAreaClose = 1.14;
@@ -122,24 +128,16 @@ public class VisionAlign {
 
             case SEARCH:
 
-                //Biases the turret to turn towards the last known direction
-                turretRotatePower += lastTargetAngle * 0.01;
+                // Aim toward goal using odometry
+                error = odoTargetAngle - currentTurretAngle;
 
-                // Use odometry to point toward goal instead of blind sweeping
-                double odoSearchPower = odoTurretPower * odoSearchK;
+                while (error > 180) error -= 360;
+                while (error < -180) error += 360;
 
-                if (searchTimer.seconds() < INITIAL_SEARCH_TIME) {
-                    // Try odometry first (fast reacquire)
-                    turretRotatePower = odoSearchPower;
-                } else {
-                    // fallback to sweep if still no tag
-                    turretRotatePower = searchPower * turretDirection;
+                turretRotatePower = Range.clip(error * 0.02,
+                        -MAX_ROTATE_TURRET_POWER,
+                        MAX_ROTATE_TURRET_POWER);
 
-                    if (currentTurretAngle >= MAX_TURRET_ANGLE && turretDirection > 0)
-                        turretDirection = -1;
-                    else if (currentTurretAngle <= MIN_TURRET_ANGLE && turretDirection < 0)
-                        turretDirection = 1;
-                }
                 break;
         }
 
