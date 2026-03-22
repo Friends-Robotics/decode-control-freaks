@@ -5,7 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.util.Range;
 
-import org.firstinspires.ftc.teamcode.friends.comp.Comp;
+import org.firstinspires.ftc.teamcode.friends.comp.Helpers;
 import org.firstinspires.ftc.teamcode.friends.hardwareMap;
 import org.firstinspires.ftc.teamcode.friends.vision.VisionAlign;
 
@@ -13,7 +13,7 @@ import org.firstinspires.ftc.teamcode.friends.vision.VisionAlign;
 public class Shooter extends LinearOpMode {
     hardwareMap robot;
     VisionAlign vision;
-    Comp comp;
+    Helpers helpers;
     private static float turretPower = 0.0f;;
     private double hoodPos = 0;
 
@@ -41,7 +41,7 @@ public class Shooter extends LinearOpMode {
             }
 
             // Update every loop
-            shooterController.update(robot,comp, vision);
+            shooterController.update(robot, helpers, vision);
             if (currentGamepad1.dpad_up && !previousGamepad1.dpad_up) {
                 robot.targetShooterRPM += 100f;
             }

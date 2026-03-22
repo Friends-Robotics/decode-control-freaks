@@ -14,7 +14,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
-import org.firstinspires.ftc.teamcode.friends.comp.Comp;
+import org.firstinspires.ftc.teamcode.friends.comp.Helpers;
 import org.firstinspires.ftc.teamcode.friends.hardwareMap;
 import org.firstinspires.ftc.teamcode.friends.tests.AutoDrive;
 import org.firstinspires.ftc.teamcode.friends.tests.OdometryShooter;
@@ -29,7 +29,7 @@ public class FullAutoAny extends LinearOpMode {
     Follower follower;
     Limelight3A limelight;
     VisionAlign vision;
-    Comp comp;
+    Helpers comp;
     ShooterController shooterController;
     OdometryShooter odometryShooter;
     AutoDrive AutoPoses;
