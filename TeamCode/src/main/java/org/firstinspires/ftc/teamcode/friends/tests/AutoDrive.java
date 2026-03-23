@@ -1,8 +1,6 @@
 package org.firstinspires.ftc.teamcode.friends.tests;
 
-import com.bylazar.field.Line;
 import com.pedropathing.follower.Follower;
-import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathBuilder;
@@ -16,6 +14,8 @@ public class AutoDrive {
     private final Pose AutoParkingPose;
 
 
+
+
     public AutoDrive(Follower follower, boolean isBlue, boolean close) {
         // y --> x ^ reverse from pedropathing visualizer
         this.follower = follower;
@@ -26,7 +26,7 @@ public class AutoDrive {
             if(close)
             {
                 shootPose = new Pose(60, 90, Math.toRadians(135));
-                AutoParkingPose = new Pose(60, 108, Math.toRadians(135));
+                AutoParkingPose = new Pose(60, 108, Math.toRadians(90));
             }
             else
             {
@@ -34,11 +34,11 @@ public class AutoDrive {
                 AutoParkingPose = new Pose(39, 12, Math.toRadians(90));
             }
         } else {
-            goalPose = new Pose(132, 135, 0); // don't need angle
+            goalPose = new Pose(134, 133, 0); // don't need angle
             if(close)
             {
                 shootPose = new Pose(84, 90, Math.toRadians(45));
-                AutoParkingPose = new Pose(80, 109, Math.toRadians(45));
+                AutoParkingPose = new Pose(80, 109, Math.toRadians(90));
             }
             else
             {
@@ -47,8 +47,6 @@ public class AutoDrive {
             }
         }
     }
-
-
 
     public void driveToShoot() {
         Pose currentPose = follower.getPose();

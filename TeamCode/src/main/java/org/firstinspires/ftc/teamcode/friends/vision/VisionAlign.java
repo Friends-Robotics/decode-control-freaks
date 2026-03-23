@@ -2,47 +2,43 @@ package org.firstinspires.ftc.teamcode.friends.vision;
 
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
-
 import com.qualcomm.hardware.limelightvision.LLResult;
 
-
+/**
+ * Vision-driven turret controller.
+ * Vision (tx) gives the base angle to the tag.
+ * OdometryShooter gives a small offset to aim behind the tag (toward goal).
+ * Turret tracks the combined target angle.
+ */
 public class VisionAlign {
 
-
-    public double turretPower = 0;
     public double drivePowerClose = 0;
     public double drivePowerFar = 0;
     public double turretRotatePower = 0;
 
-    double MIN_TURRET_ANGLE = -85.0;
-    double MAX_TURRET_ANGLE = 85.0;
-
-    public static class TurretConstants {
-        public static final double TICKS_PER_DEGREE = (193 - (-193)) / 180.0;
-    }
-    double currentTurretAngle = 0;
-
     public double lastXError = 0;
     public boolean isAligned = false;
-    public double alignmentTolerance = 5;
+
+    // Alignment tolerance in degrees of turret error
+    public double alignmentTolerance = 1.5;
+
+    // Turret limits and constants
+    double MIN_TURRET_ANGLE = -85.0;
+    double MAX_TURRET_ANGLE = 85.0;
+    int rightTicks = 193;
+    int leftTicks = -193;
+    double TICKS_PER_DEGREE = (rightTicks - leftTicks) / 180.0;
+    public double currentTurretAngle = 0;
+
     double turretDirection = 1;
-
-
-    double kP_rotate = 0.7;
+    double kP_rotate = 0.02;   // start smaller, tune up
     double kP_drive = 0.8;
     double kP_driveFar = 1;
     double MAX_DRIVE_POWER = 0.6;
-    double MAX_ROTATE_TURRET_POWER = 0.10;
-    double ROTATE_TOLERANCE = 0.05;
+    double MAX_ROTATE_TURRET_POWER = 0.12;
     double DRIVE_TOLERANCE = 0.05;
 
-    //----ODOMETRY Assist----
-    double odoAssistK = 0.1; // how much odometry helps during TRACK
-    double odoSearchK = 0.4; // stronger during SEARCH
-
-    double lastTargetAngle = 0; // for prediction
-
-    double INITIAL_SEARCH_TIME = 1.00;
+    double INITIAL_SEARCH_TIME = 0.35;
     double searchPower = 0.15;
     ElapsedTime searchTimer = new ElapsedTime();
 
@@ -52,10 +48,17 @@ public class VisionAlign {
     double LOST_DELAY = 0.25;
     ElapsedTime lostTimer = new ElapsedTime();
 
-    public void update(LLResult results, boolean enabled, int turretEncoderTicks, double odoTargetAngle) {
-        currentTurretAngle = turretEncoderTicks / TurretConstants.TICKS_PER_DEGREE;
+    public void update(LLResult results,
+                       boolean enabled,
+                       int turretEncoderTicks,
+                       double odometryOffsetDegrees) {
+
+        // Convert ticks → degrees
+        currentTurretAngle = turretEncoderTicks / TICKS_PER_DEGREE;
+
         turretRotatePower = 0;
         drivePowerClose = 0;
+        drivePowerFar = 0;
         isAligned = false;
 
         if (!enabled) {
@@ -64,11 +67,10 @@ public class VisionAlign {
         }
 
         boolean tagValid = (results != null && results.isValid());
+
         if (tagValid) {
             currentState = State.TRACK;
             lostTimer.reset();
-            // store last good target direction
-            lastTargetAngle = results.getTx();
         } else if (lostTimer.seconds() > LOST_DELAY) {
             if (currentState != State.SEARCH) {
                 currentState = State.SEARCH;
@@ -77,72 +79,84 @@ public class VisionAlign {
         }
 
         switch (currentState) {
+
             case IDLE:
                 turretRotatePower = 0;
                 break;
 
             case TRACK:
-                double tx = results.getTx(); // vision horizontal offset
-
-                // --- Combine odometry + vision ---
-                double finalTargetAngle = odoTargetAngle + tx;
-
-                // Normalize
-                while (finalTargetAngle > 180) finalTargetAngle -= 360;
-                while (finalTargetAngle < -180) finalTargetAngle += 360;
-
-                // --- Error ---
-                double error = finalTargetAngle - currentTurretAngle;
-
-                while (error > 180) error -= 360;
-                while (error < -180) error += 360;
-
-                // --- Control ---
-                turretRotatePower = Range.clip(error * 0.02,
-                        -MAX_ROTATE_TURRET_POWER,
-                        MAX_ROTATE_TURRET_POWER);
-
-                // --- Alignment check ---
-                if (Math.abs(tx) < alignmentTolerance) {
-                    isAligned = true;
+                // Use lastXError if tag flickers
+                if (tagValid && Math.abs(results.getTx()) < 50) {
+                    lastXError = 0.8 * lastXError + 0.2 * results.getTx();
                 }
-                // --- Distance control ----
-                double targetArea = results.getTa();
-                double desiredAreaClose = 1.14;
-                double desiredAreaFar = 0.3162;
 
-                double areaErrorClose = desiredAreaClose - targetArea;
-                double areaErrorFar = desiredAreaFar - targetArea;
+                double xError = lastXError;
 
-                drivePowerClose = (Math.abs(areaErrorClose) > DRIVE_TOLERANCE)
-                        ? Range.clip(areaErrorClose * kP_drive, -MAX_DRIVE_POWER, MAX_DRIVE_POWER)
-                        : 0;
+                // Vision angle: angle from turret to tag (in degrees)
+                double visionAngle = -xError; // sign depends on your setup
 
-                drivePowerFar = (Math.abs(areaErrorFar) > DRIVE_TOLERANCE)
-                        ? Range.clip(areaErrorFar * kP_driveFar, -MAX_DRIVE_POWER, MAX_DRIVE_POWER)
-                        : 0;
+                // Combined target angle: tag + odometry offset
+                double finalTargetAngle = visionAngle + odometryOffsetDegrees;
 
+                // Turret error = where we want to be - where we are
+                double alignError = finalTargetAngle - currentTurretAngle;
+
+                if (Math.abs(alignError) > alignmentTolerance) {
+                    turretRotatePower = Range.clip(
+                            alignError * kP_rotate,
+                            -MAX_ROTATE_TURRET_POWER,
+                            MAX_ROTATE_TURRET_POWER
+                    );
+                } else {
+                    isAligned = true;
+                    turretRotatePower = 0;
+                }
+
+                // Distance control (unchanged from your logic)
+                if (tagValid) {
+                    double targetArea = results.getTa();
+                    double desiredAreaClose = 1.14;
+                    double desiredAreaFar = 0.3162;
+                    double areaErrorClose = desiredAreaClose - targetArea;
+                    double areaErrorFar = desiredAreaFar - targetArea;
+
+                    drivePowerClose = (Math.abs(areaErrorClose) > DRIVE_TOLERANCE)
+                            ? Range.clip(areaErrorClose * kP_drive, -MAX_DRIVE_POWER, MAX_DRIVE_POWER)
+                            : 0;
+
+                    drivePowerFar = (Math.abs(areaErrorFar) > DRIVE_TOLERANCE)
+                            ? Range.clip(areaErrorFar * kP_driveFar, -MAX_DRIVE_POWER, MAX_DRIVE_POWER)
+                            : 0;
+                }
                 break;
 
-
-
             case SEARCH:
+                if (searchTimer.seconds() < INITIAL_SEARCH_TIME) {
+                    turretDirection = Math.signum(lastXError);
+                    if (turretDirection == 0) turretDirection = 1;
+                    turretRotatePower = searchPower * turretDirection;
+                } else {
+                    turretRotatePower = searchPower * turretDirection;
 
-                // Aim toward goal using odometry
-                error = odoTargetAngle - currentTurretAngle;
+                    if (currentTurretAngle >= MAX_TURRET_ANGLE && turretDirection > 0)
+                        turretDirection = -1;
+                    else if (currentTurretAngle <= MIN_TURRET_ANGLE && turretDirection < 0)
+                        turretDirection = 1;
 
-                while (error > 180) error -= 360;
-                while (error < -180) error += 360;
-
-                turretRotatePower = Range.clip(error * 0.02,
-                        -MAX_ROTATE_TURRET_POWER,
-                        MAX_ROTATE_TURRET_POWER);
-
+                    turretRotatePower = Range.clip(
+                            turretRotatePower,
+                            (currentTurretAngle <= MIN_TURRET_ANGLE) ? 0 : -MAX_ROTATE_TURRET_POWER,
+                            (currentTurretAngle >= MAX_TURRET_ANGLE) ? 0 : MAX_ROTATE_TURRET_POWER
+                    );
+                }
                 break;
         }
 
         // Soft limits
-        if (currentTurretAngle >= MAX_TURRET_ANGLE && turretRotatePower > 0) turretRotatePower = 0;
-        if (currentTurretAngle <= MIN_TURRET_ANGLE && turretRotatePower < 0) turretRotatePower = 0;
+        if (currentTurretAngle >= MAX_TURRET_ANGLE && turretRotatePower > 0)
+            turretRotatePower = 0;
+
+        if (currentTurretAngle <= MIN_TURRET_ANGLE && turretRotatePower < 0)
+            turretRotatePower = 0;
     }
 }

@@ -34,27 +34,25 @@ public class Helpers {
     }
 
     public void readDriveInputs() {
-        drive = -currentGp1.left_stick_y;
-        strafe = -currentGp1.left_stick_x;
+        drive  = -currentGp1.left_stick_y;
+        strafe = currentGp1.left_stick_x;
         rotate = currentGp1.right_stick_x;
     }
 
     public void applyDrive() {
-        if (currentGp1.touchpad && !previousGp1.touchpad) {
-            speedModifier = (speedModifier == 0.8) ? 1.0 : 0.8;
+        // Base drive + rotate
+        double fl = drive + strafe + rotate;
+        double bl = drive - strafe + rotate;
+        double fr = drive - strafe - rotate;
+        double br = drive + strafe - rotate;
+
+        double max = Math.max(Math.abs(fl), Math.max(Math.abs(bl), Math.max(Math.abs(fr), Math.abs(br))));
+        if (max > 1.0) {
+            fl /= max;
+            bl /= max;
+            fr /= max;
+            br /= max;
         }
-
-        double denominator = Math.max(Math.abs(drive) + Math.abs(strafe) + Math.abs(rotate), 1.0);
-
-        double fl = (drive + strafe + rotate) / denominator;
-        double bl = (drive - strafe + rotate) / denominator;
-        double fr = (drive - strafe - rotate) / denominator;
-        double br = (drive + strafe - rotate) / denominator;
-
-        fl = Math.max(-0.7, Math.min(fl, 0.7));
-        bl = Math.max(-0.7, Math.min(bl, 0.7));
-        fr = Math.max(-0.7, Math.min(fr, 0.7));
-        br = Math.max(-0.7, Math.min(br, 0.7));
 
         robot.frontLeftMotor.setPower(fl);
         robot.backLeftMotor.setPower(bl);

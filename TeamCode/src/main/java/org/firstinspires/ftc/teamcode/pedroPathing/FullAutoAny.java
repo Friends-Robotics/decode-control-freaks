@@ -18,6 +18,7 @@ import org.firstinspires.ftc.teamcode.friends.comp.Helpers;
 import org.firstinspires.ftc.teamcode.friends.hardwareMap;
 import org.firstinspires.ftc.teamcode.friends.tests.AutoDrive;
 import org.firstinspires.ftc.teamcode.friends.tests.OdometryShooter;
+import org.firstinspires.ftc.teamcode.friends.vision.TagPoseEstimator;
 import org.firstinspires.ftc.teamcode.friends.vision.VisionAlign;
 import org.firstinspires.ftc.teamcode.friends.tests.ShooterController;
 
@@ -32,7 +33,7 @@ public class FullAutoAny extends LinearOpMode {
     Helpers comp;
     ShooterController shooterController;
     OdometryShooter odometryShooter;
-    AutoDrive AutoPoses;
+    AutoDrive autoDrive;
 
     // ---------- Autonomous states ----------
     enum AutoState {
@@ -93,13 +94,11 @@ public class FullAutoAny extends LinearOpMode {
 
         vision = new VisionAlign();
         shooterController = new ShooterController();
-        odometryShooter = new OdometryShooter(
-              0.1524, 0.0508   // CLOSE_HOOD, FAR_HOOD
-        );
-        AutoPoses = new AutoDrive(follower,Red,Close);
-        shootPose = AutoPoses.getShootPose();
-        parkPose = AutoPoses.getAutoParkingPose();
-        startPose = AutoPoses.getShootPose();// same
+        odometryShooter = new OdometryShooter();
+        autoDrive = new AutoDrive(follower,Red,Close);
+        shootPose = autoDrive.getShootPose();
+        parkPose = autoDrive.getAutoParkingPose();
+        startPose = autoDrive.getShootPose();// same
 
 
         robot.turretMotor.setMode(com.qualcomm.robotcore.hardware.DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -116,37 +115,41 @@ public class FullAutoAny extends LinearOpMode {
         // ---------- Main loop ----------
         while (opModeIsActive()) {
 
-            comp = new Helpers(robot);
-
-            follower.update(); // updates pose via Pinpoint
-            Pose currentpose = follower.getPose();
-            LLResult result = limelight.getLatestResult();
-            int turretTicks = robot.turretMotor.getCurrentPosition();
-
             // =========================
-// VISION + ODOMETRY AIMING
+// ODOMETRY UPDATE
 // =========================
+            follower.update();
+            Pose robotPose = follower.getPose();
 
-// Get target turret angle (goal center, not tag)
-            double targetAngle = odometryShooter.getTargetTurretAngle(
-                    currentpose,
-                    shootPose
-            );
+// =========================
+// VISION
+// =========================
+            LLResult result = limelight.getLatestResult();
 
-// VisionAlign = main controller
+// 1) Compute REAL tag pose from robot + vision
+            Pose tagPose = TagPoseEstimator.computeTagPose(robotPose, result);
+
+// 2) Compute goal pose from tag pose (6 right, 2 up)
+            Pose goalPose = TagPoseEstimator.computeGoalPoseFromTag(tagPose);
+
+// 3) Compute small angular offset tag → goal
+            double offsetDeg = odometryShooter.getTagToGoalOffset(robotPose, tagPose, goalPose);
+
+// 4) Vision-driven turret with odometry offset
             vision.update(
                     result,
                     true,
                     robot.turretMotor.getCurrentPosition(),
-                    targetAngle
+                    offsetDeg
             );
 
-            // Apply turret power
             robot.turretMotor.setPower(vision.turretRotatePower);
 
-            // DISTANCE + SHOOTER
-
-            double distance = odometryShooter.getDistanceToGoal(currentpose, shootPose);
+// =========================
+// DISTANCE + SHOOTER
+// =========================
+// distance = distance from ROBOT to GOAL (not tag, not shootPose)
+            double distance = odometryShooter.getDistanceToGoal(robotPose, goalPose);
 
             double targetRPM = odometryShooter.getTargetRPM(
                     distance,
@@ -160,11 +163,10 @@ public class FullAutoAny extends LinearOpMode {
                     60, 130
             );
 
-// Smooth shooter RPM
-            robot.targetShooterRPM = 0.8 * robot.targetShooterRPM + 0.2 * targetRPM;
+// Smooth RPM
             robot.targetShooterRPM = 0.8 * robot.targetShooterRPM + 0.2 * targetRPM;
 
-            // ---------- Shooter Controller update ----------
+// Shooter state machine
             shooterController.update(robot, comp, vision);
 
             switch (currentState) {
@@ -252,9 +254,9 @@ public class FullAutoAny extends LinearOpMode {
             // ---------- Telemetry ----------
             telemetry.addData("State", currentState);
             telemetry.addData("Cycle", cycleIndex);
-            telemetry.addData("X", currentpose.getX());
-            telemetry.addData("Y", currentpose.getY());
-            telemetry.addData("Heading", Math.toRadians(currentpose.getHeading()));
+            telemetry.addData("X", robotPose.getX());
+            telemetry.addData("Y", robotPose.getY());
+            telemetry.addData("Heading", Math.toRadians(robotPose.getHeading()));
             telemetry.update();
         }
     }

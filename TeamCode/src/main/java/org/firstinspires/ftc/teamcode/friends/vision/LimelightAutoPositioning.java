@@ -79,36 +79,7 @@ public class LimelightAutoPositioning extends LinearOpMode {
             {
                 stepIndex --;
             }
-            if(gamepad1.dpad_right)
-            {
-                if(stepIndex == 0 )
-                {
-                    visionAlign.kP_rotate += 0.001;
-                }
-                if(stepIndex == 1)
-                {
-                    visionAlign.kP_rotate += 0.01;
-                }
-                if(stepIndex == 2)
-                {
-                    visionAlign.kP_rotate += 0.05;
-                }
-            }
-            if(gamepad1.dpad_left)
-            {
-                if(stepIndex == 0 )
-                {
-                    visionAlign.kP_rotate -= 0.001;
-                }
-                if(stepIndex == 1)
-                {
-                    visionAlign.kP_rotate -= 0.01;
-                }
-                if(stepIndex == 2)
-                {
-                    visionAlign.kP_rotate -= 0.05;
-                }
-            }
+
 
             robot.turretMotor.setPower(visionAlign.turretRotatePower);
 
@@ -126,18 +97,7 @@ public class LimelightAutoPositioning extends LinearOpMode {
             robot.frontRightMotor.setPower(fr);
             robot.backRightMotor.setPower(br);
 
-            // -------- Telemetry --------
-            telemetry.addData("Drive Close Active", gamepad1.right_bumper);
-            telemetry.addData("Drive Far Active", gamepad1.left_bumper);
-            telemetry.addData("Turret Angle  Power", visionAlign.turretPower);
-            telemetry.addData("Drive Power", visionAlign.drivePowerClose);
-            telemetry.addData("Locked", turretLock );
-            telemetry.addData("State", visionAlign.currentState);
-            telemetry.addData("TurretAngle", visionAlign.currentTurretAngle);
-            telemetry.addData("LastXError", visionAlign.lastXError);
-            telemetry.addData("TurretPower", visionAlign.turretRotatePower);
-            telemetry.addData("Ta", result.getTa());
-            telemetry.addData("Kp_rotate", visionAlign.kP_rotate);
+
             telemetry.addLine("Modifier = 1 --> kp_rotate +-0.001, Modifier = 2 --> kp_rotate +-0.01, Modifier = 3 --> kp_rotate +-0.05,");
             telemetry.addData("Kp Modifier", stepIndex);
             telemetry.update();
