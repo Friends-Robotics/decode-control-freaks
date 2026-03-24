@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.pedroPathing;
 
 import com.pedropathing.geometry.BezierCurve;
+import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathBuilder;
@@ -37,6 +38,7 @@ public class FullAutoAny extends LinearOpMode {
 
     // ---------- Autonomous states ----------
     enum AutoState {
+        CHECK_VISION,
         VISION_ALIGN,
         SHOOTING_CYCLE,
         DRIVE_TO_INTAKE,
@@ -45,7 +47,7 @@ public class FullAutoAny extends LinearOpMode {
         DONE
     }
 
-    AutoState currentState = AutoState.VISION_ALIGN;
+    AutoState currentState = AutoState.CHECK_VISION;
     ElapsedTime stateTimer = new ElapsedTime();
 
     // ---------- Poses ----------
@@ -85,32 +87,31 @@ public class FullAutoAny extends LinearOpMode {
         // ---------- Initialize ----------
         robot = new hardwareMap(hardwareMap);
         follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose(startPose);
 
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
         limelight.setPollRateHz(100);
         limelight.start();
         limelight.pipelineSwitch(0);
 
+        comp = new Helpers(robot);
         vision = new VisionAlign();
         shooterController = new ShooterController();
         odometryShooter = new OdometryShooter();
         autoDrive = new AutoDrive(follower,Red,Close);
         shootPose = autoDrive.getShootPose();
-        parkPose = autoDrive.getAutoParkingPose();
         startPose = autoDrive.getShootPose();// same
+        follower.setStartingPose(startPose);
 
 
         robot.turretMotor.setMode(com.qualcomm.robotcore.hardware.DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         robot.turretMotor.setMode(com.qualcomm.robotcore.hardware.DcMotor.RunMode.RUN_USING_ENCODER);
-
-        buildNewCycle();
 
         telemetry.addLine("Ready");
         telemetry.update();
         waitForStart();
 
         stateTimer.reset();
+        buildNewCycle();
 
         // ---------- Main loop ----------
         while (opModeIsActive()) {
@@ -132,8 +133,6 @@ public class FullAutoAny extends LinearOpMode {
 // 2) Compute goal pose from tag pose (6 right, 2 up)
             Pose goalPose = TagPoseEstimator.computeGoalPoseFromTag(tagPose);
 
-// 3) Compute small angular offset tag → goal
-            double offsetDeg = odometryShooter.getTagToGoalOffset(robotPose, tagPose, goalPose);
 
 // 4) Vision-driven turret with odometry offset
             vision.update(
@@ -170,6 +169,16 @@ public class FullAutoAny extends LinearOpMode {
 
             switch (currentState) {
 
+
+                case CHECK_VISION:
+                    if(Close)
+                    {
+                        currentState = AutoState.VISION_ALIGN;
+                    }
+                    else{
+                        currentState = AutoState.SHOOTING_CYCLE;
+                    }
+
                 case VISION_ALIGN:
                     if (!follower.isBusy()) {
                         double drive;
@@ -179,6 +188,10 @@ public class FullAutoAny extends LinearOpMode {
                         else
                         {
                             drive = vision.drivePowerFar;
+                        }
+                        if (stateTimer.seconds() > 3.0) {
+                            // proceed anyway or skip cycle
+                            currentState = AutoState.SHOOTING_CYCLE;
                         }
                         double strafe = 0;
                         double rotate = 0;
@@ -232,7 +245,7 @@ public class FullAutoAny extends LinearOpMode {
 
                 case DRIVE_TO_SHOOT:
                     if (!follower.isBusy()) {
-                        currentState = AutoState.VISION_ALIGN; // align and shoot next cycle
+                        currentState = AutoState.CHECK_VISION; // align and shoot next cycle
                         cycleIndex++;
                     }
                     break;
@@ -245,8 +258,11 @@ public class FullAutoAny extends LinearOpMode {
                     break;
 
                 case DONE:
-                    robot.stopShooter();
-                    robot.stopIntake();
+                    if(!follower.isBusy())
+                    {
+                        robot.stopShooter();
+                        robot.stopIntake();
+                    }
                     break;
             }
 
@@ -268,35 +284,51 @@ public class FullAutoAny extends LinearOpMode {
         if (Red && !PosesMirrored) {
             PosesMirrored = true;
             for (int i = 0; i < intakePoses.length; i++) {
-                AutoForRedIntake1Offset = (72 -intakePoses[i].getX())*2;// 72 is centre of field
-                AutoForRedIntake2Offset = (72 -intakePoses2[i].getX())*2;
-                intakePoses2[i] = new Pose(
-                        intakePoses2[i].getX() + AutoForRedIntake2Offset,
-                        intakePoses2[i].getY(),
-                        intakePoses2[i].getHeading() + Math.toRadians(180)
-                );
+                AutoForRedIntake1Offset = (72 - intakePoses[i].getX()) * 2;
+                AutoForRedIntake2Offset = (72 - intakePoses2[i].getX()) * 2;
                 intakePoses[i] = new Pose(
                         intakePoses[i].getX() + AutoForRedIntake1Offset,
                         intakePoses[i].getY(),
                         intakePoses[i].getHeading() + Math.toRadians(180)
                 );
+                intakePoses2[i] = new Pose(
+                        intakePoses2[i].getX() + AutoForRedIntake2Offset,
+                        intakePoses2[i].getY(),
+                        intakePoses2[i].getHeading() + Math.toRadians(180)
+                );
             }
         }
 
-        Pose intakePose = intakePoses[cycleIndex];
+        Pose intakePose  = intakePoses[cycleIndex];
         Pose intakePose2 = intakePoses2[cycleIndex];
 
         intakeFullPath = new PathBuilder(follower)
-                .addPath(new Path(new BezierCurve(currentPose, intakePose)))
-                .addPath(new Path(new BezierCurve(intakePose, intakePose2)))
+                .addPath(new Path(new BezierLine(currentPose, intakePose)))
+                .setLinearHeadingInterpolation(
+                        currentPose.getHeading(),
+                        intakePose.getHeading()
+                )
+                .addPath(new Path(new BezierLine(intakePose, intakePose2)))
+                .setLinearHeadingInterpolation(
+                        intakePose.getHeading(),
+                        intakePose2.getHeading()
+                )
                 .build();
 
         shootPath = new PathBuilder(follower)
-                .addPath(new Path(new BezierCurve(intakePose2, shootPose)))
+                .addPath(new Path(new BezierLine(intakePose2, shootPose)))
+                .setLinearHeadingInterpolation(
+                        intakePose2.getHeading(),
+                        shootPose.getHeading()
+                )
                 .build();
 
         ParkPath = new PathBuilder(follower)
-                .addPath(new Path(new BezierCurve(currentPose, parkPose)))
+                .addPath(new Path(new BezierLine(currentPose, parkPose)))
+                .setLinearHeadingInterpolation(
+                        currentPose.getHeading(),
+                        parkPose.getHeading()
+                )
                 .build();
     }
 }

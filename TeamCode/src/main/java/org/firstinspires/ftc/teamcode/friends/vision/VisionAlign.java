@@ -6,7 +6,7 @@ import com.qualcomm.hardware.limelightvision.LLResult;
 
 public class VisionAlign {
 
-    // PID constants (you will tune these)
+    // PID constants need tuned
 
     /*Then:
     Increase kP until it tracks fast but starts to oscillate
@@ -113,8 +113,6 @@ public class VisionAlign {
 
             case TRACK:
 
-
-
                 double xError = results.getTx();
                 lastXError = xError;
 
@@ -148,11 +146,11 @@ public class VisionAlign {
                     integralSum = 0;
                 }
 
-                if (currentTurretAngle >= MAX_TURRET_ANGLE && turretPower > 0)
-                    turretPower = 0;
+                if (currentTurretAngle >= MAX_TURRET_ANGLE && turretRotatePower > 0)
+                    turretRotatePower = 0;
 
-                if (currentTurretAngle <= MIN_TURRET_ANGLE && turretPower < 0)
-                    turretPower = 0;
+                if (currentTurretAngle <= MIN_TURRET_ANGLE && turretRotatePower < 0)
+                    turretRotatePower = 0;
 
                 break;
 
@@ -186,11 +184,11 @@ public class VisionAlign {
                 }
 
                 // Stop pushing INTO the limit, but allow movement AWAY
-                if (currentTurretAngle >= MAX_TURRET_ANGLE && turretPower > 0)
-                    turretPower = 0;
+                if (currentTurretAngle >= MAX_TURRET_ANGLE && turretRotatePower > 0)
+                    turretRotatePower = 0;
 
-                if (currentTurretAngle <= MIN_TURRET_ANGLE && turretPower < 0)
-                    turretPower = 0;
+                if (currentTurretAngle <= MIN_TURRET_ANGLE && turretRotatePower < 0)
+                    turretRotatePower = 0;
 
 
                 break;

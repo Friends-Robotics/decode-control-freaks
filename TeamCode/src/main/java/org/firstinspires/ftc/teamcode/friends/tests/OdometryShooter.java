@@ -49,7 +49,7 @@ public class OdometryShooter {
 
         offset = Range.clip(offset, -15, 15);
 
-        offset = 0.8 * lastOffset + 0.2 * offset;
+        offset = 0.2 * lastOffset + 0.8 * offset;
         lastOffset = offset;
 
         return offset;

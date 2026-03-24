@@ -47,13 +47,16 @@ public class AutoDrive {
             }
         }
     }
-
     public void driveToShoot() {
         Pose currentPose = follower.getPose();
 
         follower.followPath(
                 new PathBuilder(follower)
-                        .addPath(new Path(new BezierLine(currentPose, shootPose)))
+                        .addPath(new BezierLine(currentPose, shootPose))
+                        .setLinearHeadingInterpolation(
+                                currentPose.getHeading(),
+                                shootPose.getHeading()
+                        )
                         .build()
         );
     }
