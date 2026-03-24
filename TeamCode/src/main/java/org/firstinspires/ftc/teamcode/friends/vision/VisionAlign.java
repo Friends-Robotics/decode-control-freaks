@@ -57,8 +57,8 @@ public class VisionAlign {
         currentTurretAngle = turretEncoderTicks / TICKS_PER_DEGREE;
 
         turretRotatePower = 0;
-        drivePowerClose = 0;
-        drivePowerFar = 0;
+        //drivePowerClose = 0;
+        //drivePowerFar = 0;
         isAligned = false;
 
         if (!enabled) {
@@ -113,7 +113,7 @@ public class VisionAlign {
                 }
 
                 // Distance control (unchanged from your logic)
-                if (tagValid) {
+               /* if (tagValid) {
                     double targetArea = results.getTa();
                     double desiredAreaClose = 1.14;
                     double desiredAreaFar = 0.3162;
@@ -128,6 +128,8 @@ public class VisionAlign {
                             ? Range.clip(areaErrorFar * kP_driveFar, -MAX_DRIVE_POWER, MAX_DRIVE_POWER)
                             : 0;
                 }
+
+                */
                 break;
 
             case SEARCH:
