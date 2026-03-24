@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.friends.comp.Helpers;
 import org.firstinspires.ftc.teamcode.friends.hardwareMap;
 import org.firstinspires.ftc.teamcode.friends.vision.VisionAlign;
@@ -35,6 +36,7 @@ public class Everything extends LinearOpMode {
 
         // --- HARDWARE INIT ---
         pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
+
 
         robot = new hardwareMap(hardwareMap);
         comp = new Helpers(robot);
@@ -70,6 +72,9 @@ public class Everything extends LinearOpMode {
             comp.updateGamepads(gamepad1, gamepad2);
             comp.readDriveInputs();
 
+            telemetry.addData("Raw Forward", pinpoint.getPosY(DistanceUnit.INCH));
+            telemetry.addData("Raw Strafe", pinpoint.getPosX((DistanceUnit.INCH)));
+
             // =========================
             // ODOMETRY
             // =========================
@@ -94,10 +99,8 @@ public class Everything extends LinearOpMode {
             vision.update(
                     result,
                     true,
-                    robot.turretMotor.getCurrentPosition(),
-                    offsetDeg
+                    robot.turretMotor.getCurrentPosition()
             );
-
             robot.turretMotor.setPower(vision.turretRotatePower);
 
             // =========================
@@ -171,13 +174,15 @@ public class Everything extends LinearOpMode {
             // =========================
             AutoShoot.update(robot, comp, vision);
 
-            // Intake
-            if (gamepad2.right_trigger > 0.1) {
-                robot.intakeMotor.setPower(1.0);
-            } else if (gamepad2.left_trigger > 0.1) {
-                robot.intakeMotor.setPower(-1.0);
-            } else {
-                robot.intakeMotor.setPower(0);
+            if(!AutoShoot.isBusy()){
+                // Intake
+                if (gamepad2.right_trigger > 0.1) {
+                    robot.intakeMotor.setPower(1.0);
+                } else if (gamepad2.left_trigger > 0.1) {
+                    robot.intakeMotor.setPower(-1.0);
+                } else {
+                    robot.intakeMotor.setPower(0);
+                }
             }
 
             // =========================
@@ -186,11 +191,7 @@ public class Everything extends LinearOpMode {
             telemetry.addData("Robot Pose", robotPose);
             telemetry.addData("Distance to Goal (in)", distance);
             telemetry.addData("Target RPM", targetRPM);
-            telemetry.addData("tx", result != null && result.isValid() ? result.getTx() : 999);
-            telemetry.addData("offsetDeg", offsetDeg);
-            telemetry.addData("finalTargetAngle",
-                    (result != null && result.isValid() ? -result.getTx() : 0) + offsetDeg);
-            telemetry.addData("turretAngle", vision.currentTurretAngle);
+            telemetry.addData("tx",  result.getTx());
             telemetry.addData("Hood", hoodPos);
             telemetry.addData("Shooter RPM", robot.getShooterRPM());
             telemetry.addData("TurretPower", vision.turretRotatePower);

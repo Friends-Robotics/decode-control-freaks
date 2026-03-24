@@ -139,8 +139,7 @@ public class FullAutoAny extends LinearOpMode {
             vision.update(
                     result,
                     true,
-                    robot.turretMotor.getCurrentPosition(),
-                    offsetDeg
+                    robot.turretMotor.getCurrentPosition()
             );
 
             robot.turretMotor.setPower(vision.turretRotatePower);
