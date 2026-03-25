@@ -1,6 +1,5 @@
-package org.firstinspires.ftc.teamcode.pedroPathing;
+package org.firstinspires.ftc.teamcode.friends.comp;
 
-import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.Path;
@@ -15,13 +14,13 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
-import org.firstinspires.ftc.teamcode.friends.comp.Helpers;
 import org.firstinspires.ftc.teamcode.friends.hardwareMap;
 import org.firstinspires.ftc.teamcode.friends.tests.AutoDrive;
 import org.firstinspires.ftc.teamcode.friends.tests.OdometryShooter;
 import org.firstinspires.ftc.teamcode.friends.vision.TagPoseEstimator;
 import org.firstinspires.ftc.teamcode.friends.vision.VisionAlign;
 import org.firstinspires.ftc.teamcode.friends.tests.ShooterController;
+import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 @Autonomous(name = "FullAutoAny")
 public class FullAutoAny extends LinearOpMode {
@@ -59,7 +58,7 @@ public class FullAutoAny extends LinearOpMode {
     double AutoForRedIntake1Offset; // Adds to the x value for Auto for blue
     //Middle of field x value = 72;
     double AutoForRedIntake2Offset;
-    boolean Red = true; // set before match;
+    boolean blue = false; // set before match;
     boolean Close = true; // set before match
     boolean PosesMirrored = false;
 
@@ -97,9 +96,10 @@ public class FullAutoAny extends LinearOpMode {
         vision = new VisionAlign();
         shooterController = new ShooterController();
         odometryShooter = new OdometryShooter();
-        autoDrive = new AutoDrive(follower,Red,Close);
+        autoDrive = new AutoDrive(follower,blue,Close);
         shootPose = autoDrive.getShootPose();
-        startPose = autoDrive.getShootPose();// same
+        startPose = autoDrive.getShootPose();
+        parkPose = autoDrive.getAutoParkingPose();// same
         follower.setStartingPose(startPose);
 
 
@@ -281,7 +281,7 @@ public class FullAutoAny extends LinearOpMode {
         Pose currentPose = follower.getPose();
         if (cycleIndex >= intakePoses.length) return;
 
-        if (Red && !PosesMirrored) {
+        if (!blue && !PosesMirrored) {
             PosesMirrored = true;
             for (int i = 0; i < intakePoses.length; i++) {
                 AutoForRedIntake1Offset = (72 - intakePoses[i].getX()) * 2;
