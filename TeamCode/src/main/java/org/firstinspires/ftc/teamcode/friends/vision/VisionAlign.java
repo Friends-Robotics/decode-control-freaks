@@ -17,6 +17,9 @@ public class VisionAlign {
     double kI = 0.0;
     double kD = 0.002;
 
+    //Drive
+    double kP_drive = 0.5;
+    double MAX_DRIVE_POWER = 0.7;
     // PID state
     double integralSum = 0;
     double lastError = 0;
@@ -27,7 +30,6 @@ public class VisionAlign {
     // Timer for delta time
     ElapsedTime pidTimer = new ElapsedTime();
 
-    public double turretPower = 0;
     public double drivePowerClose = 0;
     public double drivePowerFar = 0;
     public double turretRotatePower = 0;
@@ -46,7 +48,7 @@ public class VisionAlign {
     int leftTicks = -193;
 
     double TICKS_PER_DEGREE = (rightTicks - leftTicks) / 180.0;
-    double currentTurretAngle = 0;
+    public double currentTurretAngle = 0;
 
     double turretDirection = 1;
     double kP_rotate = 0.25;
@@ -118,79 +120,50 @@ public class VisionAlign {
 
                 double dt = pidTimer.seconds();
                 pidTimer.reset();
-
-                // Prevent divide-by-zero
                 if (dt == 0) dt = 0.01;
 
-                // ----- PID CALCULATIONS -----
-                // Integral (with clamp)
                 integralSum += xError * dt;
                 integralSum = Range.clip(integralSum, -MAX_INTEGRAL, MAX_INTEGRAL);
 
-                // Derivative
                 double derivative = (xError - lastError) / dt;
-
-                // PID output
                 double output = (kP * xError) + (kI * integralSum) + (kD * derivative);
-
                 lastError = xError;
 
-                // Apply power with limits
                 turretRotatePower = Range.clip(output, -MAX_ROTATE_TURRET_POWER, MAX_ROTATE_TURRET_POWER);
 
-                // Alignment check
                 if (Math.abs(xError) < alignmentTolerance) {
                     isAligned = true;
-
-                    // Reset integral when aligned (prevents drift)
                     integralSum = 0;
                 }
-
+                // Hard clamps — once, at the end
                 if (currentTurretAngle >= MAX_TURRET_ANGLE && turretRotatePower > 0)
                     turretRotatePower = 0;
-
                 if (currentTurretAngle <= MIN_TURRET_ANGLE && turretRotatePower < 0)
                     turretRotatePower = 0;
 
+                double targetArea = results.getTa();
+
+                double desiredAreaClose = 1.14;
+                double desiredAreaFar = 0.3162;
+
+                double areaErrorClose = desiredAreaClose - targetArea;
+                double areaErrorFar = desiredAreaFar - targetArea;
+
+                drivePowerClose =
+                        (Math.abs(areaErrorClose) > DRIVE_TOLERANCE)
+                                ? Range.clip(areaErrorClose * kP_drive, -MAX_DRIVE_POWER, MAX_DRIVE_POWER)
+                                : 0;
                 break;
 
             case SEARCH:
 
-                // If we never had a last error, default direction
-                if (lastXError == 0) {
+                if (currentTurretAngle >= MAX_TURRET_ANGLE) {
+                    turretDirection = -1;
+                } else if (currentTurretAngle <= MIN_TURRET_ANGLE) {
                     turretDirection = 1;
-                }
-
-                if (searchTimer.seconds() < INITIAL_SEARCH_TIME) {
-                    turretDirection = Math.signum(lastXError);
-                    if (turretDirection == 0) turretDirection = 1;
                 }
 
                 turretRotatePower = searchPower * turretDirection;
-
-                // Bounce off limits
-                if (currentTurretAngle >= MAX_TURRET_ANGLE && turretDirection > 0) {
-                    turretDirection = -1;
-                } else if (currentTurretAngle <= MIN_TURRET_ANGLE && turretDirection < 0) {
-                    turretDirection = 1;
-                }
-
-                // Soft limits (prevents slamming)
-                if (currentTurretAngle > MAX_TURRET_ANGLE - 5) {
-                    turretDirection = -1;
-                }
-                if (currentTurretAngle < MIN_TURRET_ANGLE + 5) {
-                    turretDirection = 1;
-                }
-
-                // Stop pushing INTO the limit, but allow movement AWAY
-                if (currentTurretAngle >= MAX_TURRET_ANGLE && turretRotatePower > 0)
-                    turretRotatePower = 0;
-
-                if (currentTurretAngle <= MIN_TURRET_ANGLE && turretRotatePower < 0)
-                    turretRotatePower = 0;
-
-
                 break;
         }
     }

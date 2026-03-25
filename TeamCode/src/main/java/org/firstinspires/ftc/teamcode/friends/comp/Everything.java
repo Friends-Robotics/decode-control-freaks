@@ -50,7 +50,7 @@ public class Everything extends LinearOpMode {
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
         limelight.setPollRateHz(100);
         limelight.start();
-        limelight.pipelineSwitch(0);
+        limelight.pipelineSwitch(0); //0 blue 1 red
 
         // --- ODOMETRY / PEDRO ---
         boolean IsBlue = false; // set before match
@@ -110,11 +110,8 @@ public class Everything extends LinearOpMode {
             // distance = distance from ROBOT to GOAL (not tag)
             double distance = odometryShooter.getDistanceToGoal(robotPose, goalPose);
 
-            double targetRPM = odometryShooter.getTargetRPM(
-                    distance,
-                    3300, 4100,   // min/max RPM
-                    60, 130       // min/max distance (inches) to map over
-            );
+            double targetRPMClose = 3300;
+            double targetRPMFar = 4100;
 
             double hoodPos = odometryShooter.getHoodPosition(
                     distance,
@@ -123,26 +120,26 @@ public class Everything extends LinearOpMode {
             );
 
             // Smooth RPM target
-            robot.targetShooterRPM = 0.8 * robot.targetShooterRPM + 0.2 * targetRPM;
+            robot.targetShooterRPM = 0.8 * robot.targetShooterRPM + 0.2 * targetRPMClose;
 
             // =========================
             // AUTO DRIVE TRIGGERS
             // =========================
-            if (comp.currentGp1.right_bumper && !comp.previousGp1.right_bumper) {
-                if (distance > 5) {
-                    autoDrive = new AutoDrive(follower, IsBlue, true);
-                    autoDrive.driveToShoot();
-                    AutoDriveActive = true;
-                }
+            if (comp.currentGp1.right_bumper && result != null && result.isValid()) {
+                comp.drive = vision.drivePowerClose; // drive forward/backward automatically
+                comp.rotate = 0;              // keep robot facing the target
+                AutoDriveActive = true;
             }
 
-            if (comp.currentGp1.left_bumper && !comp.previousGp1.left_bumper) {
+            /*if (comp.currentGp1.left_bumper && !comp.previousGp1.left_bumper) {
                 if (distance > 5) {
                     autoDrive = new AutoDrive(follower, IsBlue, false);
                     autoDrive.driveToShoot();
                     AutoDriveActive = true;
                 }
             }
+
+             */
 
             if (AutoDriveActive && !follower.isBusy()) {
                 AutoDriveActive = false;
@@ -156,26 +153,28 @@ public class Everything extends LinearOpMode {
                             Math.abs(comp.rotate) < 0.1 &&
                             Math.abs(comp.drive) < 0.1 &&
                             Math.abs(comp.strafe) < 0.1 &&
-                            Math.abs(vision.turretRotatePower) < 0.03 &&
-                            gamepad1.a;
+                            Math.abs(vision.turretRotatePower) < 0.03;
 
-            if (!AutoShoot.isBusy() && readyToShoot) {
-                AutoShoot.startShooting(3, hoodPos, targetRPM);
+            if (!AutoShoot.isBusy() && readyToShoot && gamepad2.b) {
+                AutoShoot.startShooting(3, hoodPos, targetRPMFar);
             }
+            if (!AutoShoot.isBusy() && readyToShoot && gamepad2.a) {
+                AutoShoot.startShooting(3, hoodPos, targetRPMClose);
+            }
+
 
             // =========================
             // DRIVE CONTROL
             // =========================
-            if (!AutoDriveActive && !AutoShoot.isBusy()) {
-                comp.applyDrive();
-            }
+            comp.applyDrive();
+
 
             // =========================
             // SHOOTER STATE MACHINE
             // =========================
             AutoShoot.update(robot, comp, vision);
 
-            if(!AutoShoot.isBusy()){
+            if (!AutoShoot.isBusy()) {
                 // Intake
                 if (gamepad2.right_trigger > 0.1) {
                     robot.intakeMotor.setPower(1.0);
@@ -191,15 +190,18 @@ public class Everything extends LinearOpMode {
             // =========================
             telemetry.addData("Robot Pose", robotPose);
             telemetry.addData("Distance to Goal (in)", distance);
-            telemetry.addData("Target RPM", targetRPM);
-            telemetry.addData("tx",  result.getTx());
+            telemetry.addData("Target RPM CLOSE", targetRPMClose);
+            telemetry.addData("Target RPM CLOSE", targetRPMFar);
+            telemetry.addData("tx", result.getTx());
             telemetry.addData("Hood", hoodPos);
             telemetry.addData("Shooter RPM", robot.getShooterRPM());
             telemetry.addData("TurretPower", vision.turretRotatePower);
             telemetry.addData("Turret ticks", robot.turretMotor.getCurrentPosition());
             telemetry.addData("Turret aligned", vision.isAligned);
+            telemetry.addData("Turret currentAngle", vision.currentTurretAngle);
             telemetry.addData("EstDist", distance);
             telemetry.update();
         }
+
     }
 }
