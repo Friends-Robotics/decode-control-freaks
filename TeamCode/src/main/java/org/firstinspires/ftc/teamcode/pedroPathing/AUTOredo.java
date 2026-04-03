@@ -7,10 +7,16 @@ import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import org.firstinspires.ftc.teamcode.friends.tests.ShooterController;
+
 
 @Autonomous(name = "Drive Only Auto FIXED")
 public class AUTOredo extends OpMode {
 
+    private ShooterController shooterController;
+    private org.firstinspires.ftc.teamcode.friends.hardwareMap robot;
+    private org.firstinspires.ftc.teamcode.friends.comp.Helpers helpers;
+    private org.firstinspires.ftc.teamcode.friends.vision.VisionAlign vision;
     private Follower follower;
     private boolean pathStarted = false;
 
@@ -27,7 +33,8 @@ public class AUTOredo extends OpMode {
         DRIVE_COLLECT1_1,
         DRIVE_COLLECT1_2,
         DRIVE_COLLECT2_1,
-        DRIVE_COLLECT2_2
+        DRIVE_COLLECT2_2,
+        STOP
     }
 
     private PathState pathState;
@@ -54,6 +61,7 @@ public class AUTOredo extends OpMode {
 
     private PathChain driveCollect2_1;
     private PathChain driveCollect2_2;
+    private int cycleCount = 0;
 
     // ================= BUILD PATHS =================
     public void buildPaths() {
@@ -128,17 +136,28 @@ public class AUTOredo extends OpMode {
                 if (!holdStarted) {
                     holdStarted = true;
                     holdTimer = time;
+
+                    // ✅ start ONLY once
+                    shooterController.startShooting(3,0,3100);
                 }
 
-                // --- ROBOT CAN STILL DO STUFF HERE ---
-                intakeMotor.setPower(RintakePower);
-
-                // Example shooter logic (optional)
-                // shooterMotor.setPower(0.8);
-
-                if (time - holdTimer >= HOLD_TIME) {
+                // wait until shooter finishes instead of time
+                if (!shooterController.isBusy()) {
                     holdStarted = false;
-                    setPathState(PathState.DRIVE_COLLECT1_1);
+                    if (!shooterController.isBusy()) {
+                        holdStarted = false;
+
+                        if (cycleCount == 0) {
+                            cycleCount++;
+                            setPathState(PathState.DRIVE_COLLECT1_1);
+                        } else if (cycleCount == 1) {
+                            cycleCount++;
+                            setPathState(PathState.DRIVE_COLLECT2_1);
+                        } else {
+                            cycleCount++;
+                            setPathState(PathState.STOP);
+                        }
+                    }
                 }
                 break;
 
@@ -193,6 +212,9 @@ public class AUTOredo extends OpMode {
                     setPathState(PathState.HOLD_SHOOTPOSE);
                 }
                 break;
+            case STOP:
+                // do nothing
+                break;
         }
     }
 
@@ -209,6 +231,13 @@ public class AUTOredo extends OpMode {
         buildPaths();
 
         follower.setPose(startPose);
+        robot = new org.firstinspires.ftc.teamcode.friends.hardwareMap(hardwareMap);
+
+        helpers = new org.firstinspires.ftc.teamcode.friends.comp.Helpers(robot);
+
+        vision = new org.firstinspires.ftc.teamcode.friends.vision.VisionAlign();
+
+        shooterController = new ShooterController();
     }
 
     // ================= LOOP =================
