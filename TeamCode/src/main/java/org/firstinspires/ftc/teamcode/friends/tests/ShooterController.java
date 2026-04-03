@@ -70,7 +70,7 @@ public class ShooterController {
 
             case RAISING_RAMP:
                 // Only feed if aligned
-                if (vision.VisionisAligned) {
+                if (vision.isAligned) {
                     robot.feedBall();
                     if (timer.seconds() > rampUpTime) {
                         currentState = State.FEEDING;

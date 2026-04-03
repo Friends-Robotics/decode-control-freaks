@@ -1,12 +1,12 @@
 package org.firstinspires.ftc.teamcode.friends.vision;
 
+import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 import com.qualcomm.hardware.limelightvision.LLResult;
 
 import org.firstinspires.ftc.teamcode.friends.comp.Everything;
 import org.firstinspires.ftc.teamcode.friends.comp.Helpers;
-import org.firstinspires.ftc.teamcode.friends.hardwareMap;
 import org.firstinspires.ftc.teamcode.friends.tests.OdometryShooter;
 
 
@@ -20,7 +20,6 @@ public class VisionAlign {
     Add a tiny kI only if it never fully centers
     */
     Helpers help;
-    hardwareMap robot;
     OdometryShooter odometry;
     Everything TeleOp;
     double kP = 0.02;
@@ -43,7 +42,6 @@ public class VisionAlign {
 
     public double lastXError = 0;
 
-    public boolean VisionisAligned = false;
     public boolean isAligned = false;
 
     // alignment tolerance in degrees
@@ -63,7 +61,9 @@ public class VisionAlign {
 
     double MAX_ROTATE_TURRET_POWER = 0.6;
 
-
+    //SEARCH
+    double lastKnownTargetAngle = 0;
+    boolean hasSeenTarget = false;
     double INITIAL_SEARCH_TIME = 0.35;
     double ALIGNED_TIME = 0.4;
     double searchPower = 0.4;
@@ -79,12 +79,8 @@ public class VisionAlign {
 
 
 
-    public void update(LLResult results, boolean enabled, int turretEncoderTicks) {
+    public void update(LLResult results, boolean enabled, int turretEncoderTicks, Pose currentPose, Pose goalPose) {
 
-        robot = new hardwareMap();
-        help = new Helpers(robot);
-        odometry = new OdometryShooter();
-        TeleOp = new Everything();
         // Prevent divide-by-zero just in case
         if (TICKS_PER_DEGREE == 0) {
             TICKS_PER_DEGREE = 1;
@@ -94,7 +90,7 @@ public class VisionAlign {
 
         turretRotatePower = 0;
         drivePowerClose = 0;
-        VisionisAligned = false;
+        isAligned = false;
 
         if (!enabled) {
             currentState = State.IDLE;
@@ -120,7 +116,7 @@ public class VisionAlign {
                 lastError = 0;
             }
         }
-        if (currentState == State.TRACK && VisionisAligned) {
+        if (currentState == State.TRACK && isAligned) {
             if (alignedTimer.seconds() == 0) alignedTimer.reset();
 
             if (alignedTimer.seconds() > ALIGNED_TIME) {
@@ -166,7 +162,7 @@ public class VisionAlign {
                 turretRotatePower = Range.clip(output, -MAX_ROTATE_TURRET_POWER, MAX_ROTATE_TURRET_POWER);
 
                 if (Math.abs(xError) < alignmentTolerance) {
-                    VisionisAligned = true;
+                    isAligned = true;
                     integralSum = 0;
                 }
 
@@ -176,6 +172,8 @@ public class VisionAlign {
                 if (currentTurretAngle <= MIN_TURRET_ANGLE && turretRotatePower < 0)
                     turretRotatePower = 0;
 
+                lastKnownTargetAngle = currentTurretAngle;
+                hasSeenTarget = true;
                 lastXError = xError;
 
                 break;
@@ -197,8 +195,8 @@ public class VisionAlign {
                 if (results != null && results.isValid()) {
 
                     double correction = odometry.VisionShooterCorrection(
-                            TeleOp.,
-                            TeleOp.goalPose
+                            currentPose,
+                            goalPose
                     );
 
                     turretRotatePower = Range.clip(
@@ -213,18 +211,59 @@ public class VisionAlign {
 
                 break;
             case SEARCH:
-                if(searchTimer.seconds() <=  INITIAL_SEARCH_TIME)
-                {
-                    turretRotatePower  ;
+                double time = searchTimer.seconds();
+
+                // -------------------------
+                // PHASE 1: Look where target was last seen
+                // -------------------------
+                if (time < 0.5 && hasSeenTarget) {
+
+                    double error = lastKnownTargetAngle - currentTurretAngle;
+
+                    turretRotatePower = Range.clip(
+                            error * 0.02,
+                            -0.4,
+                            0.4
+                    );
                 }
 
+                // -------------------------
+                // PHASE 2: Small sweep (center-focused)
+                // -------------------------
+                else if (time < 1.5) {
+
+                    double centerBias = -currentTurretAngle * 0.01;
+
+                    turretRotatePower = (searchPower * 0.5 * turretDirection) + centerBias;
+                }
+
+                // -------------------------
+                // PHASE 3: Full sweep
+                // -------------------------
+                else {
+
+                    turretRotatePower = searchPower * turretDirection;
+                }
+
+                // -------------------------
+                // EDGE HANDLING (bounce)
+                // -------------------------
                 if (currentTurretAngle >= MAX_TURRET_ANGLE) {
                     turretDirection = -1;
                 } else if (currentTurretAngle <= MIN_TURRET_ANGLE) {
                     turretDirection = 1;
                 }
 
-                turretRotatePower = searchPower * turretDirection;
+                // -------------------------
+                // SLOW DOWN near center (better vision pickup)
+                // -------------------------
+                if (Math.abs(currentTurretAngle) < 10) {
+                    turretRotatePower *= 0.6;
+                }
+
+                double bias = -currentTurretAngle * 0.015;
+                turretRotatePower += bias;
+
                 break;
         }
     }

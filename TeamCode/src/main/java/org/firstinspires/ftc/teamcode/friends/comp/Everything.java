@@ -94,7 +94,9 @@ public class Everything extends LinearOpMode {
             vision.update(
                     result,
                     true,
-                    robot.turretMotor.getCurrentPosition()
+                    robot.turretMotor.getCurrentPosition(),
+                    robotPose,
+                    goalPose
             );
             robot.turretMotor.setPower(vision.turretRotatePower);
 
@@ -143,7 +145,7 @@ public class Everything extends LinearOpMode {
             // AUTO SHOOT LOGIC
             // =========================
             boolean readyToShoot =
-                    vision.VisionisAligned &&
+                    vision.isAligned &&
                             Math.abs(comp.rotate) < 0.1 &&
                             Math.abs(comp.drive) < 0.1 &&
                             Math.abs(comp.strafe) < 0.1 &&
@@ -183,7 +185,7 @@ public class Everything extends LinearOpMode {
             telemetry.addData("Shooter RPM", robot.getShooterRPM());
             telemetry.addData("TurretPower", vision.turretRotatePower);
             telemetry.addData("Turret ticks", robot.turretMotor.getCurrentPosition());
-            telemetry.addData("Turret aligned", vision.VisionisAligned);
+            telemetry.addData("Turret aligned", vision.isAligned);
             telemetry.addData("Turret currentAngle", vision.currentTurretAngle);
             telemetry.addData("EstDist", distance);
             telemetry.update();

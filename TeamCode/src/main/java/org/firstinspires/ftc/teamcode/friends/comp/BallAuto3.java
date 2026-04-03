@@ -29,7 +29,7 @@ public class BallAuto3 extends LinearOpMode {
 
         if (opModeIsActive()) {
 
-            vision.VisionisAligned = true;
+            vision.isAligned = true;
 
             // Step 1: Reverse
             setDrivePower(0.5, 0.5);
