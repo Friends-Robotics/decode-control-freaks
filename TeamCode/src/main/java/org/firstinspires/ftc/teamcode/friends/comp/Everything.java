@@ -50,7 +50,7 @@ public class Everything extends LinearOpMode {
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
         limelight.setPollRateHz(100);
         limelight.start();
-        limelight.pipelineSwitch(0); //0 blue 1 red
+        limelight.pipelineSwitch(1); //0 blue 1 red
 
         // --- ODOMETRY / PEDRO ---
         boolean IsBlue = false; // set before match
@@ -66,6 +66,8 @@ public class Everything extends LinearOpMode {
         waitForStart();
 
         while (opModeIsActive()) {
+            vision.isAligned = true;
+
 
             // =========================
             // INPUTS
@@ -102,7 +104,7 @@ public class Everything extends LinearOpMode {
                     true,
                     robot.turretMotor.getCurrentPosition()
             );
-            robot.turretMotor.setPower(vision.turretRotatePower);
+            robot.turretMotor.setPower(0);
 
             // =========================
             // DISTANCE + SHOOTER

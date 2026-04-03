@@ -20,100 +20,57 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 @Autonomous(name = "3BallStrafeAuto")
 public class BallAuto3 extends LinearOpMode {
 
-    hardwareMap robot;
-    Follower follower;
-
     ShooterController shooterController;
+
+    // Motors
+    hardwareMap robot;
     VisionAlign vision;
-
-    PathChain strafePath;
-    PathChain reversePath;
-
-    Pose startPose;
+    Helpers helpers;
 
     @Override
     public void runOpMode() {
-
         robot = new hardwareMap(hardwareMap);
-        follower = Constants.createFollower(hardwareMap);
         shooterController = new ShooterController();
         vision = new VisionAlign();
+        helpers = new Helpers(robot);
 
-        startPose= new Pose(0,0,0);
-        follower.setStartingPose(startPose);
 
-        telemetry.addLine("3 Ball Strafe Auto Ready");
-        telemetry.update();
         waitForStart();
 
-        // Step 1 — drive back once
-        buildReversePath();
-        follower.followPath(reversePath);
-        while (opModeIsActive() && follower.isBusy()) {
-            follower.update();
-            telemetry.addLine("Reversing...");
-            telemetry.update();
+        if (opModeIsActive()) {
+
+            vision.isAligned = true;
+
+            // Step 1: Reverse
+            setDrivePower(0.5, 0.5);
+            sleep(500);
+            stopDrive();
+
+            shooterController.startShooting(3,0,3300);
+
+
+            // Step 3: Strafe left (for mecanum)
+            robot.frontLeftMotor.setPower(0.5);
+            robot.backLeftMotor.setPower(-0.5);
+            robot.frontRightMotor.setPower(-0.5);
+            robot.backRightMotor.setPower(0.5);
+            sleep(500);  // strafe for 2 seconds
+            stopDrive();
         }
-
-        // Step 2 — shoot 3 balls
-        shooterController.startShooting(3, 0, 3100);
-        while (opModeIsActive() && shooterController.isBusy()) {
-            shooterController.update(robot, null, vision);
-            telemetry.addLine("Shooting...");
-            telemetry.update();
-        }
-
-        sleep(300);
-
-        // Step 3 — strafe
-        buildStrafePath();
-        follower.followPath(strafePath);
-        while (opModeIsActive() && follower.isBusy()) {
-            follower.update();
-            telemetry.addLine("Strafing...");
-            telemetry.update();
-        }
-
-        robot.stopShooter();
     }
 
-    // ---------- STRAFE LEFT ----------
-    private void buildStrafePath() {
-
-        Pose currentPose = follower.getPose();
-
-        Pose strafePose = new Pose(
-                currentPose.getX(),
-                currentPose.getY() + 24, // <-- adjust distance
-                currentPose.getHeading()
-        );
-
-        strafePath = new PathBuilder(follower)
-                .addPath(new Path(new BezierLine(currentPose, strafePose)))
-                .setLinearHeadingInterpolation(
-                        currentPose.getHeading(),
-                        strafePose.getHeading()
-                )
-                .build();
+    private void setDrivePower(double leftPower, double rightPower) {
+        robot.frontLeftMotor.setPower(leftPower);
+        robot.backLeftMotor.setPower(leftPower);
+        robot.frontRightMotor.setPower(rightPower);
+        robot.backRightMotor.setPower(rightPower);
     }
 
-    private void buildReversePath(){
-
-        Pose currentPose = follower.getPose();
-
-        Pose reversePose = new Pose(
-                currentPose.getX() - 12, // Change sign to plus for blue
-                currentPose.getY() - 24, // <-- adjust distance
-                currentPose.getHeading()
-        );
-
-        reversePath = new PathBuilder(follower)
-                .addPath(new Path(new BezierLine(currentPose, reversePose)))
-                .setLinearHeadingInterpolation(
-                        currentPose.getHeading(),
-                        reversePose.getHeading()
-                )
-                .build();
+    private void stopDrive() {
+        robot.frontLeftMotor.setPower(0);
+        robot.backLeftMotor.setPower(0);
+        robot.frontRightMotor.setPower(0);
+        robot.backRightMotor.setPower(0);
     }
-
 }
+
