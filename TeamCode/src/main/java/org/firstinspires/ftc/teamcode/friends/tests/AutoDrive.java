@@ -17,7 +17,7 @@ public class AutoDrive {
 
 
     public AutoDrive(Follower follower, boolean isBlue, boolean close) {
-        // y --> x ^ reverse from pedropathing visualizer
+
         this.follower = follower;
 
         if (isBlue) {

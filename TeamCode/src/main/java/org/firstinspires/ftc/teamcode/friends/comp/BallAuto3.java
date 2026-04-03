@@ -1,21 +1,11 @@
 package org.firstinspires.ftc.teamcode.friends.comp;
 
-import com.pedropathing.geometry.BezierLine;
-import com.pedropathing.geometry.Pose;
-import com.pedropathing.paths.Path;
-import com.pedropathing.paths.PathBuilder;
-import com.pedropathing.paths.PathChain;
-import com.pedropathing.follower.Follower;
-
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.friends.hardwareMap;
 import org.firstinspires.ftc.teamcode.friends.tests.ShooterController;
-import org.firstinspires.ftc.teamcode.friends.tests.OdometryShooter;
-import org.firstinspires.ftc.teamcode.friends.tests.AutoDrive;
 import org.firstinspires.ftc.teamcode.friends.vision.VisionAlign;
-import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 @Autonomous(name = "3BallStrafeAuto")
 public class BallAuto3 extends LinearOpMode {
@@ -39,7 +29,7 @@ public class BallAuto3 extends LinearOpMode {
 
         if (opModeIsActive()) {
 
-            vision.isAligned = true;
+            vision.VisionisAligned = true;
 
             // Step 1: Reverse
             setDrivePower(0.5, 0.5);

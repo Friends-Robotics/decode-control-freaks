@@ -27,32 +27,28 @@ public class OdometryShooter {
      *
      * This is the small correction added to vision tx.
      */
-    private double lastOffset = 0;
-    public double getTagToGoalOffset(Pose robotPose, Pose tagPose, Pose goalPose) {
+    private double lastCorrection = 0;
+    public double VisionShooterCorrection(Pose robotPose, Pose goalPose) {
 
-        // Robot → Tag vector
-        double dxTag = tagPose.getX() - robotPose.getX();
-        double dyTag = tagPose.getY() - robotPose.getY();
-        double tagAngle = Math.toDegrees(Math.atan2(dyTag, dxTag));
+        double dx = goalPose.getX() - robotPose.getX();
+        double dy = goalPose.getY() - robotPose.getY();
 
-        // Robot → Goal vector
-        double dxGoal = goalPose.getX() - robotPose.getX();
-        double dyGoal = goalPose.getY() - robotPose.getY();
-        double goalAngle = Math.toDegrees(Math.atan2(dyGoal, dxGoal));
+        double goalAngle = Math.toDegrees(Math.atan2(dy, dx));
+        double robotHeading = Math.toDegrees(robotPose.getHeading());
 
-        // Offset = goalAngle - tagAngle
-        double offset = goalAngle - tagAngle;
+        double correction = goalAngle - robotHeading;
 
-        // Normalize to [-180, 180]
-        while (offset > 180) offset -= 360;
-        while (offset < -180) offset += 360;
+        // normalize
+        while (correction > 180) correction -= 360;
+        while (correction < -180) correction += 360;
 
-        offset = Range.clip(offset, -15, 15);
+        correction = Range.clip(correction, -15, 15);
 
-        offset = 0.2 * lastOffset + 0.8 * offset;
-        lastOffset = offset;
+        // smooth
+        correction = 0.2 * lastCorrection + 0.8 * correction;
+        lastCorrection = correction;
 
-        return offset;
+        return correction;
     }
 
     /**

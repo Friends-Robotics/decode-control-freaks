@@ -17,7 +17,6 @@ import com.qualcomm.robotcore.util.Range;
 import org.firstinspires.ftc.teamcode.friends.hardwareMap;
 import org.firstinspires.ftc.teamcode.friends.tests.AutoDrive;
 import org.firstinspires.ftc.teamcode.friends.tests.OdometryShooter;
-import org.firstinspires.ftc.teamcode.friends.vision.TagPoseEstimator;
 import org.firstinspires.ftc.teamcode.friends.vision.VisionAlign;
 import org.firstinspires.ftc.teamcode.friends.tests.ShooterController;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
@@ -87,13 +86,7 @@ public class FullAutoAny extends LinearOpMode {
         robot = new hardwareMap(hardwareMap);
         follower = Constants.createFollower(hardwareMap);
 
-        limelight = hardwareMap.get(Limelight3A.class, "limelight");
-        limelight.setPollRateHz(100);
-        limelight.start();
-        limelight.pipelineSwitch(0);
-
         comp = new Helpers(robot);
-        vision = new VisionAlign();
         shooterController = new ShooterController();
         odometryShooter = new OdometryShooter();
         autoDrive = new AutoDrive(follower,blue,Close);
@@ -102,9 +95,7 @@ public class FullAutoAny extends LinearOpMode {
         parkPose = autoDrive.getAutoParkingPose();// same
         follower.setStartingPose(startPose);
 
-
         robot.turretMotor.setMode(com.qualcomm.robotcore.hardware.DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        robot.turretMotor.setMode(com.qualcomm.robotcore.hardware.DcMotor.RunMode.RUN_USING_ENCODER);
 
         telemetry.addLine("Ready");
         telemetry.update();
@@ -115,108 +106,12 @@ public class FullAutoAny extends LinearOpMode {
 
         // ---------- Main loop ----------
         while (opModeIsActive()) {
+            Pose currentPose = follower.getPose();
 
-            // =========================
-// ODOMETRY UPDATE
-// =========================
-            follower.update();
-            Pose robotPose = follower.getPose();
-
-// =========================
-// VISION
-// =========================
-            LLResult result = limelight.getLatestResult();
-
-// 1) Compute REAL tag pose from robot + vision
-            Pose tagPose = TagPoseEstimator.computeTagPose(robotPose, result);
-
-// 2) Compute goal pose from tag pose (6 right, 2 up)
-            Pose goalPose = TagPoseEstimator.computeGoalPoseFromTag(tagPose);
-
-
-// 4) Vision-driven turret with odometry offset
-            vision.update(
-                    result,
-                    true,
-                    robot.turretMotor.getCurrentPosition()
-            );
-
-            robot.turretMotor.setPower(vision.turretRotatePower);
-
-// =========================
-// DISTANCE + SHOOTER
-// =========================
-// distance = distance from ROBOT to GOAL (not tag, not shootPose)
-            double distance = odometryShooter.getDistanceToGoal(robotPose, goalPose);
-
-            double targetRPM = odometryShooter.getTargetRPM(
-                    distance,
-                    3300, 4100,
-                    60, 130
-            );
-
-            double hoodPos = odometryShooter.getHoodPosition(
-                    distance,
-                    0.00, 0.25,
-                    60, 130
-            );
-
-// Smooth RPM
-            robot.targetShooterRPM = 0.8 * robot.targetShooterRPM + 0.2 * targetRPM;
-
-// Shooter state machine
+            // Shooter state machine
             shooterController.update(robot, comp, vision);
 
             switch (currentState) {
-
-
-                case CHECK_VISION:
-                    if(Close)
-                    {
-                        currentState = AutoState.VISION_ALIGN;
-                    }
-                    else{
-                        currentState = AutoState.SHOOTING_CYCLE;
-                    }
-
-                case VISION_ALIGN:
-                    if (!follower.isBusy()) {
-                        double drive;
-                        if(Close){
-                            drive = vision.drivePowerClose;
-                        }
-                        else
-                        {
-                            drive = vision.drivePowerFar;
-                        }
-                        if (stateTimer.seconds() > 3.0) {
-                            // proceed anyway or skip cycle
-                            currentState = AutoState.SHOOTING_CYCLE;
-                        }
-                        double strafe = 0;
-                        double rotate = 0;
-
-                        double fl = Range.clip(drive + strafe + rotate, -1, 1);
-                        double fr = Range.clip(drive - strafe - rotate, -1, 1);
-                        double bl = Range.clip(drive - strafe + rotate, -1, 1);
-                        double br = Range.clip(drive + strafe - rotate, -1, 1);
-
-                        robot.frontLeftMotor.setPower(fl);
-                        robot.frontRightMotor.setPower(fr);
-                        robot.backLeftMotor.setPower(bl);
-                        robot.backRightMotor.setPower(br);
-
-                        if (Math.abs(vision.turretRotatePower) < 0.05 &&
-                                Math.abs(vision.drivePowerClose) < 0.05  &&
-                                robot.shooterAtSpeed(50)) {
-
-                            // Start shooting cycle for 3 balls
-                            shooterController.startShooting(3, hoodPos, targetRPM);
-                            currentState = AutoState.SHOOTING_CYCLE;
-                        }
-                        stateTimer.reset();
-                    }
-                    break;
 
                 case SHOOTING_CYCLE:
                     // Wait for ShooterController to finish
@@ -269,9 +164,9 @@ public class FullAutoAny extends LinearOpMode {
             // ---------- Telemetry ----------
             telemetry.addData("State", currentState);
             telemetry.addData("Cycle", cycleIndex);
-            telemetry.addData("X", robotPose.getX());
-            telemetry.addData("Y", robotPose.getY());
-            telemetry.addData("Heading", Math.toRadians(robotPose.getHeading()));
+            telemetry.addData("X", currentPose.getX());
+            telemetry.addData("Y", currentPose.getY());
+            telemetry.addData("Heading", Math.toRadians(currentPose.getHeading()));
             telemetry.update();
         }
     }
