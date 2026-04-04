@@ -47,10 +47,15 @@ public class ShooterController {
 
         double distance = odometryShooter.getDistanceToGoal(currentPose, goalPose);
 
-        boolean readyToShoot =
-                vision.isAligned &&
-                        robot.shooterAtSpeed(75) &&
-                        Math.abs(vision.turretRotatePower) < 0.05;
+        boolean readyToShoot;
+
+        if (vision != null) {
+            readyToShoot = vision.isAligned &&
+                    Math.abs(vision.turretRotatePower) < 0.05;
+        } else {
+            // AUTO MODE (no vision)
+            readyToShoot = robot.shooterAtSpeed(75);
+        }
 
         // --- Dynamic RPM ---
         targetRPM = 3300 + (distance * 10); // tune the 10

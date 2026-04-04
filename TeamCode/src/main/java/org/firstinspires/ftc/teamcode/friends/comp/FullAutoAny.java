@@ -11,6 +11,7 @@ import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
@@ -27,7 +28,6 @@ public class FullAutoAny extends LinearOpMode {
     // ---------- Hardware ----------
     hardwareMap robot;
     Follower follower;
-    Limelight3A limelight;
     VisionAlign vision;
     Helpers comp;
     ShooterController shooterController;
@@ -73,7 +73,6 @@ public class FullAutoAny extends LinearOpMode {
 
     PathChain intakeFullPath;
     PathChain shootPath;
-    PathChain StartShootPath;
     PathChain ParkPath;
 
     int cycleIndex = 0;
@@ -96,6 +95,9 @@ public class FullAutoAny extends LinearOpMode {
         follower.setStartingPose(startPose);
 
         robot.turretMotor.setMode(com.qualcomm.robotcore.hardware.DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        robot.turretMotor.setTargetPosition(0);
+        robot.turretMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        robot.turretMotor.setPower(0.3);
 
         telemetry.addLine("Ready");
         telemetry.update();
@@ -109,7 +111,7 @@ public class FullAutoAny extends LinearOpMode {
             Pose currentPose = follower.getPose();
 
             // Shooter state machine
-            shooterController.update(robot, vision, comp,currentPose,goalPose);
+            shooterController.update(robot, null, comp, currentPose, goalPose);
 
             switch (currentState) {
 
@@ -132,7 +134,6 @@ public class FullAutoAny extends LinearOpMode {
                 case DRIVE_TO_INTAKE:
                     if (!follower.isBusy()) {
                         robot.stopIntake();
-                        robot.setShooterRPM(robot.targetShooterRPM); // spin shooter while driving to shooting pos
                         follower.followPath(shootPath);
                         currentState = AutoState.DRIVE_TO_SHOOT;
                     }
