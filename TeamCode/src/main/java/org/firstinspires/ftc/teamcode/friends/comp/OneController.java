@@ -71,6 +71,15 @@ public class OneController extends LinearOpMode {
                 hwMap.intakeMotor.setPower(0);
             }
 
+            if (gamepad1.a) {
+                hwMap.turretMotor.setPower(0.5);
+            } else {
+                hwMap.turretMotor.setPower(0);
+            }
+
+            telemetry.addData("Position", hwMap.turretMotor.getCurrentPosition());
+            telemetry.update();
+
             telemetry.addData("Robot Speed: ", speedModifier);
             telemetry.addData("Intake Motor Speed: ", intakePower);
             telemetry.update();
