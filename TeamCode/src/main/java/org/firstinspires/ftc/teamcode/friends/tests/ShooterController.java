@@ -10,27 +10,24 @@ public class ShooterController {
     private final OdometryShooter odometryShooter = new OdometryShooter();
     ShooterPIDF shooterPIDF = new ShooterPIDF();
 
+    public boolean isBusy() {
+        return false;
+    }
+
     enum State {
         IDLE,
         SPINNING_UP,
-        RAISING_RAMP,
-        FEEDING,
-        SPACING,
-        RECOVERING
+        FEEDING
     }
 
-    State currentState = State.IDLE;
+    State currentState = State.SPINNING_UP;
     ElapsedTime timer = new ElapsedTime();
     int ballsToShoot = 0;
     int ballsShot = 0;
 
     // Tunables
-    double rampUpTime = 1.0;
-    double feedTime = 0.25;
-    double spacingTime = 0.10;
-    double minRecoverTime = 0.15;
+    double feedTime = 4;
     double intakePower = 0.8;
-    double reversePower = -0.25;
     public double hoodPos;
     public double targetRPM;
 
@@ -48,7 +45,6 @@ public class ShooterController {
     // --- Main state machine ---
     public void update(TeamHardwareMap robot, VisionAlign vision, Helpers helpers, Pose currentPose, Pose goalPose) {
 
-        double distance = odometryShooter.getDistanceToGoal(currentPose, goalPose);
 
         boolean readyToShoot;
 
@@ -61,7 +57,8 @@ public class ShooterController {
         }
 
         // --- Dynamic RPM ---
-        targetRPM = 3300 + (distance * 10); // tune the 10
+        double distance = odometryShooter.getDistanceToGoal(currentPose, goalPose);
+        targetRPM = odometryShooter.getTargetRPM(distance, 3300, 4100, 60, 130);
 
         // --- Dynamic hood ---
         hoodPos = odometryShooter.getHoodPosition(
@@ -80,12 +77,6 @@ public class ShooterController {
         }
         robot.hood.setPosition(hoodPos);
 
-
-        double rpmScale = targetRPM / 3300.0;
-        double adjustedFeedTime = feedTime / rpmScale;
-        double adjustedSpacingTime = spacingTime / rpmScale;
-        double adjustedReversePower = reversePower / rpmScale;
-
         switch (currentState) {
 
             case IDLE:
@@ -97,70 +88,27 @@ public class ShooterController {
             case SPINNING_UP:
 
                 if (robot.shooterAtSpeed(50) && timer.seconds() > 0.2) {
-                    currentState = State.RAISING_RAMP;
+                    currentState = State.FEEDING;
                     timer.reset();
                 }
                 break;
 
-            case RAISING_RAMP:
-
-                if (readyToShoot) {
-                    robot.feedBall();
-
-                    if (timer.seconds() > rampUpTime) {
-                        currentState = State.FEEDING;
-                        timer.reset();
-                    }
-                }
-                break;
 
             case FEEDING:
-                robot.intakeMotor.setPower(intakePower);
-
-                if (timer.seconds() > adjustedFeedTime) {
-                    robot.intakeMotor.setPower(0);
-                    robot.resetFeed();
-                    ballsShot++;
-                    currentState = State.SPACING;
-                    timer.reset();
-                }
-                break;
-
-            case SPACING:
-                if (ballsShot == 1) {
-                    robot.intakeMotor.setPower(adjustedReversePower);
-                } else {
-                    robot.intakeMotor.setPower(0);
-                }
-
-                if (timer.seconds() > adjustedSpacingTime) {
-                    robot.intakeMotor.setPower(0);
-                    currentState = State.RECOVERING;
-                    timer.reset();
-                }
-                break;
-
-            case RECOVERING:
-
-                double movementPenalty =
-                        Math.abs(helpers.drive) * 0.5 +
-                                Math.abs(helpers.strafe) * 0.7 +
-                                Math.abs(helpers.rotate);
-
-                if (robot.shooterAtSpeed(50) && timer.seconds() > minRecoverTime + movementPenalty * 0.1) {
-                    ballsToShoot--;
-                    if (ballsToShoot > 0) {
-                        currentState = State.RAISING_RAMP;
-                    } else {
+                if(readyToShoot)
+                {
+                    robot.intakeMotor.setPower(intakePower);
+                    robot.feedBall();
+                    if (timer.seconds() > feedTime) {
+                        robot.intakeMotor.setPower(0);
+                        robot.resetFeed();
                         currentState = State.IDLE;
+                        timer.reset();
                     }
-                    timer.reset();
+
                 }
                 break;
         }
-    }
 
-    public boolean isBusy() {
-        return currentState != State.IDLE;
     }
 }

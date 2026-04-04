@@ -75,7 +75,7 @@ public class TeamHardwareMap {
 
     // FEEDER
     public void resetFeed() {feeder.setPosition(0.0);} // Lowered
-    public void feedBall() {feeder.setPosition(0.37);} // High
+    public void feedBall() {feeder.setPosition(0.26);} // High
 
     // SHOOTER
     public void setShooterRPM(double rpm){

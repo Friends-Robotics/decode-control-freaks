@@ -117,29 +117,6 @@ public class Everything extends LinearOpMode {
             // AUTO DRIVE TRIGGERS
             // =========================
 
-            double distance = odometryShooter.getDistanceToGoal(robotPose, goalPose);
-
-            if (helpers.currentGp1.left_bumper && !helpers.previousGp1.left_bumper && !AutoDriveActive) {
-                if (distance > 5) {
-                    autoDrive = new AutoDrive(follower, IsBlue, true);
-                    autoDrive.driveToShoot();
-                    AutoDriveActive = true;
-                }
-            }
-
-            if (helpers.currentGp1.left_bumper && !helpers.previousGp1.left_bumper && !AutoDriveActive) {
-                if (distance > 5) {
-                    autoDrive = new AutoDrive(follower, IsBlue, false);
-                    autoDrive.driveToShoot();
-                    AutoDriveActive = true;
-                }
-            }
-
-            if (AutoDriveActive && !follower.isBusy()) {
-                AutoDriveActive = false;
-            }
-
-
             // =========================
             // SHOOTER STATE MACHINE
             // =========================
@@ -163,7 +140,6 @@ public class Everything extends LinearOpMode {
             telemetry.addData("Raw Forward", pinpoint.getPosY(DistanceUnit.INCH));
             telemetry.addData("Raw Strafe", pinpoint.getPosX((DistanceUnit.INCH)));
             telemetry.addData("Robot Pose", robotPose);
-            telemetry.addData("Distance to Goal (in)", distance);
             telemetry.addLine();
             telemetry.addLine("----SHOOTER----");
             telemetry.addLine();

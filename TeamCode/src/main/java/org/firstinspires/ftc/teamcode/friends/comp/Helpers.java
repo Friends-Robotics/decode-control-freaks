@@ -35,9 +35,9 @@ public class Helpers {
     }
 
     public void readDriveInputs() {
-        drive  = currentGp1.left_stick_y;
-        strafe = -currentGp1.left_stick_x;
-        rotate = -currentGp1.right_stick_x;
+        drive  = - currentGp1.left_stick_y;
+        strafe = currentGp1.left_stick_x;
+        rotate = currentGp1.right_stick_x;
     }
 
     public void applyDrive() {
