@@ -52,6 +52,7 @@ public class FullAutoAny extends LinearOpMode {
     Pose parkPose;
     Pose goalPose;
 
+
     //Determine poses
     double AutoForRedIntake1Offset; // Adds to the x value for Auto for blue
     //Middle of field x value = 72;
@@ -181,15 +182,17 @@ public class FullAutoAny extends LinearOpMode {
         if (!blue && !PosesMirrored) {
             PosesMirrored = true;
             for (int i = 0; i < intakePoses.length; i++) {
-                AutoForRedIntake1Offset = (72 - intakePoses[i].getX()) * 2;
-                AutoForRedIntake2Offset = (72 - intakePoses2[i].getX()) * 2;
+                double offset1 = (72 - intakePoses[i].getX()) * 2;
+                double offset2 = (72 - intakePoses2[i].getX()) * 2;
+
                 intakePoses[i] = new Pose(
-                        intakePoses[i].getX() + AutoForRedIntake1Offset,
+                        intakePoses[i].getX() + offset1,
                         intakePoses[i].getY(),
                         intakePoses[i].getHeading() + Math.toRadians(180)
                 );
+
                 intakePoses2[i] = new Pose(
-                        intakePoses2[i].getX() + AutoForRedIntake2Offset,
+                        intakePoses2[i].getX() + offset2,
                         intakePoses2[i].getY(),
                         intakePoses2[i].getHeading() + Math.toRadians(180)
                 );
@@ -200,30 +203,35 @@ public class FullAutoAny extends LinearOpMode {
         Pose intakePose2 = intakePoses2[cycleIndex];
 
         intakeFullPath = new PathBuilder(follower)
+
+                // DRIVE TO FIRST INTAKE → smooth turn-in
                 .addPath(new Path(new BezierLine(currentPose, intakePose)))
                 .setLinearHeadingInterpolation(
                         currentPose.getHeading(),
                         intakePose.getHeading()
                 )
+
+                // STRAFE/FINAL ALIGN → lock heading for intake
                 .addPath(new Path(new BezierLine(intakePose, intakePose2)))
-                .setLinearHeadingInterpolation(
-                        intakePose.getHeading(),
-                        intakePose2.getHeading()
-                )
+                .setConstantHeadingInterpolation(intakePose2.getHeading())
+
                 .build();
 
         shootPath = new PathBuilder(follower)
+
+                // DRIVE BACK → allow smooth reorientation
                 .addPath(new Path(new BezierLine(intakePose2, shootPose)))
                 .setLinearHeadingInterpolation(
                         intakePose2.getHeading(),
                         shootPose.getHeading()
                 )
+
                 .build();
 
         ParkPath = new PathBuilder(follower)
-                .addPath(new Path(new BezierLine(currentPose, parkPose)))
+                .addPath(new Path(new BezierLine(shootPose, parkPose)))
                 .setLinearHeadingInterpolation(
-                        currentPose.getHeading(),
+                        shootPose.getHeading(),
                         parkPose.getHeading()
                 )
                 .build();
