@@ -29,7 +29,6 @@ public class Everything extends LinearOpMode {
     GoBildaPinpointDriver pinpoint;
     OdometryShooter odometryShooter;
 
-
     boolean AutoDriveActive = false;
 
     @Override
