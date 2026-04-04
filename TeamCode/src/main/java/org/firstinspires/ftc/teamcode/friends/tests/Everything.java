@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode.friends.tests;
 
-
-
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
@@ -15,7 +13,6 @@ import org.firstinspires.ftc.teamcode.friends.comp.Helpers;
 import org.firstinspires.ftc.teamcode.friends.hardwareMap;
 import org.firstinspires.ftc.teamcode.friends.vision.VisionAlign;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
-
 
 @TeleOp(name = "Drive + Intake + Shooting")
 public class Everything extends LinearOpMode {
@@ -64,6 +61,9 @@ public class Everything extends LinearOpMode {
         boolean IsBlue = false; // set this before match
         boolean close = true; // also set for startingPose depending on what auto is ran
 
+        boolean lastA = false;
+        boolean lastB = false;
+
         follower = Constants.createFollower(hardwareMap);
         AutoDrive autoDrive = new AutoDrive(follower, IsBlue, close);// this is the same as the parking pose from the last auto
         follower.setStartingPose(autoDrive.getAutoParkingPose());
@@ -75,7 +75,40 @@ public class Everything extends LinearOpMode {
                 6 , 2
         );
 
-        //ODOMETRY
+        while (!isStarted() && !isStopRequested()) {
+            if (gamepad1.a && !lastA){
+                IsBlue = false;
+            }
+
+            if (gamepad1.b && !lastB) {
+                IsBlue = true;
+            }
+
+            lastA = gamepad1.a;
+            lastB = gamepad1.b;
+
+            if (IsBlue) {
+                limelight.pipelineSwitch(0);
+            } else {
+                limelight.pipelineSwitch(1);
+            }
+
+            telemetry.addLine("=== PIPELINE SELECT ===");
+            telemetry.addLine("A = RED");
+            telemetry.addLine("B = BLUE");
+            telemetry.addData("Selected", IsBlue ? "BLUE (1)" : "RED (0)");
+            telemetry.update();
+
+            sleep(50);
+        }
+
+        if (IsBlue) {
+            limelight.pipelineSwitch(0);
+        } else {
+            limelight.pipelineSwitch(1);
+        }
+
+        waitForStart();
 
         while (opModeIsActive()) {
 
