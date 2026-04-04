@@ -92,6 +92,11 @@ public class hardwareMap {
         shooterMotor1.setVelocity(ticksPerSecond);
         shooterMotor2.setVelocity(ticksPerSecond);
     }
+    public void setShooterPower(double power){
+        shooterMotor1.setPower(power);
+        shooterMotor2.setPower(power);
+    }
+
 
     public double getShooterRPM() {
         return (shooterMotor1.getVelocity() * 60.0) / SHOOTER_TICKS_PER_REV;

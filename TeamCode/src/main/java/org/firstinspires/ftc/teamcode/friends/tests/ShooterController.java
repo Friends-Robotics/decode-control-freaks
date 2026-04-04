@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 public class ShooterController {
     private final OdometryShooter odometryShooter = new OdometryShooter();
+    ShooterPIDF shooterPIDF = new ShooterPIDF();
 
     enum State {
         IDLE,
@@ -33,11 +34,13 @@ public class ShooterController {
     public double hoodPos;
     public double targetRPM;
 
+    boolean shooterControlEnabled = false;
 
     // --- Start shooting with count + hood angle ---
     public void startShooting(int count) {
         ballsToShoot = count;
-        ballsShot = 0;           // reset
+        ballsShot = 0;// reset
+        shooterControlEnabled = true;
         currentState = State.SPINNING_UP;
         timer.reset();
     }
@@ -68,7 +71,13 @@ public class ShooterController {
         );
 
         // Apply live
-        robot.setShooterRPM(targetRPM);
+        double currentRPM = robot.getShooterRPM(); // or encoder method
+        double power = shooterPIDF.calculate(targetRPM, currentRPM);
+
+        if(shooterControlEnabled)
+        {
+            robot.setShooterPower(power);
+        }
         robot.hood.setPosition(hoodPos);
 
 

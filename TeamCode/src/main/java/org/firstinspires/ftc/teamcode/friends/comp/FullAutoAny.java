@@ -43,7 +43,7 @@ public class FullAutoAny extends LinearOpMode {
         DONE
     }
 
-    AutoState currentState = AutoState.SHOOTING_CYCLE;
+    AutoState currentState = AutoState.DRIVE_TO_SHOOT;
     ElapsedTime stateTimer = new ElapsedTime();
 
     // ---------- Poses ----------
@@ -52,11 +52,6 @@ public class FullAutoAny extends LinearOpMode {
     Pose parkPose;
     Pose goalPose;
 
-
-    //Determine poses
-    double AutoForRedIntake1Offset; // Adds to the x value for Auto for blue
-    //Middle of field x value = 72;
-    double AutoForRedIntake2Offset;
     boolean blue = false; // set before match;
     boolean Close = true; // set before match
     boolean PosesMirrored = false;
@@ -75,6 +70,7 @@ public class FullAutoAny extends LinearOpMode {
     PathChain intakeFullPath;
     PathChain shootPath;
     PathChain ParkPath;
+    PathChain shootPath1;
 
     int cycleIndex = 0;
     static final int MAX_CYCLES = 3;
@@ -110,16 +106,15 @@ public class FullAutoAny extends LinearOpMode {
         // ---------- Main loop ----------
         while (opModeIsActive()) {
             Pose currentPose = follower.getPose();
-
             // Shooter state machine
             shooterController.update(robot, null, comp, currentPose, goalPose);
+            follower.followPath(shootPath1);
 
             switch (currentState) {
 
                 case SHOOTING_CYCLE:
                     // Wait for ShooterController to finish
                     if (!shooterController.isBusy()) {
-
                         // Start intake cycle
                         if (cycleIndex < MAX_CYCLES) {
                             buildNewCycle();
@@ -170,6 +165,7 @@ public class FullAutoAny extends LinearOpMode {
             telemetry.addData("X", currentPose.getX());
             telemetry.addData("Y", currentPose.getY());
             telemetry.addData("Heading", Math.toRadians(currentPose.getHeading()));
+            telemetry.addData("Current RPM", shooterController.targetRPM);
             telemetry.update();
         }
     }
@@ -201,6 +197,12 @@ public class FullAutoAny extends LinearOpMode {
 
         Pose intakePose  = intakePoses[cycleIndex];
         Pose intakePose2 = intakePoses2[cycleIndex];
+
+        shootPath1 = new PathBuilder(follower)
+
+                .addPath(new Path( new BezierLine(startPose, shootPose)))
+                .setConstantHeadingInterpolation(shootPose.getHeading())
+                .build();
 
         intakeFullPath = new PathBuilder(follower)
 
