@@ -12,6 +12,7 @@ public class AutoDrive {
     private final Pose goalPose;
     private final Pose shootPose;
     private final Pose AutoParkingPose;
+    private Pose startPose;
 
 
 
@@ -37,6 +38,7 @@ public class AutoDrive {
             goalPose = new Pose(134, 133, 0); // don't need angle
             if(close)
             {
+                startPose = new Pose(123.43, 123.03, Math.toRadians(36));
                 shootPose = new Pose(84, 90, Math.toRadians(45));
                 AutoParkingPose = new Pose(80, 109, Math.toRadians(90));
             }
@@ -75,6 +77,7 @@ public class AutoDrive {
     public Pose getAutoParkingPose(){
         return AutoParkingPose;
     }
+    public Pose getStartPose(){return startPose;}
 
 
 }

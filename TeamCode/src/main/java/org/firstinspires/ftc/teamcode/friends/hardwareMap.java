@@ -88,7 +88,6 @@ public class hardwareMap {
 
     //SHOOTER
     public void setShooterRPM(double rpm){
-        targetShooterRPM = rpm;
         double ticksPerSecond = (rpm * SHOOTER_TICKS_PER_REV) / 60.0;
         shooterMotor1.setVelocity(ticksPerSecond);
         shooterMotor2.setVelocity(ticksPerSecond);

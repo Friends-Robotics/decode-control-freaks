@@ -95,13 +95,16 @@ public class Everything extends LinearOpMode {
                     robotPose,
                     goalPose
             );
-            robot.turretMotor.setPower(vision.turretRotatePower);
+            if(gamepad2.y)
+            {
+                robot.turretMotor.setPower(vision.turretRotatePower);
+            }
 
             // =========================
             // DISTANCE + SHOOTER
             // =========================
             // distance = distance from ROBOT to GOAL (not tag)
-            AutoShoot.update(robot, vision, helpers, robotPose,goalPose); // Looking kinda clean now
+            AutoShoot.update(robot, vision, helpers, robotPose, goalPose); // Looking kinda clean now
 
             // =========================
             // DRIVER SHOOTER TRIGGER
@@ -144,9 +147,9 @@ public class Everything extends LinearOpMode {
 
             if (!AutoShoot.isBusy()) {
                 // Intake
-                if (gamepad2.right_trigger > 0.1) {
+                if (gamepad1.right_trigger > 0.1) {
                     robot.intakeMotor.setPower(1.0);
-                } else if (gamepad2.left_trigger > 0.1) {
+                } else if (gamepad1.left_trigger > 0.1) {
                     robot.intakeMotor.setPower(-1.0);
                 } else {
                     robot.intakeMotor.setPower(0);

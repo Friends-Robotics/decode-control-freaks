@@ -7,7 +7,7 @@ import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 public class ShooterController {
-    OdometryShooter odometryShooter;
+    private final OdometryShooter odometryShooter = new OdometryShooter();
 
     enum State {
         IDLE,

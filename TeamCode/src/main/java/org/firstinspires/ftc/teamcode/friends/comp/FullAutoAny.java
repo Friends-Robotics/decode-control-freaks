@@ -90,7 +90,7 @@ public class FullAutoAny extends LinearOpMode {
         odometryShooter = new OdometryShooter();
         autoDrive = new AutoDrive(follower,blue,Close);
         shootPose = autoDrive.getShootPose();
-        startPose = autoDrive.getShootPose();
+        startPose = autoDrive.getStartPose();
         parkPose = autoDrive.getAutoParkingPose();// same
         goalPose = autoDrive.getGoalPose();
         follower.setStartingPose(startPose);

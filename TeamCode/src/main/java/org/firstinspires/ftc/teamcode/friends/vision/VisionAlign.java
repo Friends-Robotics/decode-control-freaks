@@ -48,8 +48,8 @@ public class VisionAlign {
     public double alignmentTolerance = 3;
 
     // turret limits and constants
-    double MIN_TURRET_ANGLE = -85.0;
-    double MAX_TURRET_ANGLE = 85.0;
+    double MIN_TURRET_ANGLE = -42.5;
+    double MAX_TURRET_ANGLE = 42.5;
 
     int rightTicks = 193;
     int leftTicks = -193;
