@@ -6,21 +6,19 @@ import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import org.firstinspires.ftc.teamcode.friends.tests.ShooterController;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
-
-@Autonomous(name = "Drive Only Auto FIXED")
+@Autonomous(name = "RED Close 1")
 public class AUTOredo extends OpMode {
 
-    private ShooterController shooterController;
     private org.firstinspires.ftc.teamcode.friends.hardwareMap robot;
     private org.firstinspires.ftc.teamcode.friends.comp.Helpers helpers;
     private org.firstinspires.ftc.teamcode.friends.vision.VisionAlign vision;
     private Follower follower;
     private boolean pathStarted = false;
 
-    private DcMotor intakeMotor;
+    private DcMotorEx IntakeMotor;
 
     private double intakePower = 0.8;
     private double RintakePower = -0.8;
@@ -34,33 +32,32 @@ public class AUTOredo extends OpMode {
         DRIVE_COLLECT1_2,
         DRIVE_COLLECT2_1,
         DRIVE_COLLECT2_2,
+        DRIVE_COLLECT2_RETURN,
         STOP
     }
 
     private PathState pathState;
 
-    // ================= TIMER =================
-    private double holdTimer = 0;
+    private ElapsedTime holdTimer = new ElapsedTime();
     private boolean holdStarted = false;
-    private final double HOLD_TIME = 3.0;
 
     // ================= POSES =================
     private final Pose startPose = new Pose(123.43, 123.03, Math.toRadians(36));
     private final Pose shootPose = new Pose(87.01, 82.29, Math.toRadians(47));
-    private final Pose collect1_1 = new Pose(101.4462, 84.0582, Math.toRadians(0));
-    private final Pose collect1_2 = new Pose(127.99, 84.39, Math.toRadians(0));
-    private final Pose collect2_1 = new Pose(105.4516, 59.6313, Math.toRadians(0));
-    private final Pose collect2_2 = new Pose(127.2718, 59.1889, Math.toRadians(0));
+    private final Pose collect1_1 = new Pose(101.4462, 85.61029580838324, Math.toRadians(0));
+    private final Pose collect1_2 = new Pose(127.99, 85.42473053892215, Math.toRadians(0));
+    private final Pose collect2_1 = new Pose(97.65218802395209, 62.39058143712576, Math.toRadians(0));
+    private final Pose collect2_2 = new Pose(127.2718, 62.1206365269461, Math.toRadians(0));
 
     // ================= PATHS =================
     private PathChain driveStartPose;
     private PathChain driveShootPose;
-
     private PathChain driveCollect1_1;
     private PathChain driveCollect1_2;
-
     private PathChain driveCollect2_1;
     private PathChain driveCollect2_2;
+    private PathChain driveCollect2Return;
+
     private int cycleCount = 0;
 
     // ================= BUILD PATHS =================
@@ -81,7 +78,6 @@ public class AUTOredo extends OpMode {
                 .setLinearHeadingInterpolation(collect1_1.getHeading(), collect1_2.getHeading())
                 .build();
 
-        // returns to shootPose
         driveCollect1_2 = follower.pathBuilder()
                 .addPath(new BezierLine(collect1_2, shootPose))
                 .setLinearHeadingInterpolation(collect1_2.getHeading(), shootPose.getHeading())
@@ -92,30 +88,34 @@ public class AUTOredo extends OpMode {
                 .setLinearHeadingInterpolation(shootPose.getHeading(), collect2_1.getHeading())
                 .build();
 
-        // returns to shootPose again
         driveCollect2_2 = follower.pathBuilder()
+                .addPath(new BezierLine(collect2_1, collect2_2))
+                .setLinearHeadingInterpolation(collect2_1.getHeading(), collect2_2.getHeading())
+                .build();
+
+        // ✅ FIX: missing return path
+        driveCollect2Return = follower.pathBuilder()
                 .addPath(new BezierLine(collect2_2, shootPose))
                 .setLinearHeadingInterpolation(collect2_2.getHeading(), shootPose.getHeading())
                 .build();
     }
 
-    // ================= STATE SWITCH =================
     public void setPathState(PathState newState) {
         pathState = newState;
         pathStarted = false;
-
-        // reset hold timer whenever leaving states
         holdStarted = false;
     }
 
-    // ================= STATE MACHINE =================
     public void statePathUpdate() {
 
         switch (pathState) {
 
             case DRIVE_STARTPOSE:
-                if (!follower.isBusy()) {
+                if (!pathStarted) {
                     follower.followPath(driveStartPose, true);
+                    pathStarted = true;
+                }
+                if (!follower.isBusy()) {
                     setPathState(PathState.DRIVE_SHOOTPOSE);
                 }
                 break;
@@ -125,38 +125,31 @@ public class AUTOredo extends OpMode {
                     follower.followPath(driveShootPose, false);
                     pathStarted = true;
                 }
-
                 if (!follower.isBusy()) {
                     setPathState(PathState.HOLD_SHOOTPOSE);
                 }
                 break;
 
             case HOLD_SHOOTPOSE:
-
                 if (!holdStarted) {
                     holdStarted = true;
-                    holdTimer = time;
-
-                    // ✅ start ONLY once
-                    shooterController.startShooting(3,0,3100);
+                    holdTimer.reset();
                 }
 
-                // wait until shooter finishes instead of time
-                if (!shooterController.isBusy()) {
-                    holdStarted = false;
-                    if (!shooterController.isBusy()) {
-                        holdStarted = false;
+                IntakeMotor.setPower(RintakePower);
+                // TODO remove the line above and replace with the shooter, in theory that should work, remember to add in all of the imports etc.
 
-                        if (cycleCount == 0) {
-                            cycleCount++;
-                            setPathState(PathState.DRIVE_COLLECT1_1);
-                        } else if (cycleCount == 1) {
-                            cycleCount++;
-                            setPathState(PathState.DRIVE_COLLECT2_1);
-                        } else {
-                            cycleCount++;
-                            setPathState(PathState.STOP);
-                        }
+                if (holdTimer.seconds() > 1.0) {
+                    holdStarted = false;
+
+                    if (cycleCount == 0) {
+                        cycleCount++;
+                        setPathState(PathState.DRIVE_COLLECT1_1);
+                    } else if (cycleCount == 1) {
+                        cycleCount++;
+                        setPathState(PathState.DRIVE_COLLECT2_1);
+                    } else {
+                        setPathState(PathState.STOP);
                     }
                 }
                 break;
@@ -166,8 +159,7 @@ public class AUTOredo extends OpMode {
                     follower.followPath(driveCollect1_1, false);
                     pathStarted = true;
                 }
-
-                intakeMotor.setPower(intakePower);
+                IntakeMotor.setPower(intakePower);
 
                 if (!follower.isBusy()) {
                     setPathState(PathState.DRIVE_COLLECT1_2);
@@ -179,8 +171,7 @@ public class AUTOredo extends OpMode {
                     follower.followPath(driveCollect1_2, false);
                     pathStarted = true;
                 }
-
-                intakeMotor.setPower(intakePower);
+                IntakeMotor.setPower(intakePower);
 
                 if (!follower.isBusy()) {
                     setPathState(PathState.HOLD_SHOOTPOSE);
@@ -192,8 +183,7 @@ public class AUTOredo extends OpMode {
                     follower.followPath(driveCollect2_1, false);
                     pathStarted = true;
                 }
-
-                intakeMotor.setPower(intakePower);
+                IntakeMotor.setPower(intakePower);
 
                 if (!follower.isBusy()) {
                     setPathState(PathState.DRIVE_COLLECT2_2);
@@ -205,42 +195,48 @@ public class AUTOredo extends OpMode {
                     follower.followPath(driveCollect2_2, false);
                     pathStarted = true;
                 }
+                IntakeMotor.setPower(intakePower);
 
-                intakeMotor.setPower(intakePower);
+                if (!follower.isBusy()) {
+                    setPathState(PathState.DRIVE_COLLECT2_RETURN);
+                }
+                break;
+
+            case DRIVE_COLLECT2_RETURN:
+                if (!pathStarted) {
+                    follower.followPath(driveCollect2Return, false);
+                    pathStarted = true;
+                }
 
                 if (!follower.isBusy()) {
                     setPathState(PathState.HOLD_SHOOTPOSE);
                 }
                 break;
+
             case STOP:
-                // do nothing
+                IntakeMotor.setPower(0);
                 break;
         }
     }
 
-    // ================= INIT =================
     @Override
     public void init() {
 
         follower = Constants.createFollower(hardwareMap);
 
-        intakeMotor = hardwareMap.get(DcMotor.class, "IntakeMotor");
+        IntakeMotor = hardwareMap.get(DcMotorEx.class, "Intake");
 
         pathState = PathState.DRIVE_STARTPOSE;
 
         buildPaths();
 
         follower.setPose(startPose);
+
         robot = new org.firstinspires.ftc.teamcode.friends.hardwareMap(hardwareMap);
-
         helpers = new org.firstinspires.ftc.teamcode.friends.comp.Helpers(robot);
-
         vision = new org.firstinspires.ftc.teamcode.friends.vision.VisionAlign();
-
-        shooterController = new ShooterController();
     }
 
-    // ================= LOOP =================
     @Override
     public void loop() {
 
