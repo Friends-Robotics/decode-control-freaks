@@ -4,12 +4,9 @@ import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 import com.qualcomm.hardware.limelightvision.LLResult;
+import com.acmerobotics.dashboard.config.Config;
 
-import org.firstinspires.ftc.teamcode.friends.comp.Everything;
-import org.firstinspires.ftc.teamcode.friends.comp.Helpers;
-import org.firstinspires.ftc.teamcode.friends.tests.OdometryShooter;
-
-
+@Config
 public class VisionAlign {
 
     // PID constants need tuned
@@ -20,9 +17,9 @@ public class VisionAlign {
     Add a tiny kI only if it never fully centers
     */
 
-    double kP = 0.02;
-    double kI = 0.0;
-    double kD = 0.002;
+    public static double kP = 0.02;
+    public static double kI = 0.0;
+    public static double kD = 0.002;
 
     // PID state
     double integralSum = 0;
@@ -166,7 +163,6 @@ public class VisionAlign {
                 lastXError = xError;
 
                 break;
-
 
             case SEARCH:
                 double time = searchTimer.seconds();

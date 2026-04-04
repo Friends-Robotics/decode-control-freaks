@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.friends.tests.OdometryShooter;
+import org.firstinspires.ftc.teamcode.friends.tests.ShooterController;
 
 /**
  * Class to provide a helpful abstraction layer for accessing the HardwareMap
@@ -31,8 +32,9 @@ public class TeamHardwareMap {
 
     public Limelight3A limelight;
 
+    ShooterController shooterController;
+
     // Constants
-    public double targetShooterRPM = 3300; //For close 4100 for far
     public static final double SHOOTER_TICKS_PER_REV = 15;
 
     public TeamHardwareMap(com.qualcomm.robotcore.hardware.HardwareMap hardwareMap) {
@@ -92,8 +94,9 @@ public class TeamHardwareMap {
     public double getShooterRPM() {
         return (shooterMotor1.getVelocity() * 60.0) / SHOOTER_TICKS_PER_REV;
     }
-    public boolean shooterAtSpeed(double tolerance) {
-        return Math.abs(getShooterRPM() - targetShooterRPM) <= tolerance;
+    public boolean shooterAtSpeed(double tolerance, ShooterController shooterController) {
+
+        return Math.abs(getShooterRPM() - shooterController.targetRPM) <= tolerance;
     }
     public void stopShooter() {
         shooterMotor1.setPower(0);

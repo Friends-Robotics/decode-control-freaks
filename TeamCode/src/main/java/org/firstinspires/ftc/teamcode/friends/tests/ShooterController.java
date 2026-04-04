@@ -11,7 +11,7 @@ public class ShooterController {
     ShooterPIDF shooterPIDF = new ShooterPIDF();
 
     public boolean isBusy() {
-        return false;
+        return currentState != State.IDLE;
     }
 
     enum State {
@@ -26,7 +26,7 @@ public class ShooterController {
     int ballsShot = 0;
 
     // Tunables
-    double feedTime = 4;
+    double feedTime = 4.0;
     double intakePower = 0.8;
     public double hoodPos;
     public double targetRPM;
@@ -53,7 +53,7 @@ public class ShooterController {
                     Math.abs(vision.turretRotatePower) < 0.05;
         } else {
             // AUTO MODE (no vision)
-            readyToShoot = robot.shooterAtSpeed(75);
+            readyToShoot = robot.shooterAtSpeed(75, this);
         }
 
         // --- Dynamic RPM ---
@@ -69,6 +69,10 @@ public class ShooterController {
 
         // Apply live
         double currentRPM = robot.getShooterRPM(); // or encoder method
+        double error = Math.abs(targetRPM - currentRPM);
+        double RPM_TOLERANCE = 100;
+
+        boolean atSpeed = error <= RPM_TOLERANCE;
         double power = shooterPIDF.calculate(targetRPM, currentRPM);
 
         if(shooterControlEnabled)
@@ -83,11 +87,13 @@ public class ShooterController {
                 robot.intakeMotor.setPower(0);
                 robot.stopShooter();
                 robot.resetFeed();
+                shooterControlEnabled = false;
                 break;
+
 
             case SPINNING_UP:
 
-                if (robot.shooterAtSpeed(50) && timer.seconds() > 0.2) {
+                if (atSpeed && timer.seconds() > 0.2) {
                     currentState = State.FEEDING;
                     timer.reset();
                 }
@@ -95,17 +101,17 @@ public class ShooterController {
 
 
             case FEEDING:
-                if(readyToShoot)
-                {
-                    robot.intakeMotor.setPower(intakePower);
-                    robot.feedBall();
-                    if (timer.seconds() > feedTime) {
-                        robot.intakeMotor.setPower(0);
-                        robot.resetFeed();
-                        currentState = State.IDLE;
-                        timer.reset();
-                    }
+                robot.intakeMotor.setPower(intakePower);
 
+                if (readyToShoot) {
+                    robot.feedBall();
+                }
+
+                if (timer.seconds() > feedTime) {
+                    robot.intakeMotor.setPower(0);
+                    robot.resetFeed();
+                    currentState = State.IDLE;
+                    timer.reset();
                 }
                 break;
         }
