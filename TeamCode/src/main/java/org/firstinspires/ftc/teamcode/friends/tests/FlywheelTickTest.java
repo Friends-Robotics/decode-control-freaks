@@ -8,12 +8,12 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 @TeleOp(name="Flywheel Tick Test", group="Test")
 public class FlywheelTickTest extends LinearOpMode {
-    //hardwareMap robot;
+    //TeamHardwareMap robot;
 
     @Override
     public void runOpMode() {
 
-        //robot = new hardwareMap(hardwareMap);#
+        //robot = new TeamHardwareMap(TeamHardwareMap);#
 
         DcMotorEx shooterMotor1 = hardwareMap.get(DcMotorEx.class, "Shooter1");
         DcMotorEx shooterMotor2 = hardwareMap.get(DcMotorEx.class, "Shooter2");

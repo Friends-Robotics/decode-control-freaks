@@ -1,10 +1,11 @@
 package org.firstinspires.ftc.teamcode.friends.comp;
 
 import com.qualcomm.robotcore.hardware.Gamepad;
-import org.firstinspires.ftc.teamcode.friends.hardwareMap;
+
+import org.firstinspires.ftc.teamcode.friends.TeamHardwareMap;
 
 public class Helpers {
-    private final hardwareMap robot;
+    private final TeamHardwareMap robot;
 
     public double speedModifier = 0.8;
     private float intakePower = -0.8f;
@@ -21,7 +22,7 @@ public class Helpers {
     public double strafe;
     public double rotate;
 
-    public Helpers(hardwareMap robot) {
+    public Helpers(TeamHardwareMap robot) {
         this.robot = robot;
     }
 

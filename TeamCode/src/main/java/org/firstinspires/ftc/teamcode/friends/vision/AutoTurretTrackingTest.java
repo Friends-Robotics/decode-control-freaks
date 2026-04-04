@@ -5,14 +5,14 @@ import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.util.Range;
-import org.firstinspires.ftc.teamcode.friends.hardwareMap;
+
+import org.firstinspires.ftc.teamcode.friends.TeamHardwareMap;
 import org.firstinspires.ftc.teamcode.friends.tests.OdometryShooter;
 
 @TeleOp(name = "AutoTurretTest")
 public class AutoTurretTrackingTest extends LinearOpMode{
 
-    hardwareMap robot;
+    TeamHardwareMap robot;
     VisionAlign visionAlign;
     LimelightAutoPositioning pos;
     OdometryShooter odometryShooter;

@@ -10,7 +10,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.teamcode.friends.hardwareMap;
+import org.firstinspires.ftc.teamcode.friends.TeamHardwareMap;
 import org.firstinspires.ftc.teamcode.friends.tests.AutoDrive;
 import org.firstinspires.ftc.teamcode.friends.tests.ShooterController;
 import org.firstinspires.ftc.teamcode.friends.vision.VisionAlign;
@@ -20,7 +20,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 @TeleOp(name = "Drive + Intake + Shooting")
 public class Everything extends LinearOpMode {
 
-    hardwareMap robot;
+    TeamHardwareMap robot;
     Helpers helpers;
     VisionAlign vision;
     ShooterController AutoShoot;
@@ -35,10 +35,10 @@ public class Everything extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
 
         // --- HARDWARE INIT ---
-        pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
 
 
-        robot = new hardwareMap(hardwareMap);
+        robot = new TeamHardwareMap(hardwareMap);
+        pinpoint = robot.pinpoint;
         helpers = new Helpers(robot);
         vision = new VisionAlign();
         AutoShoot = new ShooterController();
@@ -47,7 +47,7 @@ public class Everything extends LinearOpMode {
         robot.turretMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         robot.turretMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        limelight = robot.limelight;
         limelight.setPollRateHz(100);
         limelight.start();
         limelight.pipelineSwitch(1); //0 blue 1 red
