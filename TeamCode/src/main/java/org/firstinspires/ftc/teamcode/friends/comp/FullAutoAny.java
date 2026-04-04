@@ -36,8 +36,6 @@ public class FullAutoAny extends LinearOpMode {
 
     // ---------- Autonomous states ----------
     enum AutoState {
-        CHECK_VISION,
-        VISION_ALIGN,
         SHOOTING_CYCLE,
         DRIVE_TO_INTAKE,
         DRIVE_TO_SHOOT,
@@ -45,13 +43,14 @@ public class FullAutoAny extends LinearOpMode {
         DONE
     }
 
-    AutoState currentState = AutoState.CHECK_VISION;
+    AutoState currentState = AutoState.SHOOTING_CYCLE;
     ElapsedTime stateTimer = new ElapsedTime();
 
     // ---------- Poses ----------
     Pose startPose;
     Pose shootPose;
     Pose parkPose;
+    Pose goalPose;
 
     //Determine poses
     double AutoForRedIntake1Offset; // Adds to the x value for Auto for blue
@@ -93,6 +92,7 @@ public class FullAutoAny extends LinearOpMode {
         shootPose = autoDrive.getShootPose();
         startPose = autoDrive.getShootPose();
         parkPose = autoDrive.getAutoParkingPose();// same
+        goalPose = autoDrive.getGoalPose();
         follower.setStartingPose(startPose);
 
         robot.turretMotor.setMode(com.qualcomm.robotcore.hardware.DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -109,7 +109,7 @@ public class FullAutoAny extends LinearOpMode {
             Pose currentPose = follower.getPose();
 
             // Shooter state machine
-            shooterController.update(robot, comp, vision);
+            shooterController.update(robot, vision, comp,currentPose,goalPose);
 
             switch (currentState) {
 
@@ -140,7 +140,8 @@ public class FullAutoAny extends LinearOpMode {
 
                 case DRIVE_TO_SHOOT:
                     if (!follower.isBusy()) {
-                        currentState = AutoState.CHECK_VISION; // align and shoot next cycle
+                        shooterController.startShooting(3);
+                        currentState = AutoState.SHOOTING_CYCLE;
                         cycleIndex++;
                     }
                     break;

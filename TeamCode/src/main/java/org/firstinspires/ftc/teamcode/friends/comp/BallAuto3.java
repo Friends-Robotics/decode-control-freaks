@@ -36,7 +36,7 @@ public class BallAuto3 extends LinearOpMode {
             sleep(500);
             stopDrive();
 
-            shooterController.startShooting(3,0,3300);
+            shooterController.startShooting(3);
 
 
             // Step 3: Strafe left (for mecanum)

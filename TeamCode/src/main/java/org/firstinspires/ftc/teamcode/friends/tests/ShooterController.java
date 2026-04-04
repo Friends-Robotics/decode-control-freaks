@@ -3,6 +3,7 @@ import org.firstinspires.ftc.teamcode.friends.hardwareMap;
 import org.firstinspires.ftc.teamcode.friends.comp.Helpers;
 import org.firstinspires.ftc.teamcode.friends.vision.VisionAlign;
 
+import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 public class ShooterController {
@@ -29,23 +30,44 @@ public class ShooterController {
     double minRecoverTime = 0.15;
     double intakePower = 0.8;
     double reversePower = -0.25;
-    public double hoodPos = 0;
-    double targetShooterRPM;
+    public double hoodPos;
+    public double targetRPM;
 
 
     // --- Start shooting with count + hood angle ---
-    public void startShooting(int count, double hood, double targetRPM) {
+    public void startShooting(int count) {
         ballsToShoot = count;
         ballsShot = 0;           // reset
-        hoodPos = hood;
-        targetShooterRPM = targetRPM;
         currentState = State.SPINNING_UP;
         timer.reset();
     }
 
     // --- Main state machine ---
-    public void update(hardwareMap robot, Helpers helpers, VisionAlign vision) {
-        double rpmScale = robot.targetShooterRPM / 3300.0; // base RPM for close shot
+    public void update(hardwareMap robot, VisionAlign vision,Helpers helpers, Pose currentPose, Pose goalPose) {
+
+        double distance = odometryShooter.getDistanceToGoal(currentPose, goalPose);
+
+        boolean readyToShoot =
+                vision.isAligned &&
+                        robot.shooterAtSpeed(75) &&
+                        Math.abs(vision.turretRotatePower) < 0.05;
+
+        // --- Dynamic RPM ---
+        targetRPM = 3300 + (distance * 10); // tune the 10
+
+        // --- Dynamic hood ---
+        hoodPos = odometryShooter.getHoodPosition(
+                distance,
+                0.00, 0.25,
+                60, 130
+        );
+
+        // Apply live
+        robot.setShooterRPM(targetRPM);
+        robot.hood.setPosition(hoodPos);
+
+
+        double rpmScale = targetRPM / 3300.0;
         double adjustedFeedTime = feedTime / rpmScale;
         double adjustedSpacingTime = spacingTime / rpmScale;
         double adjustedReversePower = reversePower / rpmScale;
@@ -59,8 +81,6 @@ public class ShooterController {
                 break;
 
             case SPINNING_UP:
-                robot.setShooterRPM(targetShooterRPM);
-                robot.hood.setPosition(hoodPos);
 
                 if (robot.shooterAtSpeed(50) && timer.seconds() > 0.2) {
                     currentState = State.RAISING_RAMP;
@@ -69,9 +89,10 @@ public class ShooterController {
                 break;
 
             case RAISING_RAMP:
-                // Only feed if aligned
-                if (vision.isAligned) {
+
+                if (readyToShoot) {
                     robot.feedBall();
+
                     if (timer.seconds() > rampUpTime) {
                         currentState = State.FEEDING;
                         timer.reset();
@@ -106,7 +127,12 @@ public class ShooterController {
                 break;
 
             case RECOVERING:
-                double movementPenalty = Math.abs(helpers.drive) + Math.abs(helpers.strafe); // moving correction
+
+                double movementPenalty =
+                        Math.abs(helpers.drive) * 0.5 +
+                                Math.abs(helpers.strafe) * 0.7 +
+                                Math.abs(helpers.rotate);
+
                 if (robot.shooterAtSpeed(50) && timer.seconds() > minRecoverTime + movementPenalty * 0.1) {
                     ballsToShoot--;
                     if (ballsToShoot > 0) {

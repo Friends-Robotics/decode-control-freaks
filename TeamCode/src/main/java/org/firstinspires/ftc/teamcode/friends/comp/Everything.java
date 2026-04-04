@@ -21,7 +21,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 public class Everything extends LinearOpMode {
 
     hardwareMap robot;
-    Helpers comp;
+    Helpers helpers;
     VisionAlign vision;
     ShooterController AutoShoot;
     Limelight3A limelight;
@@ -40,7 +40,7 @@ public class Everything extends LinearOpMode {
 
 
         robot = new hardwareMap(hardwareMap);
-        comp = new Helpers(robot);
+        helpers = new Helpers(robot);
         vision = new VisionAlign();
         AutoShoot = new ShooterController();
         odometryShooter = new OdometryShooter();
@@ -61,22 +61,19 @@ public class Everything extends LinearOpMode {
         AutoDrive autoDrive = new AutoDrive(follower, IsBlue, close);
         follower.setStartingPose(autoDrive.getAutoParkingPose());
 
-        // Odometry shooter: only computes tag→goal offset and distance
-        OdometryShooter odometryShooter = new OdometryShooter();
-
         waitForStart();
 
         while (opModeIsActive()) {
-            AutoShoot.update(robot, comp, vision);
 
             // =========================
             // INPUTS
             // =========================
-            comp.updateGamepads(gamepad1, gamepad2);
-            comp.readDriveInputs();
-
-            telemetry.addData("Raw Forward", pinpoint.getPosY(DistanceUnit.INCH));
-            telemetry.addData("Raw Strafe", pinpoint.getPosX((DistanceUnit.INCH)));
+            helpers.updateGamepads(gamepad1, gamepad2);
+            helpers.readDriveInputs();
+            // =========================
+            // DRIVE CONTROL
+            // =========================
+            helpers.applyDrive();
 
             // =========================
             // ODOMETRY
@@ -104,24 +101,23 @@ public class Everything extends LinearOpMode {
             // DISTANCE + SHOOTER
             // =========================
             // distance = distance from ROBOT to GOAL (not tag)
-            double distance = odometryShooter.getDistanceToGoal(robotPose, goalPose);
+            AutoShoot.update(robot, vision, helpers, robotPose,goalPose); // Looking kinda clean now
 
-            double targetRPMClose = 3300;
-            double targetRPMFar = 4100;
+            // =========================
+            // DRIVER SHOOTER TRIGGER
+            // =========================
+            if (gamepad2.a && !AutoShoot.isBusy()) {
+                AutoShoot.startShooting(3); // hood/RPM ignored now
+            }
 
-            double hoodPos = odometryShooter.getHoodPosition(
-                    distance,
-                    0.00, 0.25,   // min/max hood position
-                    60, 130       // same distance range
-            );
-
-            // Smooth RPM target
-            robot.targetShooterRPM = 0.8 * robot.targetShooterRPM + 0.2 * targetRPMClose;
 
             // =========================
             // AUTO DRIVE TRIGGERS
             // =========================
-            if (comp.currentGp1.left_bumper && !comp.previousGp1.left_bumper && !AutoDriveActive) {
+
+            double distance = odometryShooter.getDistanceToGoal(robotPose, goalPose);
+
+            if (helpers.currentGp1.left_bumper && !helpers.previousGp1.left_bumper && !AutoDriveActive) {
                 if (distance > 5) {
                     autoDrive = new AutoDrive(follower, IsBlue, true);
                     autoDrive.driveToShoot();
@@ -129,7 +125,7 @@ public class Everything extends LinearOpMode {
                 }
             }
 
-            if (comp.currentGp1.left_bumper && !comp.previousGp1.left_bumper && !AutoDriveActive) {
+            if (helpers.currentGp1.left_bumper && !helpers.previousGp1.left_bumper && !AutoDriveActive) {
                 if (distance > 5) {
                     autoDrive = new AutoDrive(follower, IsBlue, false);
                     autoDrive.driveToShoot();
@@ -140,22 +136,6 @@ public class Everything extends LinearOpMode {
             if (AutoDriveActive && !follower.isBusy()) {
                 AutoDriveActive = false;
             }
-
-            // =========================
-            // AUTO SHOOT LOGIC
-            // =========================
-            boolean readyToShoot =
-                    vision.isAligned &&
-                            Math.abs(comp.rotate) < 0.1 &&
-                            Math.abs(comp.drive) < 0.1 &&
-                            Math.abs(comp.strafe) < 0.1 &&
-                            Math.abs(vision.turretRotatePower) < 0.03;
-
-
-            // =========================
-            // DRIVE CONTROL
-            // =========================
-            comp.applyDrive();
 
 
             // =========================
@@ -176,18 +156,27 @@ public class Everything extends LinearOpMode {
             // =========================
             // TELEMETRY
             // =========================
+            telemetry.addLine("----ODOMETRY----");
+            telemetry.addLine();
+            telemetry.addData("Raw Forward", pinpoint.getPosY(DistanceUnit.INCH));
+            telemetry.addData("Raw Strafe", pinpoint.getPosX((DistanceUnit.INCH)));
             telemetry.addData("Robot Pose", robotPose);
             telemetry.addData("Distance to Goal (in)", distance);
-            telemetry.addData("Target RPM CLOSE", targetRPMClose);
-            telemetry.addData("Target RPM CLOSE", targetRPMFar);
-            telemetry.addData("tx", result.getTx());
-            telemetry.addData("Hood", hoodPos);
+            telemetry.addLine();
+            telemetry.addLine("----SHOOTER----");
+            telemetry.addLine();
+            telemetry.addData("Target RPM", AutoShoot.targetRPM);
             telemetry.addData("Shooter RPM", robot.getShooterRPM());
+            telemetry.addData("Hood", AutoShoot.hoodPos);
+            telemetry.addLine();
+            telemetry.addLine("----VISION----");
+            telemetry.addLine();
+            telemetry.addData("tx", result.getTx());
             telemetry.addData("TurretPower", vision.turretRotatePower);
             telemetry.addData("Turret ticks", robot.turretMotor.getCurrentPosition());
             telemetry.addData("Turret aligned", vision.isAligned);
             telemetry.addData("Turret currentAngle", vision.currentTurretAngle);
-            telemetry.addData("EstDist", distance);
+            telemetry.addLine();
             telemetry.update();
         }
 

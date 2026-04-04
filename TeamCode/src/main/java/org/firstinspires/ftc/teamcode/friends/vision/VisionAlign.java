@@ -210,6 +210,7 @@ public class VisionAlign {
                 }
 
                 break;
+
             case SEARCH:
                 double time = searchTimer.seconds();
 
