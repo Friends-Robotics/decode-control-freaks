@@ -19,9 +19,7 @@ public class VisionAlign {
     Add kD to remove oscillation
     Add a tiny kI only if it never fully centers
     */
-    Helpers help;
-    OdometryShooter odometry;
-    Everything TeleOp;
+
     double kP = 0.02;
     double kI = 0.0;
     double kD = 0.002;
@@ -72,7 +70,7 @@ public class VisionAlign {
     ElapsedTime lostTimer = new ElapsedTime();
     ElapsedTime alignedTimer = new ElapsedTime();
 
-    enum State { IDLE, TRACK, SEARCH, CORRECT }
+    enum State { IDLE, TRACK, SEARCH }
     State currentState = State.IDLE;
 
     double LOST_DELAY = 0.25;
@@ -115,15 +113,6 @@ public class VisionAlign {
                 integralSum = 0;
                 lastError = 0;
             }
-        }
-        if (currentState == State.TRACK && isAligned) {
-            if (alignedTimer.seconds() == 0) alignedTimer.reset();
-
-            if (alignedTimer.seconds() > ALIGNED_TIME) {
-                currentState = State.CORRECT;
-            }
-        } else {
-            alignedTimer.reset();
         }
 
         // ---------------- STATE MACHINE ----------------
@@ -178,38 +167,6 @@ public class VisionAlign {
 
                 break;
 
-            case CORRECT:
-                double movement = Math.hypot(help.drive, help.strafe) + Math.abs(help.rotate);
-                boolean isStationary = movement < 0.05;
-
-                if (!isStationary) {
-                    // if robot moves, immediately go back to TRACK
-                    currentState = State.TRACK;
-                    break;
-                }
-
-                // -------------------------
-                // APPLY ODOMETRY CORRECTION
-                // -------------------------
-
-                if (results != null && results.isValid()) {
-
-                    double correction = odometry.VisionShooterCorrection(
-                            currentPose,
-                            goalPose
-                    );
-
-                    turretRotatePower = Range.clip(
-                            correction,
-                            -MAX_ROTATE_TURRET_POWER,
-                            MAX_ROTATE_TURRET_POWER
-                    );
-
-                } else {
-                    currentState = State.SEARCH;
-                }
-
-                break;
 
             case SEARCH:
                 double time = searchTimer.seconds();

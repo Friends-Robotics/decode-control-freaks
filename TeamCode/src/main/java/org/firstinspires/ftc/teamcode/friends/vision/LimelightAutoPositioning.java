@@ -4,9 +4,9 @@ import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.util.Range;
 
-import org.firstinspires.ftc.teamcode.friends.hardwareMap;
+import org.firstinspires.ftc.teamcode.friends.TeamHardwareMap;
+
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 
 
@@ -19,7 +19,7 @@ public class LimelightAutoPositioning extends LinearOpMode {
 
     // -------- Hardware --------
 
-    hardwareMap robot;
+    TeamHardwareMap robot;
     VisionAlign visionAlign;
     public Limelight3A limelight;
 
@@ -30,7 +30,7 @@ public class LimelightAutoPositioning extends LinearOpMode {
     @Override
     public void runOpMode() {
 
-        robot = new hardwareMap(hardwareMap);
+        robot = new TeamHardwareMap(hardwareMap);
 
         visionAlign = new VisionAlign();
 

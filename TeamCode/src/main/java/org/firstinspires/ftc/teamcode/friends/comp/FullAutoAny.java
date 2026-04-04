@@ -7,15 +7,12 @@ import com.pedropathing.paths.PathBuilder;
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.follower.Follower;
 
-import com.qualcomm.hardware.limelightvision.LLResult;
-import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import com.qualcomm.robotcore.util.Range;
 
-import org.firstinspires.ftc.teamcode.friends.hardwareMap;
+import org.firstinspires.ftc.teamcode.friends.TeamHardwareMap;
 import org.firstinspires.ftc.teamcode.friends.tests.AutoDrive;
 import org.firstinspires.ftc.teamcode.friends.tests.OdometryShooter;
 import org.firstinspires.ftc.teamcode.friends.vision.VisionAlign;
@@ -26,7 +23,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 public class FullAutoAny extends LinearOpMode {
 
     // ---------- Hardware ----------
-    hardwareMap robot;
+    TeamHardwareMap robot;
     Follower follower;
     VisionAlign vision;
     Helpers comp;
@@ -78,7 +75,7 @@ public class FullAutoAny extends LinearOpMode {
     public void runOpMode() {
 
         // ---------- Initialize ----------
-        robot = new hardwareMap(hardwareMap);
+        robot = new TeamHardwareMap(hardwareMap);
         follower = Constants.createFollower(hardwareMap);
 
         comp = new Helpers(robot);

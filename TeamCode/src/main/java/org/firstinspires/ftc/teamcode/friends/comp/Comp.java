@@ -4,12 +4,12 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Gamepad;
 
-import org.firstinspires.ftc.teamcode.friends.hardwareMap;
+import org.firstinspires.ftc.teamcode.friends.TeamHardwareMap;
 
 @TeleOp(name = "Comp")
 public class Comp extends LinearOpMode {
     // -------- Hardware --------
-    private static hardwareMap robot;
+    private static TeamHardwareMap robot;
     // -------- State --------
     public double speedModifier = 0.8;
     private float intakePower = -0.8f;
@@ -30,7 +30,7 @@ public class Comp extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        robot = new hardwareMap(hardwareMap);
+        robot = new TeamHardwareMap(hardwareMap);
 
         waitForStart();
         if (isStopRequested()) return;
