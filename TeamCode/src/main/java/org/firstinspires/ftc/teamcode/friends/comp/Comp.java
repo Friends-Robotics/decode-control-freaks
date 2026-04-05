@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Gamepad;
 
+import org.firstinspires.ftc.teamcode.friends.components.Robot;
 import org.firstinspires.ftc.teamcode.friends.helpers.Utils;
 
 @TeleOp(name = "Comp")

@@ -2,7 +2,7 @@ package org.firstinspires.ftc.teamcode.friends.tests;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
-import org.firstinspires.ftc.teamcode.friends.comp.Robot;
+import org.firstinspires.ftc.teamcode.friends.components.Robot;
 
 public class TurretMotorTest extends LinearOpMode {
 

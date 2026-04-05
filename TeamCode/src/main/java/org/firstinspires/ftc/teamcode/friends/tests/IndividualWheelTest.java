@@ -3,7 +3,7 @@ package org.firstinspires.ftc.teamcode.friends.tests;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-import org.firstinspires.ftc.teamcode.friends.comp.Robot;
+import org.firstinspires.ftc.teamcode.friends.components.Robot;
 
 @TeleOp(name = "Individual Wheel Test", group = "Testing")
 public class IndividualWheelTest extends LinearOpMode {

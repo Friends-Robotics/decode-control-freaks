@@ -2,6 +2,9 @@ package org.firstinspires.ftc.teamcode.friends.comp;
 
 import com.qualcomm.robotcore.hardware.Gamepad;
 
+import org.firstinspires.ftc.teamcode.friends.components.Robot;
+import org.firstinspires.ftc.teamcode.friends.helpers.Utils;
+
 public class Helpers {
     private final Robot robot;
 
@@ -76,7 +79,7 @@ public class Helpers {
         if (currentGp2.dpad_up && !previousGp2.dpad_up) shooterPower += 0.1f;
         if (currentGp2.dpad_down && !previousGp2.dpad_down) shooterPower -= 0.1f;
 
-        shooterPower = clamp(shooterPower, -1.0f, 1.0f);
+        shooterPower = Utils.clamp(shooterPower, -1.0f, 1.0f);
 
         if (currentGp2.touchpad) {
             robot.shooterMotor1.setPower(shooterPower);
@@ -91,7 +94,7 @@ public class Helpers {
         if (currentGp2.triangle && !previousGp2.triangle) servoPosition += 0.05f;
         if (currentGp2.cross && !previousGp2.cross) servoPosition -= 0.05f;
 
-        servoPosition = clamp(servoPosition, 0f, 0.5f);
+        servoPosition = Utils.clamp(servoPosition, 0f, 0.5f);
         robot.hood.setPosition(servoPosition);
     }
 
@@ -99,11 +102,7 @@ public class Helpers {
         if (currentGp2.left_bumper && !previousGp2.left_bumper) turretPower -= 0.1f;
         if (currentGp2.right_bumper && !previousGp2.right_bumper) turretPower += 0.1f;
 
-        turretPower = clamp(turretPower, -1.0f, 1.0f);
+        turretPower = Utils.clamp(turretPower, -1.0f, 1.0f);
         robot.turretMotor.setPower(turretPower);
-    }
-
-    private float clamp(float value, float min, float max) {
-        return Math.max(min, Math.min(max, value));
     }
 }

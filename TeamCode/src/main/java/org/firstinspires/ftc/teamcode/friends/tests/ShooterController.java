@@ -1,5 +1,5 @@
 package org.firstinspires.ftc.teamcode.friends.tests;
-import org.firstinspires.ftc.teamcode.friends.comp.Robot;
+import org.firstinspires.ftc.teamcode.friends.components.Robot;
 import org.firstinspires.ftc.teamcode.friends.comp.Helpers;
 import org.firstinspires.ftc.teamcode.friends.vision.VisionAlign;
 
@@ -91,7 +91,7 @@ public class ShooterController {
             case IDLE:
                 robot.intakeMotor.setPower(0);
                 robot.stopShooter();
-                robot.resetFeed();
+                robot.stopFeed();
                 break;
 
             case SPINNING_UP:
@@ -105,7 +105,7 @@ public class ShooterController {
             case RAISING_RAMP:
 
                 if (readyToShoot) {
-                    robot.feedBall();
+                    robot.startFeed();
 
                     if (timer.seconds() > rampUpTime) {
                         currentState = State.FEEDING;
@@ -119,7 +119,7 @@ public class ShooterController {
 
                 if (timer.seconds() > adjustedFeedTime) {
                     robot.intakeMotor.setPower(0);
-                    robot.resetFeed();
+                    robot.stopFeed();
                     ballsShot++;
                     currentState = State.SPACING;
                     timer.reset();

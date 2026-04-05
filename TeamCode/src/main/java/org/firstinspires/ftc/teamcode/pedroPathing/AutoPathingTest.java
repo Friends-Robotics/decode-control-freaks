@@ -10,7 +10,7 @@ import com.pedropathing.paths.PathBuilder;
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.follower.Follower;
 
-import org.firstinspires.ftc.teamcode.friends.comp.Robot;
+import org.firstinspires.ftc.teamcode.friends.components.Robot;
 
 @Autonomous(name = "Pedro Pinpoint Drive Test")
 public class AutoPathingTest extends LinearOpMode {

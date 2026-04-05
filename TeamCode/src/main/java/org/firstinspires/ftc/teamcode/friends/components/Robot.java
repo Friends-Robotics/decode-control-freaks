@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.friends.comp;
+package org.firstinspires.ftc.teamcode.friends.components;
 
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
@@ -74,15 +74,8 @@ public class Robot {
     public void stopIntake() { intakeMotor.setPower(0.0);}
 
     // FEEDER
-    public void resetFeed() {feeder.setPosition(0.0);} // Lowered
-    public void feedBall() {feeder.setPosition(0.37);} // High
-
-    // SHOOTER
-    public void setShooterRPM(double rpm){
-        double ticksPerSecond = (rpm * SHOOTER_TICKS_PER_REV) / 60.0;
-        shooterMotor1.setVelocity(ticksPerSecond);
-        shooterMotor2.setVelocity(ticksPerSecond);
-    }
+    public void stopFeed() {feeder.setPosition(0.0);} // Lowered
+    public void startFeed() {feeder.setPosition(0.37);} // High
 
     public void setShooterPower(double power){
         shooterMotor1.setPower(power);
@@ -92,12 +85,13 @@ public class Robot {
     public double getShooterRPM() {
         return (shooterMotor1.getVelocity() * 60.0) / SHOOTER_TICKS_PER_REV;
     }
+
     public boolean shooterAtSpeed(double tolerance) {
         return Math.abs(getShooterRPM() - targetShooterRPM) <= tolerance;
     }
+
     public void stopShooter() {
         shooterMotor1.setPower(0);
         shooterMotor2.setPower(0);
     }
-    public void setTurretPower(double power) { turretMotor.setPower(power); }
 }

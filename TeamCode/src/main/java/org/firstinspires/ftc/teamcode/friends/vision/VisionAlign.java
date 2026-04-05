@@ -1,28 +1,16 @@
 package org.firstinspires.ftc.teamcode.friends.vision;
 
+import com.acmerobotics.dashboard.config.Config;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 import com.qualcomm.hardware.limelightvision.LLResult;
 
-import org.firstinspires.ftc.teamcode.friends.comp.Everything;
-import org.firstinspires.ftc.teamcode.friends.comp.Helpers;
-import org.firstinspires.ftc.teamcode.friends.tests.OdometryShooter;
-
-
+@Config
 public class VisionAlign {
-
-    // PID constants need tuned
-
-    /*Then:
-    Increase kP until it tracks fast but starts to oscillate
-    Add kD to remove oscillation
-    Add a tiny kI only if it never fully centers
-    */
-
-    double kP = 0.02;
-    double kI = 0.0;
-    double kD = 0.002;
+    public static double kP = 0.02;
+    public static double kI = 0.0;
+    public static double kD = 0.002;
 
     // PID state
     double integralSum = 0;

@@ -8,8 +8,11 @@ import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Gamepad;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.teamcode.friends.components.MecanumDrive;
+import org.firstinspires.ftc.teamcode.friends.components.Robot;
 import org.firstinspires.ftc.teamcode.friends.tests.AutoDrive;
 import org.firstinspires.ftc.teamcode.friends.tests.ShooterController;
 import org.firstinspires.ftc.teamcode.friends.vision.VisionAlign;
@@ -18,26 +21,28 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 @TeleOp(name = "Drive + Intake + Shooting")
 public class Everything extends LinearOpMode {
+    private Robot robot;
+    private MecanumDrive mecanumDrive;
+    private Helpers helpers;
+    private VisionAlign vision;
+    private ShooterController AutoShoot;
+    private Follower follower;
+    private OdometryShooter odometryShooter;
 
-    Robot robot;
-    Helpers helpers;
-    VisionAlign vision;
-    ShooterController AutoShoot;
-    Limelight3A limelight;
-    Follower follower;
-    GoBildaPinpointDriver pinpoint;
-    OdometryShooter odometryShooter;
+    private final Gamepad currentGp1 = new Gamepad();
+    private final Gamepad previousGp1 = new Gamepad();
+    private final Gamepad currentGp2 = new Gamepad();
+    private final Gamepad previousGp2 = new Gamepad();
 
     boolean AutoDriveActive = false;
 
+    private double speedModifier = 0.8;
+
     @Override
     public void runOpMode() throws InterruptedException {
-
-        // --- HARDWARE INIT ---
-
-
         robot = new Robot(hardwareMap);
-        pinpoint = robot.pinpoint;
+        mecanumDrive = new MecanumDrive(robot);
+
         helpers = new Helpers(robot);
         vision = new VisionAlign();
         AutoShoot = new ShooterController();
@@ -46,46 +51,41 @@ public class Everything extends LinearOpMode {
         robot.turretMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         robot.turretMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        limelight = robot.limelight;
-        limelight.setPollRateHz(100);
-        limelight.start();
-        limelight.pipelineSwitch(1); //0 blue 1 red
+        robot.limelight.setPollRateHz(100);
+        robot.limelight.start();
+        robot.limelight.pipelineSwitch(1); // 0 blue 1 red
 
         // --- ODOMETRY / PEDRO ---
-        boolean IsBlue = false; // set before match
-        boolean close = true;   // set based on auto
+        // Removed auto drive
+        // boolean IsBlue = false; // set before match
+        // boolean close = true;   // set based on auto
 
-        follower = Constants.createFollower(hardwareMap);
-        AutoDrive autoDrive = new AutoDrive(follower, IsBlue, close);
-        follower.setStartingPose(autoDrive.getAutoParkingPose());
+        // follower = Constants.createFollower(hardwareMap);
+        // AutoDrive autoDrive = new AutoDrive(follower, IsBlue, close);
+        // follower.setStartingPose(autoDrive.getAutoParkingPose());
 
         waitForStart();
 
         while (opModeIsActive()) {
+            // Inputs
+            updateGamepads();
 
-            // =========================
-            // INPUTS
-            // =========================
-            helpers.updateGamepads(gamepad1, gamepad2);
-            helpers.readDriveInputs();
-            // =========================
-            // DRIVE CONTROL
-            // =========================
-            helpers.applyDrive();
+            // Driving
+            mecanumDrive.move(
+                    currentGp1.left_stick_y * speedModifier,
+                    -currentGp1.left_stick_x * speedModifier,
+                    -currentGp1.right_stick_x * speedModifier
+            );
 
-            // =========================
-            // ODOMETRY
-            // =========================
-            follower.update();
-            Pose robotPose = follower.getPose();
-            Pose goalPose = autoDrive.getGoalPose();
+            // Odometry
+            // follower.update();
+            // Pose robotPose = follower.getPose();
+            // Pose goalPose = autoDrive.getGoalPose();
 
-            // =========================
-            // VISION
-            // =========================
-            LLResult result = limelight.getLatestResult();
+            // Vision
+            LLResult result = robot.limelight.getLatestResult();
 
-            // 4) Vision-driven turret with odometry offset
+            // Vision-driven turret with odometry offset
             vision.update(
                     result,
                     true,
@@ -154,13 +154,11 @@ public class Everything extends LinearOpMode {
                 }
             }
 
-            // =========================
-            // TELEMETRY
-            // =========================
+            // Telemetry
             telemetry.addLine("----ODOMETRY----");
             telemetry.addLine();
-            telemetry.addData("Raw Forward", pinpoint.getPosY(DistanceUnit.INCH));
-            telemetry.addData("Raw Strafe", pinpoint.getPosX((DistanceUnit.INCH)));
+            telemetry.addData("Raw Forward", robot.pinpoint.getPosY(DistanceUnit.INCH));
+            telemetry.addData("Raw Strafe", robot.pinpoint.getPosX((DistanceUnit.INCH)));
             telemetry.addData("Robot Pose", robotPose);
             telemetry.addData("Distance to Goal (in)", distance);
             telemetry.addLine();
@@ -180,6 +178,13 @@ public class Everything extends LinearOpMode {
             telemetry.addLine();
             telemetry.update();
         }
+    }
 
+    private void updateGamepads() {
+        previousGp1.copy(currentGp1);
+        currentGp1.copy(gamepad1);
+
+        previousGp2.copy(currentGp2);
+        currentGp2.copy(gamepad2);
     }
 }
