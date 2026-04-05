@@ -20,6 +20,7 @@ public class VisionAlign {
     public static double kP = 0.02;
     public static double kI = 0.0;
     public static double kD = 0.002;
+    public static double kF = 0.05;
 
     // PID state
     double integralSum = 0;
@@ -69,6 +70,7 @@ public class VisionAlign {
 
     enum State { IDLE, TRACK, SEARCH }
     State currentState = State.IDLE;
+    State lastState = currentState;
 
     double LOST_DELAY = 0.25;
 
@@ -111,6 +113,10 @@ public class VisionAlign {
                 lastError = 0;
             }
         }
+        if (currentState == State.TRACK && lastState != State.TRACK) {
+            pidTimer.reset();
+            alignedTimer.reset();
+        }
 
         // ---------------- STATE MACHINE ----------------
         switch (currentState) {
@@ -121,38 +127,39 @@ public class VisionAlign {
 
             case TRACK:
 
-                double alpha = 0.7; // 0 = smooth, 1 = raw
-                double xError = alpha * lastXError + (1 - alpha) * results.getTx();
+                double alpha = 0.85;
+                double xError = alpha * results.getTx() + (1 - alpha) * lastXError;
 
                 double dt = pidTimer.seconds();
                 pidTimer.reset();
                 if (dt == 0) dt = 0.01;
 
-                //I
+                // I
                 integralSum += xError * dt;
                 integralSum = Range.clip(integralSum, -MAX_INTEGRAL, MAX_INTEGRAL);
 
-                //D
+                // D
                 double derivative = (xError - lastError) / dt;
 
-                //F
-                double kF = 0.05;
-
-                //Compute TurretPower
+                // PID
                 double output = (kP * xError) + (kI * integralSum) + (kD * derivative);
 
-                if (Math.abs(xError) > alignmentTolerance) {
-                    output += Math.signum(xError) * kF;
-                }
+                // Feedforward
+                output += kF * (xError / 27.0);
 
                 turretRotatePower = Range.clip(output, -MAX_ROTATE_TURRET_POWER, MAX_ROTATE_TURRET_POWER);
 
+                // Alignment logic
                 if (Math.abs(xError) < alignmentTolerance) {
-                    isAligned = true;
-                    integralSum = 0;
+                    if (alignedTimer.seconds() > 0.2) {
+                        isAligned = true;
+                    }
+                } else {
+                    alignedTimer.reset();
+                    isAligned = false;
                 }
 
-                // Hard clamps — once, at the end
+                // Limits
                 if (currentTurretAngle >= MAX_TURRET_ANGLE && turretRotatePower > 0)
                     turretRotatePower = 0;
                 if (currentTurretAngle <= MIN_TURRET_ANGLE && turretRotatePower < 0)
@@ -161,62 +168,18 @@ public class VisionAlign {
                 lastKnownTargetAngle = currentTurretAngle;
                 hasSeenTarget = true;
                 lastXError = xError;
+                lastError = xError;
 
                 break;
 
             case SEARCH:
-                double time = searchTimer.seconds();
+                turretRotatePower = searchPower * turretDirection;
 
-                // -------------------------
-                // PHASE 1: Look where target was last seen
-                // -------------------------
-                if (time < 0.5 && hasSeenTarget) {
-
-                    double error = lastKnownTargetAngle - currentTurretAngle;
-
-                    turretRotatePower = Range.clip(
-                            error * 0.02,
-                            -0.4,
-                            0.4
-                    );
-                }
-
-                // -------------------------
-                // PHASE 2: Small sweep (center-focused)
-                // -------------------------
-                else if (time < 1.5) {
-
-                    double centerBias = -currentTurretAngle * 0.01;
-
-                    turretRotatePower = (searchPower * 0.5 * turretDirection) + centerBias;
-                }
-
-                // -------------------------
-                // PHASE 3: Full sweep
-                // -------------------------
-                else {
-
-                    turretRotatePower = searchPower * turretDirection;
-                }
-
-                // -------------------------
-                // EDGE HANDLING (bounce)
-                // -------------------------
                 if (currentTurretAngle >= MAX_TURRET_ANGLE) {
                     turretDirection = -1;
                 } else if (currentTurretAngle <= MIN_TURRET_ANGLE) {
                     turretDirection = 1;
                 }
-
-                // -------------------------
-                // SLOW DOWN near center (better vision pickup)
-                // -------------------------
-                if (Math.abs(currentTurretAngle) < 10) {
-                    turretRotatePower *= 0.6;
-                }
-
-                double bias = -currentTurretAngle * 0.015;
-                turretRotatePower += bias;
 
                 break;
         }

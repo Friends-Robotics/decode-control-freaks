@@ -17,7 +17,9 @@ public class ShooterController {
     enum State {
         IDLE,
         SPINNING_UP,
-        FEEDING
+        FEEDING,
+        RAISING,
+        RESETTING
     }
 
     State currentState = State.SPINNING_UP;
@@ -26,7 +28,9 @@ public class ShooterController {
     int ballsShot = 0;
 
     // Tunables
-    double feedTime = 4.0;
+    double raiseTime = 0.3;   // time to lift ramp
+    double feedTime = 1.5;    // time to run intake
+    double resetTime = 0.3;   // time to lower ramp
     double intakePower = 0.8;
     public double hoodPos;
     public double targetRPM;
@@ -90,27 +94,38 @@ public class ShooterController {
                 shooterControlEnabled = false;
                 break;
 
-
             case SPINNING_UP:
-
                 if (atSpeed && timer.seconds() > 0.2) {
+                    currentState = State.RAISING;
+                    timer.reset();
+                }
+                break;
+
+            case RAISING:
+                robot.feedBall(); // raise ramp
+
+                if (timer.seconds() > raiseTime) {
                     currentState = State.FEEDING;
                     timer.reset();
                 }
                 break;
 
-
             case FEEDING:
                 robot.intakeMotor.setPower(intakePower);
 
-                if (readyToShoot) {
-                    robot.feedBall();
-                }
-
                 if (timer.seconds() > feedTime) {
                     robot.intakeMotor.setPower(0);
-                    robot.resetFeed();
+                    currentState = State.RESETTING;
+                    timer.reset();
+                }
+                break;
+
+            case RESETTING:
+                robot.resetFeed(); // lower ramp
+
+                if (timer.seconds() > resetTime) {
                     currentState = State.IDLE;
+                    shooterControlEnabled = false;
                     timer.reset();
                 }
                 break;
