@@ -15,14 +15,12 @@ public class BallAuto3 extends LinearOpMode {
     // Motors
     Robot robot;
     VisionAlign vision;
-    Helpers helpers;
 
     @Override
     public void runOpMode() {
         robot = new Robot(hardwareMap);
         shooterController = new ShooterController();
         vision = new VisionAlign();
-        helpers = new Helpers(robot);
 
 
         waitForStart();

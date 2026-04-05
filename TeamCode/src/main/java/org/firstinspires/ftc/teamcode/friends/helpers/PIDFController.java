@@ -4,33 +4,23 @@ package org.firstinspires.ftc.teamcode.friends.helpers;
  * PIDF Controller wrapper.
  * Adds a Feedforward component (kf) to the standard PID logic.
  */
-public class PIDFController {
-    private final PIDController pid;
-    private double kf;
+public class PIDFController extends PIDController {
+    private double ks; // Static friction
+    private double kv; // Velocity
 
     /**
      * Constructs a new PIDF controller
      * @param kp Proportional gain
      * @param ki Integral gain
      * @param kd Derivative gain
-     * @param kf Feedforward gain
-     */
-    public PIDFController(double kp, double ki, double kd, double kf) {
-        this.pid = new PIDController(kp, ki, kd);
-        this.kf = kf;
-    }
-
-    /**
-     * Constructs a new PIDF controller
-     * @param kp Proportional gain
-     * @param ki Integral gain
-     * @param kd Derivative gain
-     * @param kf Feedforward gain
+     * @param ks Feedforward gain (static, e.g. a constant static feedforward resistance such as friction)
+     * @param kv Feedforward gain (proportional, e.g. a resistance proportional to the target)
      * @param integralLimit The maximum absolute value the integral term can reach
      */
-    public PIDFController(double kp, double ki, double kd, double kf, double integralLimit) {
-        this.pid = new PIDController(kp, ki, kd, integralLimit);
-        this.kf = kf;
+    public PIDFController(double kp, double ki, double kd, double ks, double kv, double integralLimit) {
+        super(kp, ki, kd, integralLimit);
+        this.ks = ks;
+        this.kv = kv;
     }
 
     /**
@@ -39,18 +29,16 @@ public class PIDFController {
      * @param state  The current measured value (where you are now)
      * @return The calculated control output to be applied to the system
      */
+    @Override
     public double calculate(double target, double state) {
-        double pidOutput = pid.calculate(target, state);
+        // Use the parent's calculate method to get the base PID output
+        double pidOutput = super.calculate(target, state);
 
-        double feedforward = target * kf;
+        // Calculate Feedforward terms
+        double error = target - state;
+        double staticFF = Math.signum(error) * ks;
+        double velocityFF = target * kv;
 
-        return pidOutput + feedforward;
-    }
-
-    /**
-     * Resets the internal state (integral and timers).
-     */
-    public void reset() {
-        pid.reset();
+        return pidOutput + staticFF + velocityFF;
     }
 }

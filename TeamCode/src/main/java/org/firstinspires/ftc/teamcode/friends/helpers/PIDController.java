@@ -1,16 +1,16 @@
 package org.firstinspires.ftc.teamcode.friends.helpers;
 
 public class PIDController {
-    private double kp;
-    private double ki;
-    private double kd;
+    protected double kp;
+    protected double ki;
+    protected double kd;
 
-    private double lastState = 0;
-    private double integral = 0;
-    private double lastTime = 0;
+    protected double lastState = 0;
+    protected double integral = 0;
+    protected double lastTime = 0;
 
-    private double integralLimit;
-    private boolean firstRun = true;
+    protected double integralLimit;
+    protected boolean firstRun = true;
 
     /**
      * Constructs a new PID controller
@@ -45,7 +45,7 @@ public class PIDController {
     public double calculate(double target, double state) {
         double now = System.nanoTime() / 1e9; // Divide to ensure the value is not massive
 
-        // Initialization on the first loop to prevent 'dt' spikes
+        // Initialization on the first loop to prevent dt spikes
         if (firstRun) {
             lastTime = now;
             lastState = state;
