@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.friends;
+package org.firstinspires.ftc.teamcode.friends.comp;
 
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
@@ -6,8 +6,6 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
-
-import org.firstinspires.ftc.teamcode.friends.tests.OdometryShooter;
 
 /**
  * Class to provide a helpful abstraction layer for accessing the HardwareMap
@@ -83,11 +81,11 @@ public class TeamHardwareMap {
         shooterMotor1.setVelocity(ticksPerSecond);
         shooterMotor2.setVelocity(ticksPerSecond);
     }
+
     public void setShooterPower(double power){
         shooterMotor1.setPower(power);
         shooterMotor2.setPower(power);
     }
-
 
     public double getShooterRPM() {
         return (shooterMotor1.getVelocity() * 60.0) / SHOOTER_TICKS_PER_REV;
@@ -99,11 +97,5 @@ public class TeamHardwareMap {
         shooterMotor1.setPower(0);
         shooterMotor2.setPower(0);
     }
-    public void setTurretPower(double power) {
-        turretMotor.setPower(power);
-    }
-
-    public float clamp(float value, float min, float max) {
-        return Math.max(min, Math.min(max, value));
-    }
+    public void setTurretPower(double power) { turretMotor.setPower(power); }
 }

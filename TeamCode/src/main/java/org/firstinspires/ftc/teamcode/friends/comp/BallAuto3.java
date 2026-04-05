@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode.friends.comp;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
-import org.firstinspires.ftc.teamcode.friends.TeamHardwareMap;
 import org.firstinspires.ftc.teamcode.friends.tests.ShooterController;
 import org.firstinspires.ftc.teamcode.friends.vision.VisionAlign;
 

@@ -12,7 +12,6 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.teamcode.friends.TeamHardwareMap;
 import org.firstinspires.ftc.teamcode.friends.tests.AutoDrive;
 import org.firstinspires.ftc.teamcode.friends.tests.OdometryShooter;
 import org.firstinspires.ftc.teamcode.friends.vision.VisionAlign;

@@ -1,5 +1,5 @@
 package org.firstinspires.ftc.teamcode.friends.tests;
-import org.firstinspires.ftc.teamcode.friends.TeamHardwareMap;
+import org.firstinspires.ftc.teamcode.friends.comp.TeamHardwareMap;
 import org.firstinspires.ftc.teamcode.friends.comp.Helpers;
 import org.firstinspires.ftc.teamcode.friends.vision.VisionAlign;
 

@@ -2,8 +2,6 @@ package org.firstinspires.ftc.teamcode.friends.comp;
 
 import com.qualcomm.robotcore.hardware.Gamepad;
 
-import org.firstinspires.ftc.teamcode.friends.TeamHardwareMap;
-
 public class Helpers {
     private final TeamHardwareMap robot;
 

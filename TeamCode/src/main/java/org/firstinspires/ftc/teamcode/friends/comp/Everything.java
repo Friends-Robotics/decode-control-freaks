@@ -10,7 +10,6 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.teamcode.friends.TeamHardwareMap;
 import org.firstinspires.ftc.teamcode.friends.tests.AutoDrive;
 import org.firstinspires.ftc.teamcode.friends.tests.ShooterController;
 import org.firstinspires.ftc.teamcode.friends.vision.VisionAlign;

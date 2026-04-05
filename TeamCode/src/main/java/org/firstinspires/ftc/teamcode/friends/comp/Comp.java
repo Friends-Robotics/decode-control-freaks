@@ -4,7 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Gamepad;
 
-import org.firstinspires.ftc.teamcode.friends.TeamHardwareMap;
+import org.firstinspires.ftc.teamcode.friends.helpers.Utils;
 
 @TeleOp(name = "Comp")
 public class Comp extends LinearOpMode {
@@ -119,7 +119,7 @@ public class Comp extends LinearOpMode {
             shooterPower -= 0.1f;
         }
 
-        shooterPower = robot.clamp(shooterPower, -1.0f, 1.0f);
+        shooterPower = Utils.clamp(shooterPower, -1.0f, 1.0f);
 
         if (currentGp2.touchpad) {
             robot.shooterMotor1.setPower(shooterPower);
@@ -143,7 +143,7 @@ public class Comp extends LinearOpMode {
             servoPosition -= 0.05f;
         }
 
-        servoPosition = robot.clamp(servoPosition, 0f, 1.0f);
+        servoPosition = Utils.clamp(servoPosition, 0f, 1.0f);
 
     }
 
@@ -160,7 +160,7 @@ public class Comp extends LinearOpMode {
             turretPower += 0.1f;
         }
 
-        turretPower = robot.clamp(turretPower, -1.0f, 1.0f);
+        turretPower = Utils.clamp(turretPower, -1.0f, 1.0f);
         robot.turretMotor.setPower(turretPower);
     }
 
