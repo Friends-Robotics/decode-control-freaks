@@ -10,12 +10,12 @@ import com.pedropathing.paths.PathBuilder;
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.follower.Follower;
 
-import org.firstinspires.ftc.teamcode.friends.comp.TeamHardwareMap;
+import org.firstinspires.ftc.teamcode.friends.comp.Robot;
 
 @Autonomous(name = "Pedro Pinpoint Drive Test")
 public class AutoPathingTest extends LinearOpMode {
 
-    TeamHardwareMap robot;
+    Robot robot;
     Follower follower;
 
     PathChain testPath;
@@ -24,7 +24,7 @@ public class AutoPathingTest extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
 
         // ---------- Initialize ----------
-        robot = new TeamHardwareMap(hardwareMap);
+        robot = new Robot(hardwareMap);
 
         // Refers to constants file
         follower = Constants.createFollower(hardwareMap);

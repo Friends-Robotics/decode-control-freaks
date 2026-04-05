@@ -9,7 +9,7 @@ import org.firstinspires.ftc.teamcode.friends.helpers.Utils;
 @TeleOp(name = "Comp")
 public class Comp extends LinearOpMode {
     // -------- Hardware --------
-    private static TeamHardwareMap robot;
+    private static Robot robot;
     // -------- State --------
     public double speedModifier = 0.8;
     private float intakePower = -0.8f;
@@ -30,7 +30,7 @@ public class Comp extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        robot = new TeamHardwareMap(hardwareMap);
+        robot = new Robot(hardwareMap);
 
         waitForStart();
         if (isStopRequested()) return;

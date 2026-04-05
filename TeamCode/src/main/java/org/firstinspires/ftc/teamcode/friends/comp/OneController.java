@@ -13,7 +13,7 @@ public class OneController extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        TeamHardwareMap hwMap = new TeamHardwareMap(hardwareMap);
+        Robot hwMap = new Robot(hardwareMap);
 
         waitForStart();
 

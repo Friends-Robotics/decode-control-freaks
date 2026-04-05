@@ -19,7 +19,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 @TeleOp(name = "Drive + Intake + Shooting")
 public class Everything extends LinearOpMode {
 
-    TeamHardwareMap robot;
+    Robot robot;
     Helpers helpers;
     VisionAlign vision;
     ShooterController AutoShoot;
@@ -36,7 +36,7 @@ public class Everything extends LinearOpMode {
         // --- HARDWARE INIT ---
 
 
-        robot = new TeamHardwareMap(hardwareMap);
+        robot = new Robot(hardwareMap);
         pinpoint = robot.pinpoint;
         helpers = new Helpers(robot);
         vision = new VisionAlign();

@@ -22,7 +22,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 public class FullAutoAny extends LinearOpMode {
 
     // ---------- Hardware ----------
-    TeamHardwareMap robot;
+    Robot robot;
     Follower follower;
     VisionAlign vision;
     Helpers comp;
@@ -74,7 +74,7 @@ public class FullAutoAny extends LinearOpMode {
     public void runOpMode() {
 
         // ---------- Initialize ----------
-        robot = new TeamHardwareMap(hardwareMap);
+        robot = new Robot(hardwareMap);
         follower = Constants.createFollower(hardwareMap);
 
         comp = new Helpers(robot);

@@ -10,16 +10,18 @@ import com.qualcomm.robotcore.hardware.Servo;
 /**
  * Class to provide a helpful abstraction layer for accessing the HardwareMap
  */
-
-public class TeamHardwareMap {
+public class Robot {
+    // Drive
     public DcMotor frontLeftMotor;
     public DcMotor backLeftMotor;
     public DcMotor frontRightMotor;
     public DcMotor backRightMotor;
 
+    // Intake
     public DcMotor intakeMotor;
     public Servo feeder;
 
+    // Shooter
     public DcMotorEx shooterMotor1;
     public DcMotorEx shooterMotor2;
     public DcMotor turretMotor;
@@ -33,7 +35,7 @@ public class TeamHardwareMap {
     public double targetShooterRPM = 3300; //For close 4100 for far
     public static final double SHOOTER_TICKS_PER_REV = 15;
 
-    public TeamHardwareMap(com.qualcomm.robotcore.hardware.HardwareMap hardwareMap) {
+    public Robot(com.qualcomm.robotcore.hardware.HardwareMap hardwareMap) {
         frontRightMotor = hardwareMap.get(DcMotor.class, "FRM");
         frontRightMotor.setDirection(DcMotorSimple.Direction.FORWARD);
         frontLeftMotor = hardwareMap.get(DcMotor.class, "FLM");

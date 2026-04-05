@@ -3,18 +3,18 @@ package org.firstinspires.ftc.teamcode.friends.tests;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-import org.firstinspires.ftc.teamcode.friends.comp.TeamHardwareMap;
+import org.firstinspires.ftc.teamcode.friends.comp.Robot;
 
 @TeleOp(name = "Individual Wheel Test", group = "Testing")
 public class IndividualWheelTest extends LinearOpMode {
 
-    TeamHardwareMap robot;
+    Robot robot;
 
     @Override
     public void runOpMode() {
 
         // Get motors from hardware map
-        robot = new TeamHardwareMap(hardwareMap);
+        robot = new Robot(hardwareMap);
 
         telemetry.addLine("Individual Wheel Test");
         telemetry.addLine("Press gamepad buttons to test each wheel");

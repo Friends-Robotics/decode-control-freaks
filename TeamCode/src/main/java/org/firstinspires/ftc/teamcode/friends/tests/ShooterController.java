@@ -1,5 +1,5 @@
 package org.firstinspires.ftc.teamcode.friends.tests;
-import org.firstinspires.ftc.teamcode.friends.comp.TeamHardwareMap;
+import org.firstinspires.ftc.teamcode.friends.comp.Robot;
 import org.firstinspires.ftc.teamcode.friends.comp.Helpers;
 import org.firstinspires.ftc.teamcode.friends.vision.VisionAlign;
 
@@ -46,7 +46,7 @@ public class ShooterController {
     }
 
     // --- Main state machine ---
-    public void update(TeamHardwareMap robot, VisionAlign vision, Helpers helpers, Pose currentPose, Pose goalPose) {
+    public void update(Robot robot, VisionAlign vision, Helpers helpers, Pose currentPose, Pose goalPose) {
 
         double distance = odometryShooter.getDistanceToGoal(currentPose, goalPose);
 
