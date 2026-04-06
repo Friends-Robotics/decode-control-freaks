@@ -10,11 +10,10 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 @TeleOp(name = "Pinpoint Calibration", group = "Calibration")
 public class PinpointCalibration extends LinearOpMode {
 
-    GoBildaPinpointDriver pinpoint;
+    private GoBildaPinpointDriver pinpoint;
 
     @Override
     public void runOpMode() {
-
         pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
 
         telemetry.addLine("Pinpoint Ready");
@@ -27,9 +26,7 @@ public class PinpointCalibration extends LinearOpMode {
         pinpoint.resetPosAndIMU();
         pinpoint.getPosition();;
 
-        // -------- LIVE DATA --------
         while (opModeIsActive()) {
-
             telemetry.addData("X (in)", pinpoint.getPosition().getX(DistanceUnit.INCH));
             telemetry.addData("Y (in)", pinpoint.getPosition().getY(DistanceUnit.INCH));
             telemetry.addData("Heading (deg)", Math.toDegrees(pinpoint.getHeading(AngleUnit.RADIANS)));

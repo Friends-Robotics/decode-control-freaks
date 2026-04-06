@@ -12,21 +12,22 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.teamcode.friends.components.Robot;
 import org.firstinspires.ftc.teamcode.friends.components.RobotHardware;
-import org.firstinspires.ftc.teamcode.friends.components.AutoDrive;
-import org.firstinspires.ftc.teamcode.friends.components.OdometryShooter;
+import org.firstinspires.ftc.teamcode.friends.controllers.AutoDrive;
+import org.firstinspires.ftc.teamcode.friends.controllers.OdometryShooter;
 import org.firstinspires.ftc.teamcode.friends.vision.VisionAlign;
-import org.firstinspires.ftc.teamcode.friends.components.ShooterController;
+import org.firstinspires.ftc.teamcode.friends.controllers.ShooterController;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 @Autonomous(name = "FullAutoAny")
 public class FullAutoAny extends LinearOpMode {
 
     // ---------- Hardware ----------
-    RobotHardware robot;
+    RobotHardware robotHardware;
+    Robot robot;
     Follower follower;
     VisionAlign vision;
-    Helpers comp;
     ShooterController shooterController;
     OdometryShooter odometryShooter;
     AutoDrive autoDrive;
@@ -75,10 +76,10 @@ public class FullAutoAny extends LinearOpMode {
     public void runOpMode() {
 
         // ---------- Initialize ----------
-        robot = new RobotHardware(hardwareMap);
+        robotHardware = new RobotHardware(hardwareMap);
+        robot = new Robot(robotHardware);
         follower = Constants.createFollower(hardwareMap);
 
-        comp = new Helpers(robot);
         shooterController = new ShooterController();
         odometryShooter = new OdometryShooter();
         autoDrive = new AutoDrive(follower,blue,Close);
@@ -88,10 +89,10 @@ public class FullAutoAny extends LinearOpMode {
         goalPose = autoDrive.getGoalPose();
         follower.setStartingPose(startPose);
 
-        robot.turretMotor.setMode(com.qualcomm.robotcore.hardware.DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        robot.turretMotor.setTargetPosition(0);
-        robot.turretMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        robot.turretMotor.setPower(0.3);
+        robotHardware.turretMotor.setMode(com.qualcomm.robotcore.hardware.DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        robotHardware.turretMotor.setTargetPosition(0);
+        robotHardware.turretMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        robotHardware.turretMotor.setPower(0.3);
 
         telemetry.addLine("Ready");
         telemetry.update();
@@ -104,7 +105,7 @@ public class FullAutoAny extends LinearOpMode {
         while (opModeIsActive()) {
             Pose currentPose = follower.getPose();
             // Shooter state machine
-            shooterController.update(robot, null, comp, currentPose, goalPose);
+            // shooterController.update(robotHardware, null, comp, currentPose, goalPose);
             follower.followPath(shootPath1);
 
             switch (currentState) {
@@ -150,7 +151,7 @@ public class FullAutoAny extends LinearOpMode {
                 case DONE:
                     if(!follower.isBusy())
                     {
-                        robot.stopShooter();
+                        robot.setShooterPower(0); // Stop shooter
                         robot.stopIntake();
                     }
                     break;

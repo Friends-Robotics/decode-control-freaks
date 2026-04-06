@@ -24,16 +24,12 @@ public class RobotHardware {
     // Shooter
     public DcMotorEx shooterMotor1;
     public DcMotorEx shooterMotor2;
-    public DcMotor turretMotor;
+    public DcMotorEx turretMotor;
     public Servo hood;
 
     public GoBildaPinpointDriver pinpoint;
 
     public Limelight3A limelight;
-
-    // Constants
-    public double targetShooterRPM = 3300; //For close 4100 for far
-    public static final double SHOOTER_TICKS_PER_REV = 15;
 
     public RobotHardware(com.qualcomm.robotcore.hardware.HardwareMap hardwareMap) {
         frontRightMotor = hardwareMap.get(DcMotor.class, "FRM");
@@ -48,17 +44,17 @@ public class RobotHardware {
         feeder = hardwareMap.get(Servo.class, "Feeder");
 
         shooterMotor1 = hardwareMap.get(DcMotorEx.class, "Shooter1");
-        shooterMotor1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        shooterMotor1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER); // This tells the builtin motor PID not to run
         shooterMotor1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         shooterMotor1.setDirection(DcMotorSimple.Direction.REVERSE);
 
         shooterMotor2 = hardwareMap.get(DcMotorEx.class, "Shooter2");
-        shooterMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        shooterMotor2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         shooterMotor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         shooterMotor2.setDirection(DcMotorSimple.Direction.REVERSE);
 
         turretMotor = hardwareMap.get(DcMotorEx.class, "Turret");
-        turretMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        turretMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         turretMotor.setDirection(DcMotorSimple.Direction.FORWARD);
         turretMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
@@ -67,31 +63,5 @@ public class RobotHardware {
         pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
 
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
-    }
-
-    // INTAKE
-    public void startIntake() { intakeMotor.setPower(0.6);}
-    public void stopIntake() { intakeMotor.setPower(0.0);}
-
-    // FEEDER
-    public void stopFeed() {feeder.setPosition(0.0);} // Lowered
-    public void startFeed() {feeder.setPosition(0.37);} // High
-
-    public void setShooterPower(double power){
-        shooterMotor1.setPower(power);
-        shooterMotor2.setPower(power);
-    }
-
-    public double getShooterRPM() {
-        return (shooterMotor1.getVelocity() * 60.0) / SHOOTER_TICKS_PER_REV;
-    }
-
-    public boolean shooterAtSpeed(double tolerance) {
-        return Math.abs(getShooterRPM() - targetShooterRPM) <= tolerance;
-    }
-
-    public void stopShooter() {
-        shooterMotor1.setPower(0);
-        shooterMotor2.setPower(0);
     }
 }

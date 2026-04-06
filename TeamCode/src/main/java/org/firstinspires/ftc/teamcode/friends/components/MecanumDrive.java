@@ -1,12 +1,12 @@
 package org.firstinspires.ftc.teamcode.friends.components;
 
 public class MecanumDrive {
-    private final RobotHardware robot;
+    private final RobotHardware robotHardware;
     private static final double DEADBAND = 0.05;
     private static final double STRAFE_FRICTION_OFFSET = 1.1;
 
-    public MecanumDrive(RobotHardware robot) {
-        this.robot = robot;
+    public MecanumDrive(RobotHardware robotHardware) {
+        this.robotHardware = robotHardware;
     }
 
     /**
@@ -39,9 +39,9 @@ public class MecanumDrive {
         }
 
         // Set the actual motor powers
-        robot.frontLeftMotor.setPower(fl);
-        robot.backLeftMotor.setPower(bl);
-        robot.frontRightMotor.setPower(fr);
-        robot.backRightMotor.setPower(br);
+        robotHardware.frontLeftMotor.setPower(fl);
+        robotHardware.backLeftMotor.setPower(bl);
+        robotHardware.frontRightMotor.setPower(fr);
+        robotHardware.backRightMotor.setPower(br);
     }
 }

@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.friends.components;
+package org.firstinspires.ftc.teamcode.friends.controllers;
 
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
