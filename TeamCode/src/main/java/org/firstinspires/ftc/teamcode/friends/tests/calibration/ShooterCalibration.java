@@ -38,6 +38,9 @@ public class ShooterCalibration extends LinearOpMode {
         waitForStart();
 
         while (opModeIsActive()) {
+            robot.intake();
+            robot.startFeed();
+
             shooterPID.setPIDF(
                     RobotConstants.Shooter.kP,
                     RobotConstants.Shooter.kI,
@@ -65,6 +68,7 @@ public class ShooterCalibration extends LinearOpMode {
             // 6. Telemetry for Graphing in Dashboard
             telemetry.addData("Target RPM", targetRPM);
             telemetry.addData("Current RPM", robot.getShooterRPM());
+            telemetry.addData("Shooter Current", robot.getShooterCurrentDraw());
             telemetry.addData("Target Velocity (TPS)", targetVelocity);
             telemetry.addData("Current Velocity (TPS)", currentVelocity);
             telemetry.addData("Applied Power", shooterPower);

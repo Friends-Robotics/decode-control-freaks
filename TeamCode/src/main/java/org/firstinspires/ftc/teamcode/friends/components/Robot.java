@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.friends.components;
 
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.friends.controllers.RobotConstants;
 
 public class Robot {
@@ -7,7 +8,6 @@ public class Robot {
 
     public Turret turret;
     public MecanumDrive mecanumDrive;
-
 
     public Robot(RobotHardware robotHardware) {
         this.robotHardware = robotHardware;
@@ -33,6 +33,10 @@ public class Robot {
 
     public double getShooterVelocity() {
         return (robotHardware.shooterMotor1.getVelocity() + robotHardware.shooterMotor2.getVelocity()) / 2.0;
+    }
+
+    public double getShooterCurrentDraw() {
+        return robotHardware.shooterMotor1.getCurrent(CurrentUnit.AMPS) + robotHardware.shooterMotor2.getCurrent(CurrentUnit.AMPS);
     }
 
     public double getShooterRPM() {
