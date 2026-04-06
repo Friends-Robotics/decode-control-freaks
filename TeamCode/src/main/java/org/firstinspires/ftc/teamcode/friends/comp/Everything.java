@@ -1,30 +1,22 @@
 package org.firstinspires.ftc.teamcode.friends.comp;
 
-import com.pedropathing.follower.Follower;
-import com.pedropathing.geometry.Pose;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Gamepad;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.teamcode.friends.components.MecanumDrive;
 import org.firstinspires.ftc.teamcode.friends.components.Robot;
 import org.firstinspires.ftc.teamcode.friends.components.RobotHardware;
-import org.firstinspires.ftc.teamcode.friends.controllers.AutoDrive;
 import org.firstinspires.ftc.teamcode.friends.controllers.RobotConstants;
-import org.firstinspires.ftc.teamcode.friends.controllers.ShooterController;
 import org.firstinspires.ftc.teamcode.friends.vision.VisionAlign;
-import org.firstinspires.ftc.teamcode.friends.controllers.OdometryShooter;
-import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 @TeleOp(name = "Drive + Intake + Shooting")
 public class Everything extends LinearOpMode {
     private RobotHardware robotHardware;
-
     private Robot robot;
-    // private VisionAlign vision;
+
+    private VisionAlign vision;
     // private Follower follower;
     // private OdometryShooter odometryShooter;
 
@@ -36,8 +28,9 @@ public class Everything extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         robotHardware = new RobotHardware(hardwareMap);
+        robot = new Robot(robotHardware);
 
-        // vision = new VisionAlign();
+        vision = new VisionAlign();
         // odometryShooter = new OdometryShooter();
 
         // telemetry.addLine("WARNING: Ensure the turret is centered");
@@ -54,6 +47,8 @@ public class Everything extends LinearOpMode {
         // follower = Constants.createFollower(hardwareMap);
         // AutoDrive autoDrive = new AutoDrive(follower, IsBlue, close);
         // follower.setStartingPose(autoDrive.getAutoParkingPose());
+
+        robot.stopFeed();
 
         waitForStart();
 
@@ -74,15 +69,15 @@ public class Everything extends LinearOpMode {
             // Pose goalPose = autoDrive.getGoalPose();
 
             // Vision
-            // LLResult result = robotHardware.limelight.getLatestResult();
+            LLResult result = robotHardware.limelight.getLatestResult();
 
-            // Vision-driven turret with odometry offset
-            // vision.update(
-            //         result,
-            //         currentGp2.y,
-            //         robot.turret.getAngle()
-            // );
-            // robotHardware.turretMotor.setPower(vision.getOutputPower());
+            // Vision-driven turret
+            vision.update(
+                    result,
+                    currentGp2.y,
+                    robot.turret.getAngle()
+            );
+            robotHardware.turretMotor.setPower(vision.getOutputPower());
 
             // =========================
             // DISTANCE + SHOOTER
@@ -130,15 +125,17 @@ public class Everything extends LinearOpMode {
             // =========================
 
             // if (!AutoShoot.isBusy()) {
-            //     // Intake
-            //     if (gamepad1.right_trigger > 0.1) {
-            //         robotHardware.intakeMotor.setPower(1.0);
-            //     } else if (gamepad1.left_trigger > 0.1) {
-            //         robotHardware.intakeMotor.setPower(-1.0);
-            //     } else {
-            //         robotHardware.intakeMotor.setPower(0);
-            //     }
-            // }
+            // Intake
+            if (currentGp1.right_trigger > 0.1) {
+                robot.stopFeed();
+                robot.intake();
+            } else if (currentGp1.left_trigger > 0.1) {
+                robot.startFeed();
+                robot.outtake();
+            } else {
+                robot.stopFeed();
+                robot.stopIntake();
+            }
 
             // Telemetry
             telemetry.addLine("----ODOMETRY----");
@@ -159,7 +156,7 @@ public class Everything extends LinearOpMode {
             // telemetry.addData("tx", result.getTx());
             // telemetry.addData("TurretPower", vision.getOutputPower());
             telemetry.addData("Turret ticks", robotHardware.turretMotor.getCurrentPosition());
-            // telemetry.addData("Turret aligned", vision.isAligned);
+            telemetry.addData("Turret state: ", vision.getCurrentState());
             // telemetry.addData("Turret currentAngle", robot.getTurretAngle());
             telemetry.addLine();
             telemetry.update();

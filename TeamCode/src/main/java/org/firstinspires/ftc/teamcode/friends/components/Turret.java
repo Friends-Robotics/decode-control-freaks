@@ -7,12 +7,12 @@ import com.qualcomm.robotcore.util.Range;
 public class Turret {
     private final DcMotorEx motor;
 
-    private static final double RIGHT_TICKS = 193.0;
-    private static final double LEFT_TICKS = -193.0;
-    private static final double TICKS_PER_DEGREE = (RIGHT_TICKS - LEFT_TICKS) / 180.0;
+    // 28 ticks per motor revolution, 5.23 cartridge on motor, 200 teeth on large gera, 36 teeth on the small gear
+    public static final double TICKS_PER_REVOLUTION = 28 * 5.23 * (200 / 36d);
+    public static final double TICKS_PER_DEGREE = TICKS_PER_REVOLUTION / 360d;
 
-    public static final double MIN_ANGLE = -42.5;
-    public static final double MAX_ANGLE = 42.5;
+    public static final double MIN_ANGLE = -45;
+    public static final double MAX_ANGLE = 45;
 
     public Turret(DcMotorEx motor) {
         this.motor = motor;

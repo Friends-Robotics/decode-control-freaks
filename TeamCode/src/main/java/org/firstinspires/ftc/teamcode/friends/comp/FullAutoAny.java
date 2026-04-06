@@ -116,7 +116,7 @@ public class FullAutoAny extends LinearOpMode {
                         // Start intake cycle
                         if (cycleIndex < MAX_CYCLES) {
                             buildNewCycle();
-                            robot.startIntake();
+                            robot.intake();
                             follower.followPath(intakeFullPath);
                             currentState = AutoState.DRIVE_TO_INTAKE;
                         } else {

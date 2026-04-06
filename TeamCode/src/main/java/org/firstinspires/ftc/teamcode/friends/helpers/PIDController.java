@@ -80,4 +80,15 @@ public class PIDController {
         integral = 0;
         firstRun = true;
     }
+
+    public void setPID(double kp, double ki, double kd) {
+        this.kp = kp;
+        this.ki = ki;
+        this.kd = kd;
+    }
+
+    public void setKp(double kp) { this.kp = kp; }
+    public void setKi(double ki) { this.ki = ki; }
+    public void setKd(double kd) { this.kd = kd; }
+    public void setIntegralLimit(double limit) { this.integralLimit = limit; }
 }

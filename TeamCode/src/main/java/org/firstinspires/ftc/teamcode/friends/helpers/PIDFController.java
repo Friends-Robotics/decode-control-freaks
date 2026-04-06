@@ -41,4 +41,15 @@ public class PIDFController extends PIDController {
 
         return pidOutput + staticFF + velocityFF;
     }
+
+    public void setPIDF(double kp, double ki, double kd, double ks, double kv) {
+        this.kp = kp;
+        this.ki = ki;
+        this.kd = kd;
+        this.ks = ks;
+        this.kv = kv;
+    }
+
+    public void setKs(double ks) { this.ks = ks; }
+    public void setKv(double kv) { this.kv = kv; }
 }
