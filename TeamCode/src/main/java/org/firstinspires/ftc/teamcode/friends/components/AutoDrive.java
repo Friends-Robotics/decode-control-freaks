@@ -1,10 +1,9 @@
-package org.firstinspires.ftc.teamcode.friends.tests;
+package org.firstinspires.ftc.teamcode.friends.components;
 
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathBuilder;
-import com.pedropathing.paths.Path;
 
 public class AutoDrive {
     private final Follower follower;

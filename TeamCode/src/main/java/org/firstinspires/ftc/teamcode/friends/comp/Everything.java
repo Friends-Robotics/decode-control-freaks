@@ -1,10 +1,7 @@
 package org.firstinspires.ftc.teamcode.friends.comp;
 
 import com.pedropathing.follower.Follower;
-import com.pedropathing.geometry.Pose;
-import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.hardware.limelightvision.LLResult;
-import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -13,11 +10,10 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.friends.components.MecanumDrive;
 import org.firstinspires.ftc.teamcode.friends.components.Robot;
-import org.firstinspires.ftc.teamcode.friends.tests.AutoDrive;
-import org.firstinspires.ftc.teamcode.friends.tests.ShooterController;
+import org.firstinspires.ftc.teamcode.friends.components.AutoDrive;
+import org.firstinspires.ftc.teamcode.friends.components.ShooterController;
 import org.firstinspires.ftc.teamcode.friends.vision.VisionAlign;
-import org.firstinspires.ftc.teamcode.friends.tests.OdometryShooter;
-import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
+import org.firstinspires.ftc.teamcode.friends.components.OdometryShooter;
 
 @TeleOp(name = "Drive + Intake + Shooting")
 public class Everything extends LinearOpMode {

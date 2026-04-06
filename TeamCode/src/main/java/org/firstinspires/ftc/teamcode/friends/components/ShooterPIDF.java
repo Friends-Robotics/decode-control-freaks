@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.friends.tests;
+package org.firstinspires.ftc.teamcode.friends.components;
 
 import com.acmerobotics.dashboard.config.Config;
 

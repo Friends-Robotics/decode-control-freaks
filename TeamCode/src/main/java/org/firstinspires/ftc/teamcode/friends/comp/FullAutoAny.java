@@ -13,10 +13,10 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.friends.components.Robot;
-import org.firstinspires.ftc.teamcode.friends.tests.AutoDrive;
-import org.firstinspires.ftc.teamcode.friends.tests.OdometryShooter;
+import org.firstinspires.ftc.teamcode.friends.components.AutoDrive;
+import org.firstinspires.ftc.teamcode.friends.components.OdometryShooter;
 import org.firstinspires.ftc.teamcode.friends.vision.VisionAlign;
-import org.firstinspires.ftc.teamcode.friends.tests.ShooterController;
+import org.firstinspires.ftc.teamcode.friends.components.ShooterController;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 @Autonomous(name = "FullAutoAny")

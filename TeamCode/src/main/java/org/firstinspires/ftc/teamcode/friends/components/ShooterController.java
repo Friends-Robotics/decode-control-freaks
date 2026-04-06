@@ -1,5 +1,4 @@
-package org.firstinspires.ftc.teamcode.friends.tests;
-import org.firstinspires.ftc.teamcode.friends.components.Robot;
+package org.firstinspires.ftc.teamcode.friends.components;
 import org.firstinspires.ftc.teamcode.friends.comp.Helpers;
 import org.firstinspires.ftc.teamcode.friends.vision.VisionAlign;
 

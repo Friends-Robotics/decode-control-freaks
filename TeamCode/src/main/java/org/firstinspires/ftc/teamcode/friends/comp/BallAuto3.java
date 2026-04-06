@@ -4,7 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.friends.components.Robot;
-import org.firstinspires.ftc.teamcode.friends.tests.ShooterController;
+import org.firstinspires.ftc.teamcode.friends.components.ShooterController;
 import org.firstinspires.ftc.teamcode.friends.vision.VisionAlign;
 
 @Autonomous(name = "3BallStrafeAuto")

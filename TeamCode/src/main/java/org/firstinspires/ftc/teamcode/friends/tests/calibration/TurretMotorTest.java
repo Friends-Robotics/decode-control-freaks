@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.friends.tests;
+package org.firstinspires.ftc.teamcode.friends.tests.calibration;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
