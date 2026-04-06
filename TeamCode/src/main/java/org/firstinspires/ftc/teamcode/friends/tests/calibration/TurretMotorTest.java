@@ -2,11 +2,11 @@ package org.firstinspires.ftc.teamcode.friends.tests.calibration;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
-import org.firstinspires.ftc.teamcode.friends.components.Robot;
+import org.firstinspires.ftc.teamcode.friends.components.RobotHardware;
 
 public class TurretMotorTest extends LinearOpMode {
 
-    Robot robot;
+    RobotHardware robot;
     //ticksPerDegree =
     //(motorTicksPerOutputRev × externalGearRatio) ÷ 360
     //28 x 5 = 140ticks per bearing revolution

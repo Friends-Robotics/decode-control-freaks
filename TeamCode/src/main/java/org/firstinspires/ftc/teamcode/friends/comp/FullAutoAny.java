@@ -12,7 +12,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.teamcode.friends.components.Robot;
+import org.firstinspires.ftc.teamcode.friends.components.RobotHardware;
 import org.firstinspires.ftc.teamcode.friends.components.AutoDrive;
 import org.firstinspires.ftc.teamcode.friends.components.OdometryShooter;
 import org.firstinspires.ftc.teamcode.friends.vision.VisionAlign;
@@ -23,7 +23,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 public class FullAutoAny extends LinearOpMode {
 
     // ---------- Hardware ----------
-    Robot robot;
+    RobotHardware robot;
     Follower follower;
     VisionAlign vision;
     Helpers comp;
@@ -75,7 +75,7 @@ public class FullAutoAny extends LinearOpMode {
     public void runOpMode() {
 
         // ---------- Initialize ----------
-        robot = new Robot(hardwareMap);
+        robot = new RobotHardware(hardwareMap);
         follower = Constants.createFollower(hardwareMap);
 
         comp = new Helpers(robot);

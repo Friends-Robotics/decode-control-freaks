@@ -3,7 +3,7 @@ package org.firstinspires.ftc.teamcode.friends.comp;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
-import org.firstinspires.ftc.teamcode.friends.components.Robot;
+import org.firstinspires.ftc.teamcode.friends.components.RobotHardware;
 import org.firstinspires.ftc.teamcode.friends.components.ShooterController;
 import org.firstinspires.ftc.teamcode.friends.vision.VisionAlign;
 
@@ -13,12 +13,12 @@ public class BallAuto3 extends LinearOpMode {
     ShooterController shooterController;
 
     // Motors
-    Robot robot;
+    RobotHardware robot;
     VisionAlign vision;
 
     @Override
     public void runOpMode() {
-        robot = new Robot(hardwareMap);
+        robot = new RobotHardware(hardwareMap);
         shooterController = new ShooterController();
         vision = new VisionAlign();
 

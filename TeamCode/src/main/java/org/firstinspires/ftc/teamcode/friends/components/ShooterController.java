@@ -45,7 +45,7 @@ public class ShooterController {
     }
 
     // --- Main state machine ---
-    public void update(Robot robot, VisionAlign vision, Helpers helpers, Pose currentPose, Pose goalPose) {
+    public void update(RobotHardware robot, VisionAlign vision, Helpers helpers, Pose currentPose, Pose goalPose) {
 
         double distance = odometryShooter.getDistanceToGoal(currentPose, goalPose);
 

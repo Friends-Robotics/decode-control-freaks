@@ -1,11 +1,11 @@
 package org.firstinspires.ftc.teamcode.friends.components;
 
 public class MecanumDrive {
-    private final Robot robot;
+    private final RobotHardware robot;
     private static final double DEADBAND = 0.05;
     private static final double STRAFE_FRICTION_OFFSET = 1.1;
 
-    public MecanumDrive(Robot robot) {
+    public MecanumDrive(RobotHardware robot) {
         this.robot = robot;
     }
 

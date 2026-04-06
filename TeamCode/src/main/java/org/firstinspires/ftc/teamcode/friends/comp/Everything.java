@@ -9,7 +9,7 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.friends.components.MecanumDrive;
-import org.firstinspires.ftc.teamcode.friends.components.Robot;
+import org.firstinspires.ftc.teamcode.friends.components.RobotHardware;
 import org.firstinspires.ftc.teamcode.friends.components.AutoDrive;
 import org.firstinspires.ftc.teamcode.friends.components.ShooterController;
 import org.firstinspires.ftc.teamcode.friends.vision.VisionAlign;
@@ -17,7 +17,7 @@ import org.firstinspires.ftc.teamcode.friends.components.OdometryShooter;
 
 @TeleOp(name = "Drive + Intake + Shooting")
 public class Everything extends LinearOpMode {
-    private Robot robot;
+    private RobotHardware robot;
     private MecanumDrive mecanumDrive;
     private Helpers helpers;
     private VisionAlign vision;
@@ -36,7 +36,7 @@ public class Everything extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        robot = new Robot(hardwareMap);
+        robot = new RobotHardware(hardwareMap);
         mecanumDrive = new MecanumDrive(robot);
 
         helpers = new Helpers(robot);
