@@ -11,7 +11,7 @@ import org.firstinspires.ftc.teamcode.friends.controllers.RobotConstants;
 import org.firstinspires.ftc.teamcode.friends.helpers.PIDFController;
 
 @Config
-@TeleOp(name = "Shooter Motor Test", group = "Calibration")
+@TeleOp(name = "Shooter Calibration", group = "Calibration")
 public class ShooterCalibration extends LinearOpMode {
     private RobotHardware robotHardware;
     private Robot robot;

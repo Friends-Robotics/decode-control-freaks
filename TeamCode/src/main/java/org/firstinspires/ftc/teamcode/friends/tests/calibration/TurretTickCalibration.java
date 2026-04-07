@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.teamcode.friends.components.Turret;
 
-@TeleOp(name = "Turret Tick Finder", group = "Calibration")
+@TeleOp(name = "Turret Tick Calibration", group = "Calibration")
 public class TurretTickCalibration extends LinearOpMode {
     private DcMotor turretMotor;
 

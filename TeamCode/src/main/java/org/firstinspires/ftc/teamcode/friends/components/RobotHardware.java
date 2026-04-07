@@ -12,35 +12,40 @@ import com.qualcomm.robotcore.hardware.Servo;
  */
 public class RobotHardware {
     // Drive
-    public DcMotor frontLeftMotor;
-    public DcMotor backLeftMotor;
-    public DcMotor frontRightMotor;
-    public DcMotor backRightMotor;
+    public final DcMotorEx frontLeftMotor;
+    public final DcMotorEx backLeftMotor;
+    public final DcMotorEx frontRightMotor;
+    public final DcMotorEx backRightMotor;
 
     // Intake
-    public DcMotor intakeMotor;
-    public Servo feeder;
+    public final DcMotorEx intakeMotor;
+    public final Servo feeder;
 
     // Shooter
-    public DcMotorEx shooterMotor1;
-    public DcMotorEx shooterMotor2;
-    public DcMotorEx turretMotor;
-    public Servo hood;
+    public final DcMotorEx shooterMotor1;
+    public final DcMotorEx shooterMotor2;
+    public final DcMotorEx turretMotor;
+    public final Servo hood;
 
-    public GoBildaPinpointDriver pinpoint;
+    public final GoBildaPinpointDriver pinpoint;
 
-    public Limelight3A limelight;
+    public final Limelight3A limelight;
 
     public RobotHardware(com.qualcomm.robotcore.hardware.HardwareMap hardwareMap) {
-        frontRightMotor = hardwareMap.get(DcMotor.class, "FRM");
+        frontRightMotor = hardwareMap.get(DcMotorEx.class, "FRM");
+        frontRightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         frontRightMotor.setDirection(DcMotorSimple.Direction.FORWARD);
-        frontLeftMotor = hardwareMap.get(DcMotor.class, "FLM");
+        frontLeftMotor = hardwareMap.get(DcMotorEx.class, "FLM");
+        frontLeftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-        backRightMotor = hardwareMap.get(DcMotor.class, "BRM");
+        backRightMotor = hardwareMap.get(DcMotorEx.class, "BRM");
+        backRightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         backRightMotor.setDirection(DcMotorSimple.Direction.FORWARD);
-        backLeftMotor = hardwareMap.get(DcMotor.class, "BLM");
+        backLeftMotor = hardwareMap.get(DcMotorEx.class, "BLM");
+        backLeftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         backLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-        intakeMotor = hardwareMap.get(DcMotor.class, "Intake");
+
+        intakeMotor = hardwareMap.get(DcMotorEx.class, "Intake");
         feeder = hardwareMap.get(Servo.class, "Feeder");
 
         shooterMotor1 = hardwareMap.get(DcMotorEx.class, "Shooter1");

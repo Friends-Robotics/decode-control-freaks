@@ -34,5 +34,6 @@ public class RobotConstants {
         public static final double SHOOTER_TICKS_PER_REV = 28; // Update this based on your motor (e.g., 28 for 5203)
         public static final double MAX_POWER = 1; // Update this based on your motor (e.g., 28 for 5203)
         public static final double IDLE_RPM = 650;
+        public static double RPM_TOLERANCE = 150;
     }
 }

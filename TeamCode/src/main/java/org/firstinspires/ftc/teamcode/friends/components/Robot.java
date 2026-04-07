@@ -4,10 +4,10 @@ import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.friends.controllers.RobotConstants;
 
 public class Robot {
-    private RobotHardware robotHardware;
+    private final RobotHardware robotHardware;
 
-    public Turret turret;
-    public MecanumDrive mecanumDrive;
+    public final Turret turret;
+    public final MecanumDrive mecanumDrive;
 
     public Robot(RobotHardware robotHardware) {
         this.robotHardware = robotHardware;
@@ -16,16 +16,16 @@ public class Robot {
         mecanumDrive = new MecanumDrive(robotHardware);
     }
 
-    // Intake Logic
+    // Intake
     public void intake() { robotHardware.intakeMotor.setPower(0.6); }
     public void outtake() { robotHardware.intakeMotor.setPower(-0.6); }
     public void stopIntake() { robotHardware.intakeMotor.setPower(0.0); }
 
-    // Feeder Logic (Servo)
+    // Feeder
     public void stopFeed() { robotHardware.feeder.setPosition(0.0); }
     public void startFeed() { robotHardware.feeder.setPosition(0.36); }
 
-    // Shooter Logic
+    // Shooter
     public void setShooterPower(double power){
         robotHardware.shooterMotor1.setPower(power);
         robotHardware.shooterMotor2.setPower(power);
@@ -44,7 +44,5 @@ public class Robot {
     }
 
     // Hood Logic
-    public void setHoodPosition(double position) {
-        robotHardware.hood.setPosition(position);
-    }
+    public void setHoodPosition(double position) { robotHardware.hood.setPosition(position); }
 }

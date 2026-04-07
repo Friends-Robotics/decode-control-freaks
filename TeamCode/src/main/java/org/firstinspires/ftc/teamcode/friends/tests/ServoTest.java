@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.friends.tests;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Gamepad;
@@ -7,7 +8,8 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.friends.helpers.Utils;
 
-@TeleOp(name = "Servo Test")
+@Disabled
+@TeleOp(name = "Servo Test", group = "Test")
 public class ServoTest extends LinearOpMode {
     Servo servo;
     float servoPosition = 0.0f;

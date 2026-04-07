@@ -9,6 +9,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.friends.components.Robot;
 import org.firstinspires.ftc.teamcode.friends.components.RobotHardware;
 import org.firstinspires.ftc.teamcode.friends.controllers.RobotConstants;
+import org.firstinspires.ftc.teamcode.friends.controllers.ShooterController;
 import org.firstinspires.ftc.teamcode.friends.vision.VisionAlign;
 
 @TeleOp(name = "Drive + Intake + Shooting")
@@ -17,6 +18,10 @@ public class Everything extends LinearOpMode {
     private Robot robot;
 
     private VisionAlign vision;
+    private boolean wasAligned = false;
+
+    private ShooterController shooterController;
+
     // private Follower follower;
     // private OdometryShooter odometryShooter;
 
@@ -31,14 +36,15 @@ public class Everything extends LinearOpMode {
         robot = new Robot(robotHardware);
 
         vision = new VisionAlign();
+        shooterController = new ShooterController();
         // odometryShooter = new OdometryShooter();
 
-        // telemetry.addLine("WARNING: Ensure the turret is centered");
-        // robot.turret.resetEncoder();
+        telemetry.addLine("WARNING: Ensure the turret is centered");
+        telemetry.update();
 
-        // robotHardware.limelight.setPollRateHz(100);
-        // robotHardware.limelight.start();
-        // robotHardware.limelight.pipelineSwitch(1); // 0 blue 1 red
+        robotHardware.limelight.setPollRateHz(100);
+        robotHardware.limelight.start();
+        robotHardware.limelight.pipelineSwitch(1); // 0 blue 1 red
 
         // // --- ODOMETRY / PEDRO ---
         // boolean IsBlue = false; // set before match
@@ -48,13 +54,16 @@ public class Everything extends LinearOpMode {
         // AutoDrive autoDrive = new AutoDrive(follower, IsBlue, close);
         // follower.setStartingPose(autoDrive.getAutoParkingPose());
 
-        robot.stopFeed();
-
         waitForStart();
+
+        robot.stopFeed();
+        robot.turret.resetEncoder();
 
         while (opModeIsActive()) {
             // Inputs
             updateGamepads();
+
+            // ------ Gamepad One ------
 
             // Driving
             robot.mecanumDrive.move(
@@ -63,68 +72,6 @@ public class Everything extends LinearOpMode {
                     -currentGp1.right_stick_x * RobotConstants.Drive.SPEED_MULTIPLIER
             );
 
-            // Odometry
-            // follower.update();
-            // Pose robotPose = follower.getPose();
-            // Pose goalPose = autoDrive.getGoalPose();
-
-            // Vision
-            LLResult result = robotHardware.limelight.getLatestResult();
-
-            // Vision-driven turret
-            vision.update(
-                    result,
-                    currentGp2.y,
-                    robot.turret.getAngle()
-            );
-            robotHardware.turretMotor.setPower(vision.getOutputPower());
-
-            // =========================
-            // DISTANCE + SHOOTER
-            // =========================
-            // distance = distance from ROBOT to GOAL (not tag)
-            // AutoShoot.update(robotHardware, vision, helpers, robotPose, goalPose); // Looking kinda clean now
-
-            // =========================
-            // DRIVER SHOOTER TRIGGER
-            // =========================
-            // if (gamepad2.a && !AutoShoot.isBusy()) {
-            //     AutoShoot.startShooting(3); // hood/RPM ignored now
-            // }
-
-
-            // =========================
-            // AUTO DRIVE TRIGGERS
-            // =========================
-            // Auto drive is a bad idea
-            // double distance = odometryShooter.getDistanceToGoal(robotPose, goalPose);
-
-            // if (helpers.currentGp1.left_bumper && !helpers.previousGp1.left_bumper && !AutoDriveActive) {
-            //     if (distance > 5) {
-            //         autoDrive = new AutoDrive(follower, IsBlue, true);
-            //         autoDrive.driveToShoot();
-            //         AutoDriveActive = true;
-            //     }
-            // }
-
-            // if (helpers.currentGp1.left_bumper && !helpers.previousGp1.left_bumper && !AutoDriveActive) {
-            //     if (distance > 5) {
-            //         autoDrive = new AutoDrive(follower, IsBlue, false);
-            //         autoDrive.driveToShoot();
-            //         AutoDriveActive = true;
-            //     }
-            // }
-
-            // if (AutoDriveActive && !follower.isBusy()) {
-            //     AutoDriveActive = false;
-            // }
-
-
-            // =========================
-            // SHOOTER STATE MACHINE
-            // =========================
-
-            // if (!AutoShoot.isBusy()) {
             // Intake
             if (currentGp1.right_trigger > 0.1) {
                 robot.stopFeed();
@@ -136,6 +83,47 @@ public class Everything extends LinearOpMode {
                 robot.stopFeed();
                 robot.stopIntake();
             }
+
+            // Odometry
+            // follower.update();
+            // Pose robotPose = follower.getPose();
+            // Pose goalPose = autoDrive.getGoalPose();
+
+            // Vision
+            LLResult result = robotHardware.limelight.getLatestResult();
+
+            // Vision-driven turret
+            boolean doTracking = currentGp2.y;
+
+            vision.update(
+                    result,
+                    doTracking,
+                    robot.turret.getAngle()
+            );
+            robotHardware.turretMotor.setPower(vision.getOutputPower());
+
+            if (doTracking && vision.isNewTargetAcquired()) {
+                // Jolt when a new tag is aquired
+                currentGp2.rumble(0.3, 0.3, 300);
+                wasAligned = false;
+            } else if (doTracking && vision.isAligned()) {
+                // Rumble gently when aligned
+                if (!wasAligned) {
+                    currentGp2.rumble(0.1, 0.1, 100000);
+                    wasAligned = true;
+                }
+            } else {
+                currentGp2.stopRumble();
+                wasAligned = false;
+            }
+
+            // =========================
+            // DISTANCE + SHOOTER
+            // =========================
+            // distance = distance from ROBOT to GOAL (not tag)
+            // AutoShoot.update(robotHardware, vision, helpers, robotPose, goalPose); // Looking kinda clean now
+
+            shooterController.update(robot, gamepad2.left_trigger > 0.3, 1600, 0);
 
             // Telemetry
             telemetry.addLine("----ODOMETRY----");

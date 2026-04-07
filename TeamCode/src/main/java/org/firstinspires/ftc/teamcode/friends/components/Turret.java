@@ -29,13 +29,9 @@ public class Turret {
         motor.setPower(Range.clip(power, -1, 1));
     }
 
-    public double getAngle() {
-        return motor.getCurrentPosition() / TICKS_PER_DEGREE;
-    }
+    public double getAngle() { return motor.getCurrentPosition() / TICKS_PER_DEGREE; }
 
-    public double getTicks() {
-        return motor.getCurrentPosition();
-    }
+    public double getTicks() { return motor.getCurrentPosition(); }
 
     public void resetEncoder() {
         motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);

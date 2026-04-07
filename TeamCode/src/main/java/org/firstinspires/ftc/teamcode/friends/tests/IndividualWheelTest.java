@@ -1,11 +1,13 @@
 package org.firstinspires.ftc.teamcode.friends.tests;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.friends.components.RobotHardware;
 
-@TeleOp(name = "Individual Wheel Test", group = "Testing")
+@Disabled
+@TeleOp(name = "Individual Wheel Test", group = "Test")
 public class IndividualWheelTest extends LinearOpMode {
 
     RobotHardware robot;
