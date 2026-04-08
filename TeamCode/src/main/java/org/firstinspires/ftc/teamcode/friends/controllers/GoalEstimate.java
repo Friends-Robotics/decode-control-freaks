@@ -1,12 +1,12 @@
 package org.firstinspires.ftc.teamcode.friends.controllers;
 
 public class GoalEstimate {
-    public final double error;    // Degrees off target
+    public final double degreesFromTarget;    // Degrees off target
     public final double distance; // Inches to target
     public final boolean isEstimated;   // Can we actually see or estimate the goal?
 
-    public GoalEstimate(double error, double distance, boolean isEstimated) {
-        this.error = error;
+    public GoalEstimate(double degreesFromTarget, double distance, boolean isEstimated) {
+        this.degreesFromTarget = degreesFromTarget;
         this.distance = distance;
         this.isEstimated = isEstimated;
     }

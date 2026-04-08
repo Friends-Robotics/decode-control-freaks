@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.teamcode.friends.helpers.Utils;
 
@@ -34,7 +35,7 @@ public class ServoTest extends LinearOpMode {
             if(currentGamepad.dpad_down && !(previousGamepad.dpad_down))
                 servoPosition -= 0.05f;
 
-            servoPosition = Utils.clamp(servoPosition, 0, 1);
+            servoPosition = Range.clip(servoPosition, 0, 1);
 
             if (currentGamepad.left_bumper) {
                 servo.setPosition(servoPosition);

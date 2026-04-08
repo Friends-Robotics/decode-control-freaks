@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.friends.controllers;
 
 import org.firstinspires.ftc.teamcode.friends.helpers.LowPassFilter;
 import org.firstinspires.ftc.teamcode.friends.helpers.PIDFController;
+import org.firstinspires.ftc.teamcode.friends.helpers.Utils;
 
 public class ShooterController {
     private final LowPassFilter rpmFilter;
@@ -27,12 +28,12 @@ public class ShooterController {
         rpmFilter.reset();
     }
 
-    public double calculate(double target, double raw) {
-        return pidf.calculate(target, rpmFilter.estimate(raw));
+    public double calculate(double targetRPM, double currentRPM) {
+        return pidf.calculate(targetRPM, rpmFilter.estimate(currentRPM));
     }
 
-    public boolean isReady(double target, double currentRaw) {
-        double currentFiltered = rpmFilter.estimate(currentRaw);
-        return Math.abs(target - currentFiltered) < RobotConstants.Shooter.RPM_TOLERANCE;
+    public boolean isReady(double targetRPM, double currentRPM) {
+        double currentFiltered = rpmFilter.estimate(currentRPM);
+        return Utils.withinTolerance(currentFiltered, targetRPM, RobotConstants.Shooter.RPM_TOLERANCE);
     }
 }
