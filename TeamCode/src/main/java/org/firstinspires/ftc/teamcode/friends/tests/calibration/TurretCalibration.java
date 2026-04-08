@@ -23,6 +23,8 @@ public class TurretCalibration extends LinearOpMode {
             RobotConstants.Turret.kD,
             RobotConstants.Turret.kS,
             RobotConstants.Turret.kV,
+            0.0,
+            0.0,
             RobotConstants.Turret.iLimit
     );
 
@@ -51,7 +53,9 @@ public class TurretCalibration extends LinearOpMode {
                     RobotConstants.Turret.kI,
                     RobotConstants.Turret.kD,
                     RobotConstants.Turret.kS,
-                    RobotConstants.Turret.kV
+                    RobotConstants.Turret.kV,
+                    0.0,
+                    0.0
             );
 
             targetAngle = Range.clip(targetAngle, Turret.MIN_ANGLE, Turret.MAX_ANGLE);

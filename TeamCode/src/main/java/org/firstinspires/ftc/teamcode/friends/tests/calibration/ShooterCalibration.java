@@ -5,8 +5,10 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.Range;
 
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.friends.components.Robot;
 import org.firstinspires.ftc.teamcode.friends.components.RobotHardware;
+import org.firstinspires.ftc.teamcode.friends.components.Shooter;
 import org.firstinspires.ftc.teamcode.friends.controllers.RobotConstants;
 import org.firstinspires.ftc.teamcode.friends.helpers.PIDFController;
 
@@ -22,6 +24,8 @@ public class ShooterCalibration extends LinearOpMode {
             RobotConstants.Shooter.kD,
             RobotConstants.Shooter.kS,
             RobotConstants.Shooter.kV,
+            0.0,
+            0.0,
             RobotConstants.Shooter.iLimit
     );
 
@@ -38,37 +42,39 @@ public class ShooterCalibration extends LinearOpMode {
         waitForStart();
 
         while (opModeIsActive()) {
-            robot.intake();
-            robot.startFeed();
+            robot.intake.intake();
+            robot.shooter.startFeed();
 
             shooterPID.setPIDF(
                     RobotConstants.Shooter.kP,
                     RobotConstants.Shooter.kI,
                     RobotConstants.Shooter.kD,
                     RobotConstants.Shooter.kS,
-                    RobotConstants.Shooter.kV
+                    RobotConstants.Shooter.kV,
+                    0.0,
+                    0.0
             );
 
-            double targetVelocity = (targetRPM * RobotConstants.Shooter.SHOOTER_TICKS_PER_REV) / 60.0;
+            double targetVelocity = (targetRPM * Shooter.SHOOTER_TICKS_PER_REV) / 60.0;
 
-            double currentVelocity = robot.getShooterVelocity();
+            double currentVelocity = robot.shooter.getVelocity();
 
             double shooterPower = shooterPID.calculate(targetVelocity, currentVelocity);
 
             // 5. Apply Power & Safety
-            shooterPower = Range.clip(shooterPower, 0, RobotConstants.Shooter.MAX_POWER);
+            shooterPower = Range.clip(shooterPower, 0, Shooter.MAX_POWER);
 
             if (targetRPM <= 0) {
-                robot.setShooterPower(0);
+                robot.shooter.setPower(0);
                 shooterPID.reset();
             } else {
-                robot.setShooterPower(shooterPower);
+                robot.shooter.setPower(shooterPower);
             }
 
             // 6. Telemetry for Graphing in Dashboard
             telemetry.addData("Target RPM", targetRPM);
-            telemetry.addData("Current RPM", robot.getShooterRPM());
-            telemetry.addData("Shooter Current", robot.getShooterCurrentDraw());
+            telemetry.addData("Current RPM", robot.shooter.getRPM());
+            telemetry.addData("Shooter Current", robot.shooter.getCurrent(CurrentUnit.AMPS));
             telemetry.addData("Target Velocity (TPS)", targetVelocity);
             telemetry.addData("Current Velocity (TPS)", currentVelocity);
             telemetry.addData("Applied Power", shooterPower);

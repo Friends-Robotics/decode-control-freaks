@@ -5,35 +5,58 @@ import com.acmerobotics.dashboard.config.Config;
 public class RobotConstants {
     @Config
     public static class Drive {
+        public static double DEADBAND = 0.05;
+        public static double STRAFE_SPEED_MULTIPLIER = 1.1;
         public static double SPEED_MULTIPLIER = 0.8;
+        public static double MAX_ACCEL = 0.3;
     }
 
     @Config
     public static class Turret {
+        public static double kP_CLOSE = 0.0;
+        public static double kP_FAR = 0.0;
         public static double kP = 0.1;
         public static double kS = 0.2;
         public static double kI = 0.0003;
         public static double kD = 0.002;
-        public static double kV = 0.0;       // No velocity FF needed for turret
+        public static double kV = 0.0;
         public static double iLimit = 0.5;
 
-        public static double ALIGN_TOLERANCE = 2.5;  // Degrees
-        public static double MAX_POWER = 0.9;        // Cap for high-speed tracking
-        public static double HOME_POWER = 0.4;       // Cap for gentle homing
+        public static double visionkP = 0.0;
+        public static double visionkS = 0.0;
+        public static double visionkI = 0.0;
+        public static double visionkD = 0.0;
+        public static double visionkV = 0.0;
+        public static double visioniLimit = 0.5;
+
+        public static double ALIGN_TOLERANCE = 2.5;
+        public static double MAX_POWER = 0.9;
+        public static double HOME_POWER = 0.4;
     }
 
     @Config
     public static class Shooter {
-        public static double kP = 0.055;
-        public static double kS = 0.0;
+        public static double kP = 0.01;
+        public static double kS = 0.04;
         public static double kI = 0.0;
-        public static double kD = 0.0001;
-        public static double kV = 0.00069;
+        public static double kD = 0.0;
+        public static double kV = 0.0007;
         public static double iLimit = 0.5;
 
-        public static final double SHOOTER_TICKS_PER_REV = 28; // Update this based on your motor (e.g., 28 for 5203)
-        public static final double MAX_POWER = 1; // Update this based on your motor (e.g., 28 for 5203)
-        public static final double IDLE_RPM = 650;
+        public static double CLOSE_RPM = 2100;
+        public static double FAR_RPM = 3150;
+        public static double IDLE_RPM = 500;
         public static double RPM_TOLERANCE = 150;
+        public static double RPM_LPF_GAIN = 0.3;
+
+        public static double MAX_POWER = 0.9;
+    }
+
+    @Config
+    public static class Vision {
+        public static double LPF_GAIN = 0.3;
+        public static double TARGET_HEIGHT = 29.5;
+        public static double CAMERA_ANGLE = 29.5;
+        public static double CAMERA_HEIGHT = 29.5;
     }
 }

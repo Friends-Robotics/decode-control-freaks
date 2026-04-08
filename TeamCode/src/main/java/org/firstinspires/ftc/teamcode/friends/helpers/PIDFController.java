@@ -1,55 +1,70 @@
 package org.firstinspires.ftc.teamcode.friends.helpers;
 
+import com.qualcomm.robotcore.util.Range;
+
 /**
- * PIDF Controller wrapper.
- * Adds a Feedforward component (kf) to the standard PID logic.
+ * PIDFController inherits from PIDController and adds Feedforward components.
+ * Best used for mechanisms requiring predictive power like Flywheels, Lifts, and Arms.
  */
 public class PIDFController extends PIDController {
-    private double ks; // Static friction
-    private double kv; // Velocity
+    // Feedforward Constants
+    protected double kS; // Static friction (minimum power to break stiction)
+    protected double kV; // Velocity (power to maintain constant speed)
+    protected double kA; // Acceleration (power to change speed)
+    protected double kG; // Gravity (power to hold position against a constant force)
 
     /**
-     * Constructs a new PIDF controller
-     * @param kp Proportional gain
-     * @param ki Integral gain
-     * @param kd Derivative gain
-     * @param ks Feedforward gain (static, e.g. a constant static feedforward resistance such as friction)
-     * @param kv Feedforward gain (proportional, e.g. a resistance proportional to the target)
-     * @param integralLimit The maximum absolute value the integral term can reach
+     * Constructs a new PIDF controller with full constants.
      */
-    public PIDFController(double kp, double ki, double kd, double ks, double kv, double integralLimit) {
-        super(kp, ki, kd, integralLimit);
-        this.ks = ks;
-        this.kv = kv;
+    public PIDFController(double kP, double kI, double kD, double kS, double kV, double kA, double kG, double integralLimit) {
+        super(kP, kI, kD, integralLimit);
+        this.kS = kS;
+        this.kV = kV;
+        this.kA = kA;
+        this.kG = kG;
     }
 
-    /**
-     * Calculates the control output based on the current system state
-     * @param target The desired setpoint (where you want to be)
-     * @param state  The current measured value (where you are now)
-     * @return The calculated control output to be applied to the system
-     */
     @Override
     public double calculate(double target, double state) {
-        // Use the parent's calculate method to get the base PID output
+        return calculate(target, state, 0, 0);
+    }
+
+    /**
+     * Full PIDF calculation.
+     * @param target Desired setpoint (Position/RPM)
+     * @param state Current measured value
+     * @param targetVel The target velocity (from a motion profile)
+     * @param targetAccel The target acceleration (from a motion profile)
+     */
+    public double calculate(double target, double state, double targetVel, double targetAccel) {
         double pidOutput = super.calculate(target, state);
 
-        // Calculate Feedforward terms
-        double error = target - state;
-        double staticFF = Math.signum(error) * ks;
-        double velocityFF = target * kv;
+        if (pidOutput == 0 && Math.abs(target - state) <= targetTolerance) {
+            return 0.0;
+        }
 
-        return pidOutput + staticFF + velocityFF;
+        double staticFF = Math.signum(target - state) * kS;
+
+        double velocityFF = targetVel * kV;
+        double accelerationFF = targetAccel * kA;
+
+        double gravityFF = kG;
+
+        double totalOutput = pidOutput + staticFF + velocityFF + accelerationFF + gravityFF;
+
+        return Range.clip(totalOutput, minOutput, maxOutput);
     }
 
-    public void setPIDF(double kp, double ki, double kd, double ks, double kv) {
-        this.kp = kp;
-        this.ki = ki;
-        this.kd = kd;
-        this.ks = ks;
-        this.kv = kv;
+    public void setPIDF(double kP, double kI, double kD, double kS, double kV, double kA, double kG) {
+        setPID(kP, kI, kD);
+        this.kS = kS;
+        this.kV = kV;
+        this.kA = kA;
+        this.kG = kG;
     }
 
-    public void setKs(double ks) { this.ks = ks; }
-    public void setKv(double kv) { this.kv = kv; }
+    public void setkS(double kS) { this.kS = kS; }
+    public void setkV(double kV) { this.kV = kV; }
+    public void setkA(double kA) { this.kA = kA; }
+    public void setkG(double kG) { this.kG = kG; }
 }

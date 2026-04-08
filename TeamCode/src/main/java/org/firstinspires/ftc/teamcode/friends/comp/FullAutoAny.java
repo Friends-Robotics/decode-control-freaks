@@ -112,11 +112,11 @@ public class FullAutoAny extends LinearOpMode {
 
                 case SHOOTING_CYCLE:
                     // Wait for ShooterController to finish
-                    if (!shooterController.isBusy()) {
+                    if (true /*!shooterController.isBusy()*/) {
                         // Start intake cycle
                         if (cycleIndex < MAX_CYCLES) {
                             buildNewCycle();
-                            robot.intake();
+                            robot.intake.intake();
                             follower.followPath(intakeFullPath);
                             currentState = AutoState.DRIVE_TO_INTAKE;
                         } else {
@@ -127,7 +127,7 @@ public class FullAutoAny extends LinearOpMode {
 
                 case DRIVE_TO_INTAKE:
                     if (!follower.isBusy()) {
-                        robot.stopIntake();
+                        robot.intake.stop();
                         follower.followPath(shootPath);
                         currentState = AutoState.DRIVE_TO_SHOOT;
                     }
@@ -135,7 +135,7 @@ public class FullAutoAny extends LinearOpMode {
 
                 case DRIVE_TO_SHOOT:
                     if (!follower.isBusy()) {
-                        shooterController.startShooting(3);
+                        // shooterController.startShooting(3);
                         currentState = AutoState.SHOOTING_CYCLE;
                         cycleIndex++;
                     }
@@ -151,8 +151,8 @@ public class FullAutoAny extends LinearOpMode {
                 case DONE:
                     if(!follower.isBusy())
                     {
-                        robot.setShooterPower(0); // Stop shooter
-                        robot.stopIntake();
+                        robot.shooter.setPower(0);
+                        robot.intake.intake();
                     }
                     break;
             }
@@ -163,7 +163,7 @@ public class FullAutoAny extends LinearOpMode {
             telemetry.addData("X", currentPose.getX());
             telemetry.addData("Y", currentPose.getY());
             telemetry.addData("Heading", Math.toRadians(currentPose.getHeading()));
-            telemetry.addData("Current RPM", shooterController.targetRPM);
+            // telemetry.addData("Current RPM", shooterController.targetRPM);
             telemetry.update();
         }
     }

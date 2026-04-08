@@ -32,6 +32,7 @@ public class RobotHardware {
     public final Limelight3A limelight;
 
     public RobotHardware(com.qualcomm.robotcore.hardware.HardwareMap hardwareMap) {
+        // RUN_WITHOUT_ENCODER tells the builtin motor PID not to run
         frontRightMotor = hardwareMap.get(DcMotorEx.class, "FRM");
         frontRightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         frontRightMotor.setDirection(DcMotorSimple.Direction.FORWARD);
@@ -49,7 +50,7 @@ public class RobotHardware {
         feeder = hardwareMap.get(Servo.class, "Feeder");
 
         shooterMotor1 = hardwareMap.get(DcMotorEx.class, "Shooter1");
-        shooterMotor1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER); // This tells the builtin motor PID not to run
+        shooterMotor1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         shooterMotor1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         shooterMotor1.setDirection(DcMotorSimple.Direction.REVERSE);
 

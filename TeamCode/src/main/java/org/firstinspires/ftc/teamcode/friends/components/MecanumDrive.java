@@ -1,47 +1,68 @@
 package org.firstinspires.ftc.teamcode.friends.components;
 
-public class MecanumDrive {
-    private final RobotHardware robotHardware;
-    private static final double DEADBAND = 0.05;
-    private static final double STRAFE_FRICTION_OFFSET = 1.1;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
+import org.firstinspires.ftc.teamcode.friends.controllers.RobotConstants;
 
-    public MecanumDrive(RobotHardware robotHardware) {
-        this.robotHardware = robotHardware;
+public class MecanumDrive {
+    private final DcMotorEx frontLeftMotor;
+    private final DcMotorEx backLeftMotor;
+    private final DcMotorEx frontRightMotor;
+    private final DcMotorEx backRightMotor;
+
+    private double lastFL = 0;
+    private double lastBL = 0;
+    private double lastFR = 0;
+    private double lastBR = 0;
+
+    public MecanumDrive(DcMotorEx frontLeftMotor, DcMotorEx backLeftMotor, DcMotorEx frontRightMotor, DcMotorEx backRightMotor) {
+        this.frontLeftMotor = frontLeftMotor;
+        this.backLeftMotor = backLeftMotor;
+        this.frontRightMotor = frontRightMotor;
+        this.backRightMotor = backRightMotor;
     }
 
-    /**
-     * Moves the robot
-     */
     public void move(double drive, double strafe, double rotate) {
-        // Apply deadband to prevent stick drift
-        drive = Math.abs(drive) < DEADBAND ? 0 : drive;
-        strafe = Math.abs(strafe) < DEADBAND ? 0 : strafe;
-        rotate = Math.abs(rotate) < DEADBAND ? 0 : rotate;
+        drive = Math.abs(drive) < RobotConstants.Drive.DEADBAND ? 0 : drive;
+        strafe = Math.abs(strafe) < RobotConstants.Drive.DEADBAND ? 0 : strafe;
+        rotate = Math.abs(rotate) < RobotConstants.Drive.DEADBAND ? 0 : rotate;
 
-        // The strafe friction offset compensates for speed when strafing
-        double fl = drive + (strafe * STRAFE_FRICTION_OFFSET) + rotate;
-        double bl = drive - (strafe * STRAFE_FRICTION_OFFSET) + rotate;
-        double fr = drive - (strafe * STRAFE_FRICTION_OFFSET) - rotate;
-        double br = drive + (strafe * STRAFE_FRICTION_OFFSET) - rotate;
+        double targetFL = drive + (strafe * RobotConstants.Drive.STRAFE_SPEED_MULTIPLIER) + rotate;
+        double targetBL = drive - (strafe * RobotConstants.Drive.STRAFE_SPEED_MULTIPLIER) + rotate;
+        double targetFR = drive - (strafe * RobotConstants.Drive.STRAFE_SPEED_MULTIPLIER) - rotate;
+        double targetBR = drive + (strafe * RobotConstants.Drive.STRAFE_SPEED_MULTIPLIER) - rotate;
 
-        // Get the maximum power to normalise
-        double max = Math.max(Math.abs(fl),
-                     Math.max(Math.abs(bl),
-                     Math.max(Math.abs(fr),
-                              Math.abs(br))));
+        double max = Math.max(Math.abs(targetFL),
+                Math.max(Math.abs(targetBL),
+                        Math.max(Math.abs(targetFR),
+                                Math.abs(targetBR))));
 
-        // Normalise the powers
         if (max > 1.0) {
-            fl /= max;
-            bl /= max;
-            fr /= max;
-            br /= max;
+            targetFL /= max; targetBL /= max; targetFR /= max; targetBR /= max;
         }
 
-        // Set the actual motor powers
-        robotHardware.frontLeftMotor.setPower(fl);
-        robotHardware.backLeftMotor.setPower(bl);
-        robotHardware.frontRightMotor.setPower(fr);
-        robotHardware.backRightMotor.setPower(br);
+        lastFL = ramp(lastFL, targetFL * RobotConstants.Drive.SPEED_MULTIPLIER);
+        lastBL = ramp(lastBL, targetBL * RobotConstants.Drive.SPEED_MULTIPLIER);
+        lastFR = ramp(lastFR, targetFR * RobotConstants.Drive.SPEED_MULTIPLIER);
+        lastBR = ramp(lastBR, targetBR * RobotConstants.Drive.SPEED_MULTIPLIER);
+
+        frontLeftMotor.setPower(lastFL);
+        backLeftMotor.setPower(lastBL);
+        frontRightMotor.setPower(lastFR);
+        backRightMotor.setPower(lastBR);
+    }
+
+    private double ramp(double current, double target) {
+        double delta = target - current;
+        if (Math.abs(delta) > RobotConstants.Drive.MAX_ACCEL) {
+            return current + (Math.signum(delta) * RobotConstants.Drive.MAX_ACCEL);
+        } else {
+            return target;
+        }
+    }
+
+    public double getCurrent(CurrentUnit currentUnit) {
+        return frontLeftMotor.getCurrent(currentUnit) + backLeftMotor.getCurrent(currentUnit) +
+                frontRightMotor.getCurrent(currentUnit) + backRightMotor.getCurrent(currentUnit);
     }
 }

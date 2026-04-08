@@ -1,94 +1,90 @@
 package org.firstinspires.ftc.teamcode.friends.helpers;
 
-public class PIDController {
-    protected double kp;
-    protected double ki;
-    protected double kd;
+import com.qualcomm.robotcore.util.Range;
 
+public class PIDController {
+    // PID Constants
+    protected double kP;
+    protected double kI;
+    protected double kD;
+
+    // State Variables
     protected double lastState = 0;
     protected double integral = 0;
     protected double lastTime = 0;
-
-    protected double integralLimit;
     protected boolean firstRun = true;
 
-    /**
-     * Constructs a new PID controller
-     * @param kp Proportional gain
-     * @param ki Integral gain
-     * @param kd Derivative gain
-     */
+    // Constraints
+    protected double integralLimit;
+    protected double minOutput = -1.0;
+    protected double maxOutput = 1.0;
+    protected double targetTolerance = 0.0;
+
     public PIDController(double kp, double ki, double kd) {
         this(kp, ki, kd, Double.MAX_VALUE);
     }
 
-    /**
-     * Constructs a new PID controller
-     * @param kp Proportional gain
-     * @param ki Integral gain
-     * @param kd Derivative gain
-     * @param integralLimit The maximum absolute value the integral term can reach
-     */
     public PIDController(double kp, double ki, double kd, double integralLimit) {
-        this.kp = kp;
-        this.ki = ki;
-        this.kd = kd;
+        this.kP = kp;
+        this.kI = ki;
+        this.kD = kd;
         this.integralLimit = integralLimit;
     }
 
     /**
-     * Calculates the control output based on the current system state.
-     * * @param target The desired setpoint (where you want to be).
-     * @param state  The current measured value (where you are now).
-     * @return The calculated control output to be applied to the system.
+     * Calculates output of the PID controller
      */
     public double calculate(double target, double state) {
-        double now = System.nanoTime() / 1e9; // Divide to ensure the value is not massive
+        double now = System.nanoTime() / 1e9;
 
-        // Initialization on the first loop to prevent dt spikes
         if (firstRun) {
             lastTime = now;
             lastState = state;
             firstRun = false;
-            return 0;
+            return 0.0;
         }
 
         double dt = now - lastTime;
-
         if (dt <= 0) return 0;
 
         double error = target - state;
-        double pTerm = kp * error;
+
+        // Deadband check
+        if (Math.abs(error) <= targetTolerance) {
+            return 0.0;
+        }
+
+        double pTerm = kP * error;
 
         integral += error * dt;
-        integral = Utils.clamp(integral, -integralLimit, integralLimit);
-        double iTerm = ki * integral;
+        integral = Range.clip(integral, -integralLimit, integralLimit);
+        double iTerm = kI * integral;
 
         double derivative = -(state - lastState) / dt;
-        double dTerm = kd * derivative;
+        double dTerm = kD * derivative;
 
         lastTime = now;
         lastState = state;
 
-        return pTerm + iTerm + dTerm;
+        double output = pTerm + iTerm + dTerm;
+        return Range.clip(output, minOutput, maxOutput);
     }
 
-    /**
-     * Resets the internal state (integral and timers).
-     */
     public void reset() {
         integral = 0;
         firstRun = true;
     }
 
-    public void setPID(double kp, double ki, double kd) {
-        this.kp = kp;
-        this.ki = ki;
-        this.kd = kd;
+    public void setPID(double kP, double kI, double kD) {
+        this.kP = kP;
+        this.kI = kI;
+        this.kD = kD;
     }
 
-    public void setKp(double kp) { this.kp = kp; }
-    public void setKi(double ki) { this.ki = ki; }
-    public void setKd(double kd) { this.kd = kd; }
+    public void setkP(double kP) { this.kP = kP; }
+    public void setkI(double kI) { this.kI = kI; }
+    public void setkD(double kD) { this.kD = kD; }
     public void setIntegralLimit(double limit) { this.integralLimit = limit; }
+    public void setTolerance(double tolerance) { this.targetTolerance = tolerance; }
+    public void setOutputBounds(double min, double max) { this.minOutput = min; this.maxOutput = max; }
 }

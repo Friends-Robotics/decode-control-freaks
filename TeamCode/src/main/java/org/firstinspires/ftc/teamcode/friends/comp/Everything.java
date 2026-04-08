@@ -5,157 +5,140 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Gamepad;
 
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.friends.components.Robot;
 import org.firstinspires.ftc.teamcode.friends.components.RobotHardware;
+import org.firstinspires.ftc.teamcode.friends.controllers.GoalEstimate;
+import org.firstinspires.ftc.teamcode.friends.controllers.GoalFusion;
 import org.firstinspires.ftc.teamcode.friends.controllers.RobotConstants;
 import org.firstinspires.ftc.teamcode.friends.controllers.ShooterController;
-import org.firstinspires.ftc.teamcode.friends.vision.VisionAlign;
+import org.firstinspires.ftc.teamcode.friends.controllers.TurretController;
 
-@TeleOp(name = "Drive + Intake + Shooting")
+@TeleOp(name = "FSM: Drive + Fusion + Shooting")
 public class Everything extends LinearOpMode {
     private RobotHardware robotHardware;
     private Robot robot;
 
-    private VisionAlign vision;
-    private boolean wasAligned = false;
-
+    private TurretController turretController;
     private ShooterController shooterController;
+    private GoalFusion goalFusion;
 
-    // private Follower follower;
-    // private OdometryShooter odometryShooter;
+    enum RobotState { IDLE, INTAKING, OUTTAKING, ALIGNING, SHOOTING }
+    private RobotState currentState = RobotState.IDLE;
+    private RobotState lastState = RobotState.IDLE;
 
     private final Gamepad currentGp1 = new Gamepad();
-    private final Gamepad previousGp1 = new Gamepad();
     private final Gamepad currentGp2 = new Gamepad();
-    private final Gamepad previousGp2 = new Gamepad();
 
     @Override
     public void runOpMode() throws InterruptedException {
         robotHardware = new RobotHardware(hardwareMap);
         robot = new Robot(robotHardware);
 
-        vision = new VisionAlign();
+        turretController = new TurretController();
         shooterController = new ShooterController();
-        // odometryShooter = new OdometryShooter();
-
-        telemetry.addLine("WARNING: Ensure the turret is centered");
-        telemetry.update();
-
-        robotHardware.limelight.setPollRateHz(100);
-        robotHardware.limelight.start();
-        robotHardware.limelight.pipelineSwitch(1); // 0 blue 1 red
-
-        // // --- ODOMETRY / PEDRO ---
-        // boolean IsBlue = false; // set before match
-        // boolean close = true;   // set based on auto
-
-        // follower = Constants.createFollower(hardwareMap);
-        // AutoDrive autoDrive = new AutoDrive(follower, IsBlue, close);
-        // follower.setStartingPose(autoDrive.getAutoParkingPose());
+        goalFusion = new GoalFusion();
 
         waitForStart();
-
-        robot.stopFeed();
-        robot.turret.resetEncoder();
+        robot.shooter.startLimelight(false);
 
         while (opModeIsActive()) {
-            // Inputs
-            updateGamepads();
+            currentGp1.copy(gamepad1);
+            currentGp2.copy(gamepad2);
 
-            // ------ Gamepad One ------
+            // Gather data
+            LLResult llResult = robotHardware.limelight.getLatestResult();
+            Pose2D pose = robotHardware.pinpoint.getPosition();
+            double turretAngle = robot.turret.getAngle();
+            double currentRPM = robot.shooter.getRPM();
 
-            // Driving
-            robot.mecanumDrive.move(
-                    currentGp1.left_stick_y * RobotConstants.Drive.SPEED_MULTIPLIER,
-                    -currentGp1.left_stick_x * RobotConstants.Drive.SPEED_MULTIPLIER,
-                    -currentGp1.right_stick_x * RobotConstants.Drive.SPEED_MULTIPLIER
-            );
+            // Update the estimate of the goal
+            GoalEstimate estimate = goalFusion.update(llResult, pose, turretAngle);
 
-            // Intake
-            if (currentGp1.right_trigger > 0.1) {
-                robot.stopFeed();
-                robot.intake();
-            } else if (currentGp1.left_trigger > 0.1) {
-                robot.startFeed();
-                robot.outtake();
-            } else {
-                robot.stopFeed();
-                robot.stopIntake();
-            }
+            // 2. STATE TRANSITION LOGIC
+            if (currentGp2.dpad_up || currentGp2.dpad_down) {
+                double target = currentGp2.dpad_up ? RobotConstants.Shooter.FAR_RPM : RobotConstants.Shooter.CLOSE_RPM;
 
-            // Odometry
-            // follower.update();
-            // Pose robotPose = follower.getPose();
-            // Pose goalPose = autoDrive.getGoalPose();
-
-            // Vision
-            LLResult result = robotHardware.limelight.getLatestResult();
-
-            // Vision-driven turret
-            boolean doTracking = currentGp2.y;
-
-            vision.update(
-                    result,
-                    doTracking,
-                    robot.turret.getAngle()
-            );
-            robotHardware.turretMotor.setPower(vision.getOutputPower());
-
-            if (doTracking && vision.isNewTargetAcquired()) {
-                // Jolt when a new tag is aquired
-                currentGp2.rumble(0.3, 0.3, 300);
-                wasAligned = false;
-            } else if (doTracking && vision.isAligned()) {
-                // Rumble gently when aligned
-                if (!wasAligned) {
-                    currentGp2.rumble(0.1, 0.1, 100000);
-                    wasAligned = true;
+                // Switch to SHOOTING only if Shooter is at RPM AND Turret is pointed at target
+                if (shooterController.isReady(target, currentRPM) && turretController.isAligned(estimate.error)) {
+                    currentState = RobotState.SHOOTING;
+                } else {
+                    currentState = RobotState.ALIGNING;
                 }
+            } else if (currentGp1.right_trigger > 0.1) {
+                currentState = RobotState.INTAKING;
+            } else if (currentGp1.left_trigger > 0.1) {
+                currentState = RobotState.OUTTAKING;
             } else {
-                currentGp2.stopRumble();
-                wasAligned = false;
+                currentState = RobotState.IDLE;
             }
 
-            // =========================
-            // DISTANCE + SHOOTER
-            // =========================
-            // distance = distance from ROBOT to GOAL (not tag)
-            // AutoShoot.update(robotHardware, vision, helpers, robotPose, goalPose); // Looking kinda clean now
+            // 3. RESET ON TRANSITION
+            if (currentState != lastState) {
+                shooterController.reset();
+                turretController.reset();
+            }
+            lastState = currentState;
 
-            shooterController.update(robot, gamepad2.left_trigger > 0.3, 1600, 0);
+            // 4. EXECUTION
+            double turretPower = 0;
+            double shooterPower = 0;
 
-            // Telemetry
-            telemetry.addLine("----ODOMETRY----");
-            telemetry.addLine();
-            telemetry.addData("Raw Forward", robotHardware.pinpoint.getPosY(DistanceUnit.INCH));
-            telemetry.addData("Raw Strafe", robotHardware.pinpoint.getPosX((DistanceUnit.INCH)));
-            // telemetry.addData("Robot Pose", robotPose);
-            // telemetry.addData("Distance to Goal (in)", distance);
-            telemetry.addLine();
-            telemetry.addLine("----SHOOTER----");
-            telemetry.addLine();
-            // telemetry.addData("Target RPM", AutoShoot.targetRPM);
-            telemetry.addData("Shooter RPM", robot.getShooterRPM());
-            // telemetry.addData("Hood", AutoShoot.hoodPos);
-            telemetry.addLine();
-            telemetry.addLine("----VISION----");
-            telemetry.addLine();
-            // telemetry.addData("tx", result.getTx());
-            // telemetry.addData("TurretPower", vision.getOutputPower());
-            telemetry.addData("Turret ticks", robotHardware.turretMotor.getCurrentPosition());
-            telemetry.addData("Turret state: ", vision.getCurrentState());
-            // telemetry.addData("Turret currentAngle", robot.getTurretAngle());
-            telemetry.addLine();
-            telemetry.update();
+            switch (currentState) {
+                case IDLE:
+                    robot.intake.stop();
+                    robot.shooter.stopFeed();
+                    // Home to 0 degrees using neutral distance for PID gains
+                    turretPower = turretController.update(0.0 - turretAngle, 40.0);
+                    break;
+
+                case INTAKING:
+                    robot.intake.intake();
+                    robot.shooter.stopFeed();
+                    turretPower = turretController.update(0.0 - turretAngle, 40.0);
+                    break;
+
+                case OUTTAKING:
+                    robot.intake.outtake();
+                    robot.shooter.startFeed(); // Use feed to help push out
+                    break;
+
+                case ALIGNING:
+                case SHOOTING:
+                    double targetRPM = currentGp2.dpad_up ? RobotConstants.Shooter.FAR_RPM : RobotConstants.Shooter.CLOSE_RPM;
+                    double hoodPos = currentGp2.dpad_up ? 0.25 : 0.0;
+
+                    robot.shooter.setHoodPosition(hoodPos);
+                    shooterPower = shooterController.calculate(targetRPM, currentRPM);
+                    turretPower = turretController.update(estimate.error, estimate.distance);
+
+                    if (currentState == RobotState.SHOOTING) {
+                        robot.shooter.startFeed();
+                        robot.intake.intake();
+                    } else {
+                        robot.shooter.stopFeed();
+                        robot.intake.stop();
+                    }
+                    break;
+            }
+
+            // 5. HARDWARE WRITE
+            robot.mecanumDrive.move(currentGp1.left_stick_y, -currentGp1.left_stick_x, -currentGp1.right_stick_x);
+            robot.turret.setPower(turretPower);
+            robot.shooter.setPower(shooterPower);
+
+            if (robot.intake.getCurrent(CurrentUnit.AMPS) > 3.5) gamepad1.rumble(300);
+
+            updateTelemetry(estimate, currentRPM);
         }
     }
 
-    private void updateGamepads() {
-        previousGp1.copy(currentGp1);
-        currentGp1.copy(gamepad1);
-
-        previousGp2.copy(currentGp2);
-        currentGp2.copy(gamepad2);
+    private void updateTelemetry(GoalEstimate est, double rpm) {
+        telemetry.addData("State", currentState);
+        telemetry.addData("Target Found", est.isEstimated);
+        telemetry.addData("Dist", (int)est.distance + " in");
+        telemetry.addData("RPM", (int)rpm);
+        telemetry.update();
     }
 }
