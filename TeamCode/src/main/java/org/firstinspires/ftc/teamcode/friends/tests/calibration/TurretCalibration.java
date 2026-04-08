@@ -68,7 +68,7 @@ public class TurretCalibration extends LinearOpMode {
             telemetry.addData("Target Angle: ", targetAngle);
             telemetry.addData("Angle: ", robot.turret.getAngle());
             telemetry.addData("Encoder Ticks", robot.turret.getTicks());
-            telemetry.addData("Turrert rotate power", turretRotatePower);
+            telemetry.addData("Turret rotate power", turretRotatePower);
             telemetry.update();
 
         }

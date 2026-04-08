@@ -22,14 +22,14 @@ public class TurretVisionCalibration extends LinearOpMode {
     public static double LPF_GAIN = 0.3;
 
     private final PIDFController visionPID = new PIDFController(
-            RobotConstants.Turret.visionkP,
-            RobotConstants.Turret.visionkI,
-            RobotConstants.Turret.visionkD,
-            RobotConstants.Turret.visionkS,
-            RobotConstants.Turret.visionkV,
+            RobotConstants.Turret.kP,
+            RobotConstants.Turret.kI,
+            RobotConstants.Turret.kD,
+            RobotConstants.Turret.kS,
+            RobotConstants.Turret.kV,
             0.0,
             0.0,
-            RobotConstants.Turret.visioniLimit
+            RobotConstants.Turret.iLimit
     );
 
     private double filteredTx = 0;
@@ -48,11 +48,11 @@ public class TurretVisionCalibration extends LinearOpMode {
 
         while (opModeIsActive()) {
             visionPID.setPIDF(
-                RobotConstants.Turret.visionkP,
-                RobotConstants.Turret.visionkI,
-                RobotConstants.Turret.visionkD,
-                RobotConstants.Turret.visionkS,
-                RobotConstants.Turret.visionkV,
+                RobotConstants.Turret.kP,
+                RobotConstants.Turret.kI,
+                RobotConstants.Turret.kD,
+                RobotConstants.Turret.kS,
+                RobotConstants.Turret.kV,
                 0.0,
                 0.0
             );

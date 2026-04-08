@@ -27,13 +27,6 @@ public class RobotConstants {
         public static double kV = 0.0;
         public static double iLimit = 0.5;
 
-        public static double visionkP = 0.0;
-        public static double visionkS = 0.0;
-        public static double visionkI = 0.0;
-        public static double visionkD = 0.0;
-        public static double visionkV = 0.0;
-        public static double visioniLimit = 0.5;
-
         public static double ALIGN_TOLERANCE = 2.5;
         public static double MAX_POWER = 0.9;
 

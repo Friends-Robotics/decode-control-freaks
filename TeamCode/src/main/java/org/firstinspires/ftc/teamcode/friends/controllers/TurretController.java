@@ -52,6 +52,6 @@ public class TurretController {
      * @return
      */
     public boolean isAligned(double degreesFromTarget) {
-        return Math.abs(degreesFromTarget) < RobotConstants.Turret.ALIGN_TOLERANCE;
+        return Utils.withinTolerance(degreesFromTarget, 0, RobotConstants.Turret.ALIGN_TOLERANCE);
     }
 }
