@@ -132,7 +132,7 @@ public class AutoClose extends LinearOpMode {
                     break;
 
                 case CYCLE:
-                    if(!follower.isBusy()) // Making sure i dont build cycles when follower is moving
+                    if(!follower.isBusy()) // Making sure i don't build cycles when follower is moving
                     {
                         if(cycleIndex < IntakePoses1.length)
                         {
