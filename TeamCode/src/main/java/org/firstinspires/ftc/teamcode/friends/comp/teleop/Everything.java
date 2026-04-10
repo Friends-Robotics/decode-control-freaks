@@ -69,19 +69,13 @@ public class Everything extends LinearOpMode {
                     latchedDistance = estimate.distance;
                 }
 
-                targetRPM = shooterController.getInterpolatedRPM(latchedDistance);
+                targetRPM = shooterController.getInterpolatedRPM(latchedDistance) + 100;
                 hoodPos = shooterController.getInterpolatedHood(latchedDistance);
             } else {
                 latchedDistance = 0;
             }
 
-            if (gamepad2.right_bumper) {
-                hoodOffset += 0.005;
-            } else if (gamepad2.left_bumper) {
-                hoodOffset -= 0.005;
-            }
-
-            robot.shooter.setHoodPosition(hoodOffset);
+            robot.shooter.setHoodPosition(hoodPos);
             double shooterPower = shooterController.update(targetRPM, currentRPM);
             robot.shooter.setPower(shooterPower);
 
