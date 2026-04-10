@@ -132,13 +132,19 @@ public class AutoClose extends LinearOpMode {
                     break;
 
                 case CYCLE:
-                    if(cycleIndex < IntakePoses1.length)
+                    if(!follower.isBusy()) // Making sure i dont build cycles when follower is moving
                     {
-                        buildCycle(); // Not sure if i can do this
-                        currentState = AutoState.SHOOTING;
-                    }
-                    else {
-                        currentState = AutoState.PARKING;
+                        if(cycleIndex < IntakePoses1.length)
+                        {
+                            buildCycle();
+                            hasReachedRPM = false;
+                            readyTimer.reset();
+                            currentState = AutoState.SHOOTING;
+                        }
+                        else
+                        {
+                            currentState = AutoState.PARKING;
+                        }
                     }
                     break;
 
