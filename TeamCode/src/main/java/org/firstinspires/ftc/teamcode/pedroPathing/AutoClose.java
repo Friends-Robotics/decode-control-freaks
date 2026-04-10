@@ -29,6 +29,8 @@ public class AutoClose extends LinearOpMode {
     double targetRPM;
     private final ElapsedTime readyTimer = new ElapsedTime();
     double shootTime = 5.0; // Tune
+    boolean startedPath = false;
+    boolean stateJustEntered = false;
 
     enum AutoState{
         START_TO_SHOOT,
@@ -61,106 +63,128 @@ public class AutoClose extends LinearOpMode {
 
         while (opModeIsActive())
         {
+            follower.update();
+
             double currentRPM = robot.shooter.getRPM();
             double shooterPower = shooterController.update(targetRPM, currentRPM);
             robot.shooter.setPower(shooterPower);
 
+
             switch(currentState)
             {
                 case START_TO_SHOOT:
-                    follower.followPath(StartShootPath);
-                    if(!follower.isBusy())
-                    {
+
+                    if (!startedPath) {
+                        follower.followPath(StartShootPath);
+                        startedPath = true;
+                    }
+
+                    if (!follower.isBusy()) {
+                        startedPath = false;
                         currentState = AutoState.SHOOTING;
+                        readyTimer.reset();
                     }
                     break;
 
                 case SHOOTING:
-                    targetRPM = RobotConstants.Shooter.CLOSE_RPM;
-                    shooterPower = shooterController.update(targetRPM, currentRPM);
 
-                    readyTimer.startTime();
-                    robot.shooter.setPower(shooterPower);
-                    robot.shooter.feed();
-                    if(shooterController.isReady())
-                    {
+                    if (stateJustEntered) {
+                        readyTimer.reset();
+                        hasReachedRPM = false;
+                        stateJustEntered = false;
+                    }
+
+                    targetRPM = RobotConstants.Shooter.CLOSE_RPM;
+
+                    if (shooterController.isReady()) {
                         hasReachedRPM = true;
                     }
-                    if(hasReachedRPM)
-                    {
+
+                    if (hasReachedRPM) {
                         robot.intake.intake();
-                    }
-                    else
-                    {
+                        robot.shooter.feed();
+                    } else {
                         robot.intake.stop();
                     }
 
-                    if(readyTimer.seconds() > shootTime)
-                    {
+                    if (readyTimer.seconds() > shootTime) {
                         robot.intake.stop();
                         robot.shooter.stopFeed();
                         targetRPM = RobotConstants.Shooter.IDLE_RPM;
+
                         currentState = AutoState.SHOOT_TO_INTAKE;
+                        stateJustEntered = true;
                     }
+
                     break;
 
                 case SHOOT_TO_INTAKE:
-                    follower.followPath(ShootIntakePath);
-                    if(!follower.isBusy())
-                    {
+
+                    if (!startedPath) {
+                        follower.followPath(ShootIntakePath);
+                        startedPath = true;
+                    }
+
+                    if (!follower.isBusy()) {
+                        startedPath = false;
                         robot.intake.intake();
                         currentState = AutoState.INTAKE;
                     }
                     break;
 
                 case INTAKE:
-                    follower.followPath(IntakePath);
-                    if(!follower.isBusy())
-                    {
+
+                    if (!startedPath) {
+                        follower.followPath(IntakePath);
+                        startedPath = true;
+                    }
+
+                    if (!follower.isBusy()) {
+                        startedPath = false;
                         robot.intake.stop();
                         currentState = AutoState.INTAKE_TO_SHOOT;
                     }
                     break;
 
                 case INTAKE_TO_SHOOT:
-                    follower.followPath(IntakeShootPath);
-                    if(!follower.isBusy())
-                    {
-                        cycleIndex++; // Updates Intake Poses for next cycle
+
+                    if (!startedPath) {
+                        follower.followPath(IntakeShootPath);
+                        startedPath = true;
+                    }
+
+                    if (!follower.isBusy()) {
+                        startedPath = false;
+                        cycleIndex++;
                         currentState = AutoState.CYCLE;
                     }
                     break;
 
                 case CYCLE:
-                    if(!follower.isBusy()) // Making sure i don't build cycles when follower is moving
-                    {
-                        if(cycleIndex < IntakePoses1.length)
-                        {
-                            buildCycle();
-                            hasReachedRPM = false;
-                            readyTimer.reset();
-                            currentState = AutoState.SHOOTING;
-                        }
-                        else
-                        {
-                            currentState = AutoState.PARKING;
-                        }
+
+                    if (cycleIndex < IntakePoses1.length && cycleIndex < IntakePoses2.length) {
+                        buildCycle();
+                        readyTimer.reset();
+                        hasReachedRPM = false;
+                        currentState = AutoState.SHOOTING;
+                    } else {
+                        currentState = AutoState.PARKING;
                     }
                     break;
 
                 case PARKING:
-                    if(!follower.isBusy())
-                    {
+
+                    if (!startedPath) {
                         follower.followPath(ParkPath);
+                        startedPath = true;
                     }
+
                     robot.shooter.setPower(0);
                     robot.shooter.stopFeed();
                     robot.intake.stop();
                     break;
             }
         }
-
-
     }
 
     public PathChain StartShootPath;
