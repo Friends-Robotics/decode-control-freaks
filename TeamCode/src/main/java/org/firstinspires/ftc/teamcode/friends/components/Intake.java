@@ -14,8 +14,6 @@ public class Intake {
 
     public void intake() { intakeMotor.setPower(Intake.INTAKE_POWER); }
 
-    public void intakeStrong() { intakeMotor.setPower(Intake.STRONG_INTAKE_POWER); }
-
     public void outtake() { intakeMotor.setPower(Intake.OUTTAKE_POWER); }
 
     public void stop() { intakeMotor.setPower(0.0); }

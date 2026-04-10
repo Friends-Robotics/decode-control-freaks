@@ -27,7 +27,7 @@ public class RobotHardware {
     public final DcMotorEx turretMotor;
     public final Servo hood;
 
-    public final GoBildaPinpointDriver pinpoint;
+    public final GoBildaPinpointDriver pinpointDriver;
 
     public final Limelight3A limelight;
 
@@ -62,11 +62,11 @@ public class RobotHardware {
         turretMotor = hardwareMap.get(DcMotorEx.class, "Turret");
         turretMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         turretMotor.setDirection(DcMotorSimple.Direction.FORWARD);
-        turretMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        turretMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         hood = hardwareMap.get(Servo.class, "HoodServo");
 
-        pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
+        pinpointDriver = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
 
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
     }

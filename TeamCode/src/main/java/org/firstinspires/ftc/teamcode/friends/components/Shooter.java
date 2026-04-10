@@ -4,7 +4,6 @@ import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
-import org.firstinspires.ftc.teamcode.friends.controllers.RobotConstants;
 
 public class Shooter {
     private final DcMotorEx shooterMotor1;
@@ -13,7 +12,7 @@ public class Shooter {
     private final Servo hood;
     private final Limelight3A limelight;
 
-    private final double FEEDER_UP_POSITION = 0.4;
+    private final double FEEDER_UP_POSITION = 0.45;
     private final double FEEDER_DOWN_POSITION = 0.0;
 
     public static double SHOOTER_TICKS_PER_REV = 28;
@@ -51,7 +50,7 @@ public class Shooter {
 
     public void setHoodPosition(double position) { hood.setPosition(position); }
 
-    public void startFeed() { feeder.setPosition(FEEDER_UP_POSITION); }
+    public void feed() { feeder.setPosition(FEEDER_UP_POSITION); }
 
     public void stopFeed() { feeder.setPosition(FEEDER_DOWN_POSITION); }
 

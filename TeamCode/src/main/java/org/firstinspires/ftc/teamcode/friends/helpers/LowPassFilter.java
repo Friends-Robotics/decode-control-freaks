@@ -16,6 +16,10 @@ public class LowPassFilter {
         return estimate;
     }
 
+    public double getEstimate() {
+        return estimate;
+    }
+
     public void reset() {
         estimate = 0;
         initialized = false;

@@ -9,7 +9,6 @@ import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.teamcode.friends.helpers.Utils;
 
-@Disabled
 @TeleOp(name = "Servo Test", group = "Test")
 public class ServoTest extends LinearOpMode {
     Servo servo;
@@ -17,7 +16,7 @@ public class ServoTest extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        servo = hardwareMap.get(Servo.class, "Servo");
+        servo = hardwareMap.get(Servo.class, "HoodServo");
 
         waitForStart();
 

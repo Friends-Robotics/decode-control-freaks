@@ -4,54 +4,66 @@ import org.firstinspires.ftc.teamcode.friends.helpers.PIDFController;
 import org.firstinspires.ftc.teamcode.friends.helpers.Utils;
 
 public class TurretController {
-    private final PIDFController pidf = new PIDFController(
-            RobotConstants.Turret.kP,
-            RobotConstants.Turret.kI,
-            RobotConstants.Turret.kD,
-            RobotConstants.Turret.kS,
-            RobotConstants.Turret.kV,
-            0.0,
-            0.0,
-            RobotConstants.Turret.iLimit
-    );
+    private final PIDFController pidf;
+
+    private double currentPower = 0;
+    private double lastError = 0;
 
     public TurretController() {
+        this.pidf = new PIDFController(
+                RobotConstants.Turret.kP,
+                RobotConstants.Turret.kI,
+                RobotConstants.Turret.kD,
+                RobotConstants.Turret.kS,
+                RobotConstants.Turret.kV,
+                0.0,
+                0.0,
+                RobotConstants.Turret.iLimit
+        );
         pidf.setTolerance(RobotConstants.Turret.ALIGN_TOLERANCE);
         pidf.setOutputBounds(-RobotConstants.Turret.MAX_POWER, RobotConstants.Turret.MAX_POWER);
     }
 
-    public void reset() {
-        pidf.reset();
-    }
-
     /**
      * The core execution logic.
-     * @param degreesFromTarget Degrees off target
-     * @param distance Current distance to target
+     * @param degreesFromTarget Current error in degrees
      * @return Motor power clipped to safe limits.
      */
-    public double update(double degreesFromTarget, double distance) {
-        double scheduledKP = interpolateGain(distance);
-        pidf.setkP(scheduledKP);
+    public double update(double degreesFromTarget) {
+        this.lastError = degreesFromTarget;
 
-        return pidf.calculate(0, degreesFromTarget);
+        this.currentPower = pidf.calculate(0, degreesFromTarget);
+
+        return currentPower;
     }
 
     /**
-     * Logic to decide the PID strength based on distance.
+     * Instantaneous check if the turret is within the allowed tolerance.
      */
-    private double interpolateGain(double distance) {
-        double t = Utils.getT(distance, RobotConstants.Turret.MIN_TRACKING_DISTANCE, RobotConstants.Turret.MAX_TRACKING_DISTANCE);
-
-        return Utils.lerp(RobotConstants.Turret.kP_CLOSE, RobotConstants.Turret.kP_FAR, t);
+    public boolean isAligned() {
+        return Utils.withinTolerance(lastError, 0, RobotConstants.Turret.ALIGN_TOLERANCE);
     }
 
-    /**
-     * Checks if the turret is aligned
-     * @param degreesFromTarget
-     * @return
-     */
-    public boolean isAligned(double degreesFromTarget) {
-        return Utils.withinTolerance(degreesFromTarget, 0, RobotConstants.Turret.ALIGN_TOLERANCE);
+    public double getCurrentPower() { return currentPower; }
+    public double getLastError() { return lastError; }
+
+    public void reset() {
+        pidf.reset();
+        currentPower = 0;
+        lastError = 0;
+    }
+
+    public void updateConstants() {
+        pidf.setPIDF(
+                RobotConstants.Turret.kP,
+                RobotConstants.Turret.kI,
+                RobotConstants.Turret.kD,
+                RobotConstants.Turret.kS,
+                RobotConstants.Turret.kV,
+                0.0,
+                0.0
+        );
+        pidf.setTolerance(RobotConstants.Turret.ALIGN_TOLERANCE);
+        pidf.setOutputBounds(-RobotConstants.Turret.MAX_POWER, RobotConstants.Turret.MAX_POWER);
     }
 }
