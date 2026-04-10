@@ -8,13 +8,6 @@ import com.acmerobotics.dashboard.config.Config;
  * Finalised constants should be marked 'final'.
  */
 public class RobotConstants {
-    @Config
-    public static class Drive {
-        public static final double DEADBAND = 0.05;
-        public static final double STRAFE_SPEED_MULTIPLIER = 1.1;
-        public static final double SPEED_MULTIPLIER = 0.8;
-        public static final double MAX_ACCEL = 0.3;
-    }
 
     @Config
     public static class Turret {

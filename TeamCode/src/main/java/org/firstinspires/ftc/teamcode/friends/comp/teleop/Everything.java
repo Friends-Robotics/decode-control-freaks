@@ -17,17 +17,9 @@ import org.firstinspires.ftc.teamcode.friends.controllers.TurretController;
 
 @TeleOp(name = "Everything", group = "TeleOp")
 public class Everything extends LinearOpMode {
-    private RobotHardware robotHardware;
-    private Robot robot;
-
-    private TurretController turretController;
-    private ShooterController shooterController;
-    private GoalFusion goalFusion;
-
     private boolean hasReachedRPM = false;
     private boolean lastWantsTracking = false;
     private double latchedDistance = 0.0;
-
     private double hoodOffset = 0.0;
 
     enum RobotState { IDLE, INTAKING, OUTTAKING, SHOOTING }
@@ -35,12 +27,12 @@ public class Everything extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        robotHardware = new RobotHardware(hardwareMap);
-        robot = new Robot(robotHardware);
+        RobotHardware robotHardware = new RobotHardware(hardwareMap);
+        Robot robot = new Robot(robotHardware);
 
-        turretController = new TurretController();
-        shooterController = new ShooterController();
-        goalFusion = new GoalFusion();
+        TurretController turretController = new TurretController();
+        ShooterController shooterController = new ShooterController();
+        GoalFusion goalFusion = new GoalFusion();
 
         telemetry.addLine("WARNING: Ensure the turret is pointing forward");
         waitForStart();
