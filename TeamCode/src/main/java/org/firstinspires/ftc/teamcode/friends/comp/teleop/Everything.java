@@ -15,7 +15,7 @@ import org.firstinspires.ftc.teamcode.friends.controllers.RobotConstants;
 import org.firstinspires.ftc.teamcode.friends.controllers.ShooterController;
 import org.firstinspires.ftc.teamcode.friends.controllers.TurretController;
 
-@TeleOp(name = "FSM: Drive + Fusion + Shooting")
+@TeleOp(name = "Everything", group = "TeleOp")
 public class Everything extends LinearOpMode {
     private RobotHardware robotHardware;
     private Robot robot;
@@ -26,6 +26,9 @@ public class Everything extends LinearOpMode {
 
     private boolean hasReachedRPM = false;
     private boolean lastWantsTracking = false;
+    private double latchedDistance = 0.0;
+
+    private double hoodOffset = 0.0;
 
     enum RobotState { IDLE, INTAKING, OUTTAKING, SHOOTING }
     private RobotState currentState = RobotState.IDLE;
@@ -65,13 +68,28 @@ public class Everything extends LinearOpMode {
 
             if (gamepad2.dpad_up) {
                 targetRPM = RobotConstants.Shooter.FAR_RPM;
-                hoodPos = 0.20;
+                hoodPos = RobotConstants.Shooter.FAR_HOOD;
             } else if (gamepad2.dpad_down) {
                 targetRPM = RobotConstants.Shooter.CLOSE_RPM;
-                hoodPos = 0.0;
+                hoodPos = RobotConstants.Shooter.CLOSE_HOOD;
+            } else if (gamepad2.right_trigger > 0.1 && estimate.isValid) {
+                if (latchedDistance == 0) {
+                    latchedDistance = estimate.distance;
+                }
+
+                targetRPM = shooterController.getInterpolatedRPM(latchedDistance);
+                hoodPos = shooterController.getInterpolatedHood(latchedDistance);
+            } else {
+                latchedDistance = 0;
             }
 
-            robot.shooter.setHoodPosition(hoodPos);
+            if (gamepad2.right_bumper) {
+                hoodOffset += 0.005;
+            } else if (gamepad2.left_bumper) {
+                hoodOffset -= 0.005;
+            }
+
+            robot.shooter.setHoodPosition(hoodOffset);
             double shooterPower = shooterController.update(targetRPM, currentRPM);
             robot.shooter.setPower(shooterPower);
 
@@ -101,7 +119,7 @@ public class Everything extends LinearOpMode {
 
             // INTAKE LOGIC (with shooter logic)
 
-            if (gamepad2.dpad_down || gamepad2.dpad_up) {
+            if (gamepad2.dpad_down || gamepad2.dpad_up || gamepad2.right_trigger > 0.1) {
                 currentState = RobotState.SHOOTING;
             } else if (gamepad1.right_trigger > 0.1) {
                 currentState = RobotState.INTAKING;
@@ -130,7 +148,6 @@ public class Everything extends LinearOpMode {
                 case SHOOTING:
                     robot.shooter.feed();
 
-
                     if (shooterController.isReady()) {
                         hasReachedRPM = true;
                     }
@@ -153,7 +170,7 @@ public class Everything extends LinearOpMode {
             robot.mecanumDrive.move(gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x);
 
             telemetry.addData("RPM", currentRPM);
-            telemetry.addData("Pose", pose);
+            telemetry.addData("Target RPM", targetRPM);
 
             telemetry.addData("Angle", turretAngle);
             telemetry.addData("Goal angle", estimate.degreesFromTarget);

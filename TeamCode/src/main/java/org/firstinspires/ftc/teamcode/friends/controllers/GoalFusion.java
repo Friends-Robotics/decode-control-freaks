@@ -11,18 +11,18 @@ public class GoalFusion {
     private double lastGoalX = 0, lastGoalY = 0;
     private boolean hasSeenTarget = false;
 
-    public GoalEstimate update(LLResult res, Pose2D pose, double turretAngle) {
+    public GoalEstimate update(LLResult result, Pose2D pose, double turretAngle) {
         double rX = pose.getX(DistanceUnit.INCH);
         double rY = pose.getY(DistanceUnit.INCH);
         double rHeading = pose.getHeading(AngleUnit.DEGREES);
 
-        if (res != null && res.isValid()) {
+        if (result != null && result.isValid()) {
             hasSeenTarget = true;
 
             double dist = (RobotConstants.Vision.TARGET_HEIGHT - RobotConstants.Vision.CAMERA_HEIGHT) /
-                    Math.tan(Math.toRadians(RobotConstants.Vision.CAMERA_ANGLE + res.getTy()));
+                    Math.tan(Math.toRadians(RobotConstants.Vision.CAMERA_ANGLE + result.getTy()));
 
-            double filteredTx = txFilter.estimate(res.getTx());
+            double filteredTx = txFilter.estimate(result.getTx());
 
             double absoluteAngleRad = Math.toRadians(normalizeDegrees(rHeading + turretAngle + filteredTx));
 

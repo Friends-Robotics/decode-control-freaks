@@ -18,29 +18,34 @@ public class RobotConstants {
 
     @Config
     public static class Turret {
-        public static double kP = 0.009;
-        public static double kS = 0.2;
+        public static double kP = 0.0015;
+        public static double kS = 0.25;
         public static double kI = 0.0;
-        public static double kD = 0.003;
+        public static double kD = 0.0007;
         public static double kV = 0.0;
         public static double iLimit = 0.5;
 
         public static double ALIGN_TOLERANCE = 2;
-        public static double MAX_POWER = 0.4;
+        public static double MAX_POWER = 0.5;
     }
 
     @Config
     public static class Shooter {
-        public static double kP = 0.0017;
-        public static double kS = 0.0;
+        public static double kP = 0.00025;
+        public static double kS = 0.1;
         public static double kI = 0.0;
         public static double kD = 0.0;
-        public static double kV = 0.0006;
+        public static double kV = 0.000285;
         public static double iLimit = 0.5;
 
         public static double CLOSE_RPM = 2200;
-        public static double FAR_RPM = 3300;
+        public static double FAR_RPM = 3200;
         public static double IDLE_RPM = 500;
+
+        public static double CLOSE_DISTANCE = 26;
+        public static double FAR_DISTANCE = 109;
+        public static double CLOSE_HOOD = 0.0;
+        public static double FAR_HOOD = 0.2;
 
         public static double RPM_TOLERANCE = 100;
         public static double RPM_LPF_GAIN = 0.8;

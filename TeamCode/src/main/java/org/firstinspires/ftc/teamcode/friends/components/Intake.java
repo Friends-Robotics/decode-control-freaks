@@ -7,7 +7,6 @@ public class Intake {
     private final DcMotorEx intakeMotor;
 
     public static final double INTAKE_POWER = 0.75;
-    public static final double STRONG_INTAKE_POWER = 0.85;
     public static final double OUTTAKE_POWER = -0.75;
 
     public Intake(DcMotorEx intakeMotor) { this.intakeMotor = intakeMotor; }

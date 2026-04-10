@@ -27,7 +27,6 @@ public class ShooterController {
                 0.0,
                 RobotConstants.Shooter.iLimit
         );
-        pidf.setTolerance(RobotConstants.Shooter.RPM_TOLERANCE);
         pidf.setOutputBounds(0.0, RobotConstants.Shooter.MAX_POWER);
         readyTimer.reset();
     }
@@ -52,6 +51,34 @@ public class ShooterController {
         }
 
         return currentPower;
+    }
+
+    public double getInterpolatedRPM(double distance) {
+        double t = Utils.getT(
+                distance,
+                RobotConstants.Shooter.CLOSE_DISTANCE,
+                RobotConstants.Shooter.FAR_DISTANCE
+        );
+
+        return Utils.lerp(
+                RobotConstants.Shooter.CLOSE_RPM,
+                RobotConstants.Shooter.FAR_RPM,
+                t
+        );
+    }
+
+    public double getInterpolatedHood(double distance) {
+        double t = Utils.getT(
+                distance,
+                RobotConstants.Shooter.CLOSE_DISTANCE,
+                RobotConstants.Shooter.FAR_DISTANCE
+        );
+
+        return Utils.lerp(
+                RobotConstants.Shooter.CLOSE_HOOD,
+                RobotConstants.Shooter.FAR_HOOD,
+                t
+        );
     }
 
     /**
@@ -84,6 +111,5 @@ public class ShooterController {
                 0.0,
                 0.0
         );
-        pidf.setTolerance(RobotConstants.Shooter.RPM_TOLERANCE);
     }
 }

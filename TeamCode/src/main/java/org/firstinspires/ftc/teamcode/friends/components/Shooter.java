@@ -36,10 +36,6 @@ public class Shooter {
         shooterMotor2.setPower(power);
     }
 
-    /**
-     * Gets the RPM at the motor (not the actual flywheel RPM)
-     * @return the RPM
-     */
     public double getRPM() {
         return (getVelocity() * 60.0) / SHOOTER_TICKS_PER_REV;
     }

@@ -61,28 +61,21 @@ public class TurretVisionCalibration extends LinearOpMode {
                     rawTx = result.getTx();
                     filteredTx = txFilter.estimate(rawTx);
 
-                    // ABSOLUTE LOGIC: target = current + error
-                    turretPower = turretController.update(filteredTx);
+                    turretPower = turretController.update(-filteredTx);
                 } else {
-                    // Brake if target is lost while holding A
                     turretPower = 0.0;
                 }
             }
             else if (gamepad1.cross) {
-                // HOMING MODE
                 turretPower = turretController.update(turretAngle);
             }
             else {
-                // DEFAULT: ACTIVE BRAKING
                 turretPower = 0.0;
                 txFilter.reset();
             }
 
-            // 4. APPLY POWER
             robot.turret.setPower(turretPower);
 
-            // 5. TELEMETRY
-            telemetry.addData("Mode", gamepad1.a ? "VISION" : (gamepad1.b ? "HOMING" : "BRAKING"));
             telemetry.addData("Turret Angle", turretAngle);
             telemetry.addData("Raw tx", rawTx);
             telemetry.addData("Filtered tx", filteredTx);
