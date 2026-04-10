@@ -12,12 +12,7 @@ public class Intake {
     public Intake(DcMotorEx intakeMotor) { this.intakeMotor = intakeMotor; }
 
     public void intake() { intakeMotor.setPower(Intake.INTAKE_POWER); }
-
     public void outtake() { intakeMotor.setPower(Intake.OUTTAKE_POWER); }
-
     public void stop() { intakeMotor.setPower(0.0); }
-
-    public double getCurrent(CurrentUnit currentUnit) {
-        return intakeMotor.getCurrent(currentUnit);
-    }
+    public double getCurrent(CurrentUnit currentUnit) { return intakeMotor.getCurrent(currentUnit); }
 }

@@ -40,9 +40,7 @@ public class Shooter {
         return (getVelocity() * 60.0) / SHOOTER_TICKS_PER_REV;
     }
 
-    public double getVelocity() {
-        return (shooterMotor1.getVelocity() + shooterMotor2.getVelocity()) / 2.0;
-    }
+    public double getVelocity() { return (shooterMotor1.getVelocity() + shooterMotor2.getVelocity()) / 2.0; }
 
     public void setHoodPosition(double position) { hood.setPosition(position); }
 
