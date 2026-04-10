@@ -3,30 +3,27 @@ package org.firstinspires.ftc.teamcode.friends.comp.teleop;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.friends.components.Robot;
 import org.firstinspires.ftc.teamcode.friends.components.RobotHardware;
-import org.firstinspires.ftc.teamcode.friends.controllers.GoalEstimate;
-import org.firstinspires.ftc.teamcode.friends.controllers.GoalFusion;
-import org.firstinspires.ftc.teamcode.friends.controllers.RobotConstants;
-import org.firstinspires.ftc.teamcode.friends.controllers.ShooterController;
-import org.firstinspires.ftc.teamcode.friends.controllers.TurretController;
+import org.firstinspires.ftc.teamcode.friends.controllers.*;
 
 @TeleOp(name = "Everything", group = "TeleOp")
 public class Everything extends LinearOpMode {
+
     private boolean hasReachedRPM = false;
     private boolean lastWantsTracking = false;
-    private double latchedDistance = 0.0;
     private boolean lastWasHoming = false;
+    private double latchedDistance = 0.0;
 
     enum RobotState { IDLE, INTAKING, OUTTAKING, SHOOTING }
     private RobotState currentState = RobotState.IDLE;
 
     @Override
     public void runOpMode() throws InterruptedException {
+
         RobotHardware robotHardware = new RobotHardware(hardwareMap);
         Robot robot = new Robot(robotHardware);
 
@@ -34,15 +31,26 @@ public class Everything extends LinearOpMode {
         ShooterController shooterController = new ShooterController();
         GoalFusion goalFusion = new GoalFusion();
 
-        // Select the vision pipeline to use for Apriltag detection
+        boolean isBlue = selectAlliance();
+
+        waitForStart();
+        initAfterStart(robot, isBlue);
+
+        while (opModeIsActive()) {
+            mainLoop(robot, turretController, shooterController, goalFusion);
+        }
+    }
+
+    private boolean selectAlliance() throws InterruptedException {
         boolean isBlue = true;
-        while (!opModeIsActive() && !isStopRequested()){
+
+        while (!opModeIsActive() && !isStopRequested()) {
             telemetry.addLine("WARNING: Ensure the turret is pointing forward");
             telemetry.addLine();
             telemetry.addLine("Which net are you shooting into");
             telemetry.addLine("Red: (Dpad Up) Blue: (Dpad Down)");
 
-            if (gamepad1.dpad_up || gamepad2.dpad_up){
+            if (gamepad1.dpad_up || gamepad2.dpad_up) {
                 isBlue = false;
             } else if (gamepad1.dpad_down || gamepad2.dpad_down) {
                 isBlue = true;
@@ -50,143 +58,171 @@ public class Everything extends LinearOpMode {
 
             telemetry.addData("Selected", isBlue ? "Blue" : "Red");
             telemetry.update();
-
-            sleep(50); // prevents CPU overuse
+            sleep(50);
         }
 
-        waitForStart();
+        return isBlue;
+    }
 
+    private void initAfterStart(Robot robot, boolean isBlue) {
         robot.shooter.startLimelight(isBlue);
         robot.turret.resetEncoder();
+    }
 
-        while (opModeIsActive()) {
-            // Gather data
-            LLResult llResult = robot.shooter.getLimelightResult();
-            robot.pinpointDriver.update();
-            Pose2D pose = robot.pinpointDriver.getPosition();
-            double turretAngle = robot.turret.getAngle();
-            double currentRPM = robot.shooter.getRPM();
+    private void mainLoop(Robot robot, TurretController turretController,
+                          ShooterController shooterController, GoalFusion goalFusion) {
+        LLResult llResult = robot.shooter.getLimelightResult();
+        robot.pinpointDriver.update();
+        Pose2D pose = robot.pinpointDriver.getPosition();
+        double turretAngle = robot.turret.getAngle();
+        double currentRPM = robot.shooter.getRPM();
 
-            // Always estimate the goal's position in the background
-            GoalEstimate estimate = goalFusion.update(llResult, pose, turretAngle);
+        GoalEstimate estimate = goalFusion.update(llResult, pose, turretAngle);
 
-            // SHOOTER LOGIC
+        double targetRPM = handleShooter(robot, shooterController, estimate, currentRPM);
+        double turretPower = handleTurret(robot, turretController, estimate, turretAngle);
 
-            // Default values
-            double targetRPM = RobotConstants.Shooter.IDLE_RPM;
-            double hoodPos = 0.0;
+        handleState(robot, shooterController);
+        handleDrive(robot);
+        handleTelemetry(robot, estimate, currentRPM, targetRPM, turretAngle, turretPower);
+    }
 
-            if (gamepad2.dpad_up) {
-                targetRPM = RobotConstants.Shooter.FAR_RPM;
-                hoodPos = RobotConstants.Shooter.FAR_HOOD;
-            } else if (gamepad2.dpad_down) {
-                targetRPM = RobotConstants.Shooter.CLOSE_RPM;
-                hoodPos = RobotConstants.Shooter.CLOSE_HOOD;
-            } else if (gamepad2.right_trigger > 0.1 && estimate.isValid) {
-                if (latchedDistance == 0) {
-                    latchedDistance = estimate.distance;
-                }
+    private double handleShooter(Robot robot, ShooterController shooterController,
+                                 GoalEstimate estimate, double currentRPM) {
 
-                targetRPM = shooterController.getInterpolatedRPM(latchedDistance) + 100;
-                hoodPos = shooterController.getInterpolatedHood(latchedDistance);
-            } else {
-                latchedDistance = 0;
+        double targetRPM = RobotConstants.Shooter.IDLE_RPM;
+        double hoodPos = 0.0;
+
+        if (gamepad2.dpad_up) {
+            targetRPM = RobotConstants.Shooter.FAR_RPM;
+            hoodPos = RobotConstants.Shooter.FAR_HOOD;
+
+        } else if (gamepad2.dpad_down) {
+            targetRPM = RobotConstants.Shooter.CLOSE_RPM;
+            hoodPos = RobotConstants.Shooter.CLOSE_HOOD;
+
+        } else if (gamepad2.right_trigger > 0.1 && estimate.isValid) {
+            if (latchedDistance == 0) {
+                latchedDistance = estimate.distance;
             }
 
-            robot.shooter.setHoodPosition(hoodPos);
-            double shooterPower = shooterController.update(targetRPM, currentRPM);
-            robot.shooter.setPower(shooterPower);
+            targetRPM = shooterController.getInterpolatedRPM(latchedDistance) + 100;
+            hoodPos = shooterController.getInterpolatedHood(latchedDistance);
 
-            // TURRET LOGIC
-
-            boolean wantsTracking = gamepad2.triangle && estimate.isValid;
-            boolean wantsHoming = gamepad2.cross;
-
-            // Reset the PID controllers to prevent the derivative from building up
-            if (wantsTracking != lastWantsTracking || wantsHoming != lastWasHoming) {
-                turretController.reset();
-            }
-            lastWantsTracking = wantsTracking;
-            lastWasHoming = wantsHoming;
-
-            double turretPower;
-            if (wantsTracking) { // Tracking
-                turretPower = turretController.update(estimate.degreesFromTarget);
-
-                if (turretController.isAligned()) {
-                    gamepad2.rumble(100);
-                }
-            } else if (wantsHoming) { // Homing
-                turretPower = turretController.update(turretAngle);
-            } else { // Braking
-                turretPower = 0.0;
-            }
-
-            robot.turret.setPower(turretPower);
-
-            // INTAKE LOGIC (with shooter logic)
-
-            if (gamepad2.dpad_down || gamepad2.dpad_up || gamepad2.right_trigger > 0.1) {
-                currentState = RobotState.SHOOTING;
-            } else if (gamepad1.right_trigger > 0.1) {
-                currentState = RobotState.INTAKING;
-            } else if (gamepad1.left_trigger > 0.1) {
-                currentState = RobotState.OUTTAKING;
-            } else {
-                currentState = RobotState.IDLE;
-            }
-
-            // Handle the state
-            switch (currentState) {
-                case IDLE:
-                    robot.intake.stop();
-                    robot.shooter.stopFeed();
-                    hasReachedRPM = false;
-                    break;
-                case INTAKING:
-                    robot.intake.intake();
-                    robot.shooter.stopFeed();
-                    hasReachedRPM = false;
-                    break;
-                case OUTTAKING:
-                    robot.intake.outtake();
-                    robot.shooter.feed();
-                    hasReachedRPM = false;
-                    break;
-                case SHOOTING:
-                    robot.shooter.feed();
-
-                    if (shooterController.isReady()) {
-                        hasReachedRPM = true;
-                    }
-
-                    if (hasReachedRPM) {
-                        robot.intake.intake();
-                    }
-                    else {
-                        robot.intake.stop();
-                    }
-                    break;
-            }
-
-            // Rumble to warn the driver if the intake has jammed
-            if (robot.intake.getCurrent(CurrentUnit.AMPS) > 3.75) {
-                gamepad1.rumble(100);
-            }
-
-            // Write to hardware
-            robot.mecanumDrive.move(gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x);
-
-            telemetry.addData("RPM", currentRPM);
-            telemetry.addData("Target RPM", targetRPM);
-
-            telemetry.addData("Angle", turretAngle);
-            telemetry.addData("Goal angle", estimate.degreesFromTarget);
-            telemetry.addData("Goal distance", estimate.distance);
-            telemetry.addData("Turret power", turretPower);
-
-            telemetry.addData("Current draw", robot.getCurrent(CurrentUnit.AMPS));
-            telemetry.update();
+        } else {
+            latchedDistance = 0;
         }
+
+        robot.shooter.setHoodPosition(hoodPos);
+
+        double power = shooterController.update(targetRPM, currentRPM);
+        robot.shooter.setPower(power);
+
+        return targetRPM;
+    }
+
+    private double handleTurret(Robot robot, TurretController turretController,
+                                GoalEstimate estimate, double turretAngle) {
+        boolean wantsTracking = gamepad2.triangle && estimate.isValid;
+        boolean wantsHoming = gamepad2.cross;
+
+        if (wantsTracking != lastWantsTracking || wantsHoming != lastWasHoming) {
+            turretController.reset();
+        }
+
+        lastWantsTracking = wantsTracking;
+        lastWasHoming = wantsHoming;
+
+        double power;
+
+        if (wantsTracking) {
+            power = turretController.update(estimate.degreesFromTarget);
+
+            if (turretController.isAligned()) {
+                gamepad2.rumble(100);
+            }
+
+        } else if (wantsHoming) {
+            power = turretController.update(turretAngle);
+
+        } else {
+            power = 0.0;
+        }
+
+        robot.turret.setPower(power);
+        return power;
+    }
+
+    private void handleState(Robot robot, ShooterController shooterController) {
+
+        if (gamepad2.dpad_down || gamepad2.dpad_up || gamepad2.right_trigger > 0.1) {
+            currentState = RobotState.SHOOTING;
+        } else if (gamepad1.right_trigger > 0.1) {
+            currentState = RobotState.INTAKING;
+        } else if (gamepad1.left_trigger > 0.1) {
+            currentState = RobotState.OUTTAKING;
+        } else {
+            currentState = RobotState.IDLE;
+        }
+
+        switch (currentState) {
+            case IDLE:
+                robot.intake.stop();
+                robot.shooter.stopFeed();
+                hasReachedRPM = false;
+                break;
+
+            case INTAKING:
+                robot.intake.intake();
+                robot.shooter.stopFeed();
+                hasReachedRPM = false;
+                break;
+
+            case OUTTAKING:
+                robot.intake.outtake();
+                robot.shooter.feed();
+                hasReachedRPM = false;
+                break;
+
+            case SHOOTING:
+                robot.shooter.feed();
+
+                if (shooterController.isReady()) {
+                    hasReachedRPM = true;
+                }
+
+                if (hasReachedRPM) {
+                    robot.intake.intake();
+                } else {
+                    robot.intake.stop();
+                }
+                break;
+        }
+
+        if (robot.intake.getCurrent(CurrentUnit.AMPS) > 3.75) {
+            gamepad1.rumble(100);
+        }
+    }
+
+    private void handleDrive(Robot robot) {
+        robot.mecanumDrive.move(
+                gamepad1.left_stick_y,
+                -gamepad1.left_stick_x,
+                -gamepad1.right_stick_x
+        );
+    }
+
+    private void handleTelemetry(Robot robot, GoalEstimate estimate, double currentRPM,
+                                 double targetRPM,  double turretAngle, double turretPower) {
+        telemetry.addData("RPM", currentRPM);
+        telemetry.addData("Target RPM", targetRPM);
+
+        telemetry.addData("Angle", turretAngle);
+        telemetry.addData("Goal angle", estimate.degreesFromTarget);
+        telemetry.addData("Goal distance", estimate.distance);
+        telemetry.addData("Turret power", turretPower);
+
+        telemetry.addData("Current draw", robot.getCurrent(CurrentUnit.AMPS));
+        telemetry.update();
     }
 }
