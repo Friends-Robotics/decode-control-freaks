@@ -86,7 +86,7 @@ public class ShooterController {
      * consistently for at least 0.2 seconds.
      */
     public boolean isReady() {
-        return isWithinTolerance && readyTimer.seconds() >= 0.2;
+        return isWithinTolerance && readyTimer.seconds() >= 0.5;
     }
 
     public double getCurrentPower() { return currentPower; }

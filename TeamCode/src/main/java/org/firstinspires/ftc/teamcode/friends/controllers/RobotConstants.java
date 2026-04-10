@@ -39,7 +39,7 @@ public class RobotConstants {
         public static double iLimit = 0.5;
 
         public static double CLOSE_RPM = 2200;
-        public static double FAR_RPM = 3200;
+        public static double FAR_RPM = 3300;
         public static double IDLE_RPM = 500;
 
         public static double CLOSE_DISTANCE = 26;
