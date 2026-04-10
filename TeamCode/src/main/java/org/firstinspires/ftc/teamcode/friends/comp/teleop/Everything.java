@@ -41,6 +41,31 @@ public class Everything extends LinearOpMode {
         robot.turret.resetEncoder();
         robotHardware.turretMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
+        boolean isBlue = true;
+        while (!opModeIsActive() && !isStopRequested()){
+            telemetry.addLine("Which net are you shooting into");
+            telemetry.addLine("Red: (Dpad Up) Blue: (Dpad Down)");
+
+            if (gamepad1.dpad_up || gamepad2.dpad_up){
+                isBlue = false;
+            } else if (gamepad1.dpad_down || gamepad2.dpad_down) {
+                isBlue = true;
+            }
+
+            telemetry.addData("Selected", isBlue ? "Blue" : "Red");
+            telemetry.update();
+
+            sleep(50); // prevents CPU overuse
+        }
+
+        if (isBlue) {
+            robotHardware.limelight.pipelineSwitch(0);
+        } else {
+            robotHardware.limelight.pipelineSwitch(1);
+        }
+
+        waitForStart();
+
         while (opModeIsActive()) {
             // Gather data
             LLResult llResult = robotHardware.limelight.getLatestResult();
