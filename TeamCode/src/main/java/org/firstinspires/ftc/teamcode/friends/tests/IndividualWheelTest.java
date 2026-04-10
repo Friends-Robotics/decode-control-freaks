@@ -9,7 +9,6 @@ import org.firstinspires.ftc.teamcode.friends.components.RobotHardware;
 @Disabled
 @TeleOp(name = "Individual Wheel Test", group = "Test")
 public class IndividualWheelTest extends LinearOpMode {
-
     RobotHardware robot;
 
     @Override

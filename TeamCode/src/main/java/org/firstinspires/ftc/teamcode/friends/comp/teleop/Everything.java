@@ -20,7 +20,7 @@ public class Everything extends LinearOpMode {
     private boolean hasReachedRPM = false;
     private boolean lastWantsTracking = false;
     private double latchedDistance = 0.0;
-    private double hoodOffset = 0.0;
+    private boolean lastWasHoming = false;
 
     enum RobotState { IDLE, INTAKING, OUTTAKING, SHOOTING }
     private RobotState currentState = RobotState.IDLE;
@@ -34,15 +34,11 @@ public class Everything extends LinearOpMode {
         ShooterController shooterController = new ShooterController();
         GoalFusion goalFusion = new GoalFusion();
 
-        telemetry.addLine("WARNING: Ensure the turret is pointing forward");
-        waitForStart();
-
-        robot.shooter.startLimelight(false);
-        robot.turret.resetEncoder();
-        robotHardware.turretMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
+        // Select the vision pipeline to use for Apriltag detection
         boolean isBlue = true;
         while (!opModeIsActive() && !isStopRequested()){
+            telemetry.addLine("WARNING: Ensure the turret is pointing forward");
+            telemetry.addLine();
             telemetry.addLine("Which net are you shooting into");
             telemetry.addLine("Red: (Dpad Up) Blue: (Dpad Down)");
 
@@ -58,23 +54,20 @@ public class Everything extends LinearOpMode {
             sleep(50); // prevents CPU overuse
         }
 
-        if (isBlue) {
-            robotHardware.limelight.pipelineSwitch(0);
-        } else {
-            robotHardware.limelight.pipelineSwitch(1);
-        }
-
         waitForStart();
+
+        robot.shooter.startLimelight(isBlue);
+        robot.turret.resetEncoder();
 
         while (opModeIsActive()) {
             // Gather data
-            LLResult llResult = robotHardware.limelight.getLatestResult();
+            LLResult llResult = robot.shooter.getLimelightResult();
             robot.pinpointDriver.update();
             Pose2D pose = robot.pinpointDriver.getPosition();
             double turretAngle = robot.turret.getAngle();
             double currentRPM = robot.shooter.getRPM();
 
-            // Always calculate the goal's position in the background
+            // Always estimate the goal's position in the background
             GoalEstimate estimate = goalFusion.update(llResult, pose, turretAngle);
 
             // SHOOTER LOGIC
@@ -107,11 +100,14 @@ public class Everything extends LinearOpMode {
             // TURRET LOGIC
 
             boolean wantsTracking = gamepad2.triangle && estimate.isValid;
+            boolean wantsHoming = gamepad2.cross;
 
-            if (wantsTracking != lastWantsTracking) {
+            // Reset the PID controllers to prevent the derivative from building up
+            if (wantsTracking != lastWantsTracking || wantsHoming != lastWasHoming) {
                 turretController.reset();
             }
             lastWantsTracking = wantsTracking;
+            lastWasHoming = wantsHoming;
 
             double turretPower;
             if (wantsTracking) { // Tracking
@@ -120,7 +116,7 @@ public class Everything extends LinearOpMode {
                 if (turretController.isAligned()) {
                     gamepad2.rumble(100);
                 }
-            } else if (gamepad2.cross) { // Homing
+            } else if (wantsHoming) { // Homing
                 turretPower = turretController.update(turretAngle);
             } else { // Braking
                 turretPower = 0.0;
@@ -140,6 +136,7 @@ public class Everything extends LinearOpMode {
                 currentState = RobotState.IDLE;
             }
 
+            // Handle the state
             switch (currentState) {
                 case IDLE:
                     robot.intake.stop();
