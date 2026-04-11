@@ -28,12 +28,8 @@ public class ShooterCalibration extends LinearOpMode {
         // Use the actual controller used in TeleOp
         shooterController = new ShooterController();
 
-        // Link telemetry to Dashboard for graphing
+        // Link telemetry to dashboard
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
-
-        telemetry.addLine("Ready for Shooter Calibration");
-        telemetry.addLine("Use Gamepad1 Right Trigger to shoot a ring/ball");
-        telemetry.update();
 
         waitForStart();
 

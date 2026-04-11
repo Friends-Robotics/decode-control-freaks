@@ -23,6 +23,8 @@ public class LimelightAngleCalibration extends LinearOpMode {
     public void runOpMode() {
         RobotHardware robotHardware = new RobotHardware(hardwareMap);
         Robot robot = new Robot(robotHardware);
+
+        // Link telemetry to dashboard
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
 
         robot.shooter.startLimelight(false);

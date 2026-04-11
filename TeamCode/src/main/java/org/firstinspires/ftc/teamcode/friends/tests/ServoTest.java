@@ -7,8 +7,7 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
 
-import org.firstinspires.ftc.teamcode.friends.helpers.Utils;
-
+@Disabled
 @TeleOp(name = "Servo Test", group = "Test")
 public class ServoTest extends LinearOpMode {
     Servo servo;

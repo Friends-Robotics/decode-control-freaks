@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.friends.components;
 
+import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -56,5 +57,9 @@ public class Shooter {
         limelight.setPollRateHz(100);
         limelight.start();
         limelight.pipelineSwitch(isBlue ? 0 : 1);
+    }
+
+    public LLResult getLimelightResult() {
+        return limelight.getLatestResult();
     }
 }
