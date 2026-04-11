@@ -11,7 +11,7 @@ public class MecanumDrive {
 
     public static final double DEADBAND = 0.05;
     public static final double STRAFE_SPEED_MULTIPLIER = 1.1;
-    public static final double SPEED_MULTIPLIER = 1.0;
+    public static final double SPEED_MULTIPLIER = 0.85;
     public static final double MAX_ACCEL = 0.3;
 
     private double lastFL = 0;

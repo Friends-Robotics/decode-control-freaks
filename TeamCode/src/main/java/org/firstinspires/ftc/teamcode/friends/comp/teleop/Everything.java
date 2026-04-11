@@ -9,6 +9,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.friends.components.Robot;
 import org.firstinspires.ftc.teamcode.friends.components.RobotHardware;
 import org.firstinspires.ftc.teamcode.friends.controllers.*;
+import org.firstinspires.ftc.teamcode.friends.helpers.Utils;
 
 @TeleOp(name = "Everything", group = "TeleOp")
 public class Everything extends LinearOpMode {
@@ -17,6 +18,9 @@ public class Everything extends LinearOpMode {
     private boolean lastWantsTracking = false;
     private boolean lastWasHoming = false;
     private double latchedDistance = 0.0;
+    private double latchedAngle = 0.0;
+    private double startingLatchAngle = 0.0;
+    private boolean isLatchedAngle = false;
 
     enum RobotState { IDLE, INTAKING, OUTTAKING, SHOOTING }
     private RobotState currentState = RobotState.IDLE;
@@ -34,14 +38,29 @@ public class Everything extends LinearOpMode {
         boolean isBlue = selectAlliance();
 
         waitForStart();
-        initAfterStart(robot, isBlue);
+
+        robot.shooter.startLimelight(isBlue);
+        robot.turret.resetEncoder();
 
         while (opModeIsActive()) {
-            mainLoop(robot, turretController, shooterController, goalFusion);
+            LLResult llResult = robot.shooter.getLimelightResult();
+            robot.pinpointDriver.update();
+            Pose2D pose = robot.pinpointDriver.getPosition();
+            double turretAngle = robot.turret.getAngle();
+            double currentRPM = robot.shooter.getRPM();
+
+            GoalEstimate estimate = goalFusion.update(llResult, pose, turretAngle);
+
+            double targetRPM = handleShooter(robot, shooterController, estimate, currentRPM);
+            double turretPower = handleTurret(robot, turretController, estimate, turretAngle);
+
+            handleState(robot, shooterController);
+            handleDrive(robot);
+            handleTelemetry(robot, estimate, currentRPM, targetRPM, turretAngle, turretPower);
         }
     }
 
-    private boolean selectAlliance() throws InterruptedException {
+    private boolean selectAlliance() {
         boolean isBlue = true;
 
         while (!opModeIsActive() && !isStopRequested()) {
@@ -64,29 +83,6 @@ public class Everything extends LinearOpMode {
         return isBlue;
     }
 
-    private void initAfterStart(Robot robot, boolean isBlue) {
-        robot.shooter.startLimelight(isBlue);
-        robot.turret.resetEncoder();
-    }
-
-    private void mainLoop(Robot robot, TurretController turretController,
-                          ShooterController shooterController, GoalFusion goalFusion) {
-        LLResult llResult = robot.shooter.getLimelightResult();
-        robot.pinpointDriver.update();
-        Pose2D pose = robot.pinpointDriver.getPosition();
-        double turretAngle = robot.turret.getAngle();
-        double currentRPM = robot.shooter.getRPM();
-
-        GoalEstimate estimate = goalFusion.update(llResult, pose, turretAngle);
-
-        double targetRPM = handleShooter(robot, shooterController, estimate, currentRPM);
-        double turretPower = handleTurret(robot, turretController, estimate, turretAngle);
-
-        handleState(robot, shooterController);
-        handleDrive(robot);
-        handleTelemetry(robot, estimate, currentRPM, targetRPM, turretAngle, turretPower);
-    }
-
     private double handleShooter(Robot robot, ShooterController shooterController,
                                  GoalEstimate estimate, double currentRPM) {
 
@@ -106,7 +102,7 @@ public class Everything extends LinearOpMode {
                 latchedDistance = estimate.distance;
             }
 
-            targetRPM = shooterController.getInterpolatedRPM(latchedDistance) + 100;
+            targetRPM = shooterController.getInterpolatedRPM(latchedDistance);
             hoodPos = shooterController.getInterpolatedHood(latchedDistance);
 
         } else {
@@ -136,16 +132,25 @@ public class Everything extends LinearOpMode {
         double power;
 
         if (wantsTracking) {
-            power = turretController.update(estimate.degreesFromTarget);
+            if (!isLatchedAngle) {
+                latchedAngle = estimate.degreesFromTarget;
+                startingLatchAngle = turretAngle;
+                isLatchedAngle = true;
+            }
+
+            double remainingError = latchedAngle - (turretAngle - startingLatchAngle);
+            power = turretController.update(remainingError);
 
             if (turretController.isAligned()) {
                 gamepad2.rumble(100);
             }
 
         } else if (wantsHoming) {
+            isLatchedAngle = false;
             power = turretController.update(turretAngle);
 
         } else {
+            isLatchedAngle = false;
             power = 0.0;
         }
 
@@ -154,7 +159,6 @@ public class Everything extends LinearOpMode {
     }
 
     private void handleState(Robot robot, ShooterController shooterController) {
-
         if (gamepad2.dpad_down || gamepad2.dpad_up || gamepad2.right_trigger > 0.1) {
             currentState = RobotState.SHOOTING;
         } else if (gamepad1.right_trigger > 0.1) {
@@ -192,7 +196,10 @@ public class Everything extends LinearOpMode {
                 }
 
                 if (hasReachedRPM) {
-                    robot.intake.intake();
+                    double t = Utils.getT(RobotConstants.Shooter.CLOSE_PULSE_DISTANCE, RobotConstants.Shooter.FAR_PULSE_DISTANCE, latchedDistance);
+                    double offTime = Utils.lerp(0.0, RobotConstants.Shooter.FAR_PULSE_OFF, t);
+
+                    robot.intake.pulse(RobotConstants.Shooter.PULSE_ON, offTime);
                 } else {
                     robot.intake.stop();
                 }

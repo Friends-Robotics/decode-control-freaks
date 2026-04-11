@@ -36,9 +36,15 @@ public class RobotConstants {
         public static double IDLE_RPM = 500;
 
         public static double CLOSE_DISTANCE = 26;
-        public static double FAR_DISTANCE = 109;
+        public static double FAR_DISTANCE = 110;
         public static double CLOSE_HOOD = 0.0;
         public static double FAR_HOOD = 0.2;
+
+        public static double CLOSE_PULSE_DISTANCE = 75;
+        public static double FAR_PULSE_DISTANCE = 110;
+
+        public static double FAR_PULSE_OFF = 1.0;
+        public static double PULSE_ON = 0.4;
 
         public static double RPM_TOLERANCE = 100;
         public static double RPM_LPF_GAIN = 0.8;
