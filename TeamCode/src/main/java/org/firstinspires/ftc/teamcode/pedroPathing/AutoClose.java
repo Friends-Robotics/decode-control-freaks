@@ -28,7 +28,7 @@ public class AutoClose extends LinearOpMode {
     boolean hasReachedRPM;
     double targetRPM;
     private final ElapsedTime readyTimer = new ElapsedTime();
-    double shootTime = 5.0;
+    double shootTime = 2.75;
 
     boolean startedPath = false;
     boolean stateJustEntered = true;
@@ -117,7 +117,7 @@ public class AutoClose extends LinearOpMode {
                         robot.shooter.stopFeed();
                         targetRPM = RobotConstants.Shooter.IDLE_RPM;
 
-                        currentState = AutoState.SHOOT_TO_INTAKE;
+                        currentState = AutoState.CYCLE;
                         stateJustEntered = true;
                     }
                     break;
@@ -161,17 +161,17 @@ public class AutoClose extends LinearOpMode {
 
                     if (!follower.isBusy()) {
                         startedPath = false;
-                        cycleIndex++;
-                        currentState = AutoState.CYCLE;
+                        cycleIndex++; // Updates cycle
+                        currentState = AutoState.SHOOTING;
                         stateJustEntered = true;
                     }
                     break;
 
                 case CYCLE:
 
-                    if (cycleIndex < cycle.IntakePoses1.length) {
+                    if (cycleIndex < cycle.IntakePoses1.length ) {
                         buildCycle();
-                        currentState = AutoState.SHOOTING;
+                        currentState = AutoState.SHOOT_TO_INTAKE;
                         stateJustEntered = true;
                     } else {
                         currentState = AutoState.PARKING;
@@ -203,11 +203,15 @@ public class AutoClose extends LinearOpMode {
         Pose currentPose;
 
         Pose[] IntakePoses1 = {
-                new Pose(100.000, 84.000, Math.toRadians(0)),
+                new Pose(95.500, 84.000, Math.toRadians(0)),
+                new Pose(95.500,60, Math.toRadians(0)),
+                new Pose(95.500,36, Math.toRadians(0))
         };
 
         Pose[] IntakePoses2 = {
-                new Pose(127.000, 84.000, Math.toRadians(0))
+                new Pose(129.000, 84.000, Math.toRadians(0)),
+                new Pose(132.500,60, Math.toRadians(0)),
+                new Pose(132.500,36, Math.toRadians(0))
         };
 
         Pose shootPose = new Pose(102.000, 102.000, Math.toRadians(45));
