@@ -10,41 +10,38 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.friends.components.Intake;
 import org.firstinspires.ftc.teamcode.friends.components.RobotHardware;
-import org.firstinspires.ftc.teamcode.friends.components.Shooter;
 import org.firstinspires.ftc.teamcode.friends.components.Robot;
 import org.firstinspires.ftc.teamcode.friends.controllers.RobotConstants;
 import org.firstinspires.ftc.teamcode.friends.controllers.ShooterController;
 
 @Autonomous
-public class AutoClose extends LinearOpMode { //hello
-
+public class AutoFar extends LinearOpMode{
     RobotHardware robotHardware;
     Robot robot;
     Intake intake;
     ShooterController shooterController;
     private Follower follower;
 
-    public static int cycleIndex;
     boolean hasReachedRPM;
     double targetRPM;
     private final ElapsedTime readyTimer = new ElapsedTime();
-    double shootTime = 2.75;
+    double shootTime = 4;
+    int timesEnteredShooting;
 
     boolean startedPath = false;
     boolean stateJustEntered = true;
 
-    Pose startPose = new Pose(122.500, 122.500, Math.toRadians(37));
+    static Pose startPose = new Pose(82, 9, Math.toRadians(90));
 
-    BuildNewCycle cycle;
+    Paths path;
 
     enum AutoState{
         START_TO_SHOOT,
         SHOOTING,
-        SHOOT_TO_INTAKE,
+        SHOOT_TO_PREP,
         INTAKE,
         INTAKE_TO_SHOOT,
-        PARKING,
-        CYCLE
+        PARKING_TO_GATE
     }
 
     AutoState currentState = AutoState.START_TO_SHOOT;
@@ -52,7 +49,7 @@ public class AutoClose extends LinearOpMode { //hello
     @Override
     public void runOpMode() throws InterruptedException {
 
-        cycleIndex = 0;
+        timesEnteredShooting = 0;
         targetRPM = RobotConstants.Shooter.IDLE_RPM;
         hasReachedRPM = false;
 
@@ -63,7 +60,7 @@ public class AutoClose extends LinearOpMode { //hello
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(startPose);
 
-        buildCycle();
+        BuildPaths();
 
         waitForStart();
 
@@ -80,7 +77,7 @@ public class AutoClose extends LinearOpMode { //hello
                 case START_TO_SHOOT:
 
                     if (!startedPath) {
-                        follower.followPath(cycle.StartShootPath);
+                        follower.followPath(path.StartShootPath);
                         startedPath = true;
                     }
 
@@ -94,12 +91,13 @@ public class AutoClose extends LinearOpMode { //hello
                 case SHOOTING:
 
                     if (stateJustEntered) {
+                        timesEnteredShooting++;
                         readyTimer.reset();
                         hasReachedRPM = false;
                         stateJustEntered = false;
                     }
 
-                    targetRPM = RobotConstants.Shooter.CLOSE_RPM;
+                    targetRPM = RobotConstants.Shooter.FAR_RPM;
 
                     if (shooterController.isReady()) {
                         hasReachedRPM = true;
@@ -116,16 +114,21 @@ public class AutoClose extends LinearOpMode { //hello
                         robot.intake.stop();
                         robot.shooter.stopFeed();
                         targetRPM = RobotConstants.Shooter.IDLE_RPM;
-
-                        currentState = AutoState.CYCLE;
+                        if(timesEnteredShooting == 1)
+                        {
+                            currentState = AutoState.SHOOT_TO_PREP;
+                        }
+                        else{
+                            currentState = AutoState.PARKING_TO_GATE;
+                        }
                         stateJustEntered = true;
                     }
                     break;
 
-                case SHOOT_TO_INTAKE:
+                case SHOOT_TO_PREP:
 
                     if (!startedPath) {
-                        follower.followPath(cycle.ShootIntakePath);
+                        follower.followPath(path.ShootPrepPath);
                         startedPath = true;
                     }
 
@@ -140,7 +143,7 @@ public class AutoClose extends LinearOpMode { //hello
                 case INTAKE:
 
                     if (!startedPath) {
-                        follower.followPath(cycle.IntakePath);
+                        follower.followPath(path.PrepIntakePath);
                         startedPath = true;
                     }
 
@@ -155,34 +158,20 @@ public class AutoClose extends LinearOpMode { //hello
                 case INTAKE_TO_SHOOT:
 
                     if (!startedPath) {
-                        follower.followPath(cycle.IntakeShootPath);
+                        follower.followPath(path.IntakeShootPath);
                         startedPath = true;
                     }
 
                     if (!follower.isBusy()) {
                         startedPath = false;
-                        cycleIndex++; // Updates cycle
                         currentState = AutoState.SHOOTING;
                         stateJustEntered = true;
                     }
                     break;
 
-                case CYCLE:
-
-                    if (cycleIndex < cycle.IntakePoses1.length ) {
-                        buildCycle();
-                        currentState = AutoState.SHOOT_TO_INTAKE;
-                        stateJustEntered = true;
-                    } else {
-                        currentState = AutoState.PARKING;
-                        stateJustEntered = true;
-                    }
-                    break;
-
-                case PARKING:
-
+                case PARKING_TO_GATE:
                     if (!startedPath) {
-                        follower.followPath(cycle.ParkPath);
+                        follower.followPath(path.ShootParkPath);
                         startedPath = true;
                     }
 
@@ -195,81 +184,71 @@ public class AutoClose extends LinearOpMode { //hello
         }
     }
 
-    // =========================
-    //  PATH BUILDER CLASS
-    // =========================
-    public class BuildNewCycle {
-
-
-        Pose currentPose;
-
-        Pose[] IntakePoses1 = {
-                new Pose(95.500, 84.000, Math.toRadians(0)),
-                new Pose(95.500,60, Math.toRadians(0)),
-                new Pose(95.500,36, Math.toRadians(0))
-        };
-
-        Pose[] IntakePoses2 = {
-                new Pose(129.000, 84.000, Math.toRadians(0)),
-                new Pose(132.500,60, Math.toRadians(0)),
-                new Pose(132.500,36, Math.toRadians(0))
-        };
-
-        Pose shootPose = new Pose(102.000, 102.000, Math.toRadians(45));
-        Pose parkPose = new Pose(96, 120, Math.toRadians(90));
+    public static class Paths {
+        Pose shootPose = new Pose(82,25, Math.toRadians(67));
+        Pose prepPose = new Pose(82,35,Math.toRadians(0));
+        Pose endIntakePose = new Pose(125,35, Math.toRadians(0));
+        Pose parkPose = new Pose(136,40,Math.toRadians(90));
 
         public PathChain StartShootPath;
-        public PathChain ShootIntakePath;
-        public PathChain IntakePath;
+        public PathChain ShootPrepPath;
+        public PathChain PrepIntakePath;
         public PathChain IntakeShootPath;
-        public PathChain ParkPath;
+        public PathChain ShootParkPath;
 
-        public BuildNewCycle(Follower follower) {
-
-            if (cycleIndex == 0) {
-                currentPose = startPose;
-            } else {
-                currentPose = follower.getPose();
-            }
-
+        public Paths(Follower follower) {
             StartShootPath = follower.pathBuilder().addPath(
-                    new BezierLine(currentPose, shootPose)
-            ).setLinearHeadingInterpolation(
-                    currentPose.getHeading(),
-                    shootPose.getHeading()
-            ).build();
+                            new BezierLine(
+                                    new Pose(startPose.getX(), startPose.getY()),
 
-            ShootIntakePath = follower.pathBuilder().addPath(
-                    new BezierLine(shootPose, IntakePoses1[cycleIndex])
-            ).setLinearHeadingInterpolation(
-                    shootPose.getHeading(),
-                    IntakePoses1[cycleIndex].getHeading()
-            ).build();
+                                    new Pose(shootPose.getX(), shootPose.getY())
+                            )
+                    ).setLinearHeadingInterpolation(startPose.getHeading(), shootPose.getHeading())
 
-            IntakePath = follower.pathBuilder().addPath(
-                    new BezierLine(IntakePoses1[cycleIndex], IntakePoses2[cycleIndex])
-            ).setLinearHeadingInterpolation(
-                    IntakePoses1[cycleIndex].getHeading(),
-                    IntakePoses2[cycleIndex].getHeading()
-            ).build();
+                    .build();
+
+            ShootPrepPath = follower.pathBuilder().addPath(
+                            new BezierLine(
+                                    new Pose(shootPose.getX(), shootPose.getY()),
+
+                                    new Pose(prepPose.getX(), prepPose.getY())
+                            )
+                    ).setLinearHeadingInterpolation(shootPose.getHeading(), prepPose.getHeading())
+
+                    .build();
+
+            PrepIntakePath = follower.pathBuilder().addPath(
+                            new BezierLine(
+                                    new Pose(prepPose.getX(), prepPose.getY()),
+
+                                    new Pose(endIntakePose.getX(), endIntakePose.getY())
+                            )
+                    ).setLinearHeadingInterpolation(prepPose.getHeading(), endIntakePose.getHeading())
+
+                    .build();
 
             IntakeShootPath = follower.pathBuilder().addPath(
-                    new BezierLine(IntakePoses2[cycleIndex], shootPose)
-            ).setLinearHeadingInterpolation(
-                    IntakePoses2[cycleIndex].getHeading(),
-                    shootPose.getHeading()
-            ).build();
+                            new BezierLine(
+                                    new Pose(endIntakePose.getX(), endIntakePose.getY()),
 
-            ParkPath = follower.pathBuilder().addPath(
-                    new BezierLine(IntakePoses2[cycleIndex], parkPose)
-            ).setLinearHeadingInterpolation(
-                    IntakePoses2[cycleIndex].getHeading(),
-                    parkPose.getHeading()
-            ).build();
+                                    new Pose(shootPose.getX(), shootPose.getY())
+                            )
+                    ).setLinearHeadingInterpolation(endIntakePose.getHeading(), shootPose.getHeading())
+
+                    .build();
+
+            ShootParkPath = follower.pathBuilder().addPath(
+                            new BezierLine(
+                                    new Pose(shootPose.getX(), shootPose.getY()),
+
+                                    new Pose(parkPose.getX(), parkPose.getY())
+                            )
+                    ).setLinearHeadingInterpolation(shootPose.getHeading(), parkPose.getHeading())
+
+                    .build();
         }
     }
-
-    public void buildCycle() {
-        cycle = new BuildNewCycle(follower);
+    public void BuildPaths() {
+        path = new Paths(follower);
     }
 }
