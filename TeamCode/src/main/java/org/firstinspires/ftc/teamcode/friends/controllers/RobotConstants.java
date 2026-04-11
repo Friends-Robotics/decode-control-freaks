@@ -24,7 +24,7 @@ public class RobotConstants {
 
     @Config
     public static class Shooter {
-        public static double kP = 0.00025;
+        public static double kP = 0.06;
         public static double kS = 0.1;
         public static double kI = 0.0;
         public static double kD = 0.0;
