@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.pedroPathing;
 
+import com.acmerobotics.dashboard.config.Config;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
@@ -8,6 +9,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.friends.components.Intake;
 import org.firstinspires.ftc.teamcode.friends.components.RobotHardware;
 import org.firstinspires.ftc.teamcode.friends.components.Robot;
@@ -25,7 +27,11 @@ public class AutoFar extends LinearOpMode{
     boolean hasReachedRPM;
     double targetRPM;
     private final ElapsedTime readyTimer = new ElapsedTime();
-    double shootTime = 4;
+    double shootTime = 7; // try to lower
+
+    ElapsedTime shotTimer = new ElapsedTime();
+    boolean isFeeding = false;
+    double shotDelay = 0.3; //between shots
     int timesEnteredShooting;
 
     boolean startedPath = false;
@@ -72,6 +78,8 @@ public class AutoFar extends LinearOpMode{
             double shooterPower = shooterController.update(targetRPM, currentRPM);
             robot.shooter.setPower(shooterPower);
 
+            robot.shooter.setHoodPosition(RobotConstants.Shooter.FAR_HOOD);
+
             switch(currentState) {
 
                 case START_TO_SHOOT:
@@ -104,10 +112,23 @@ public class AutoFar extends LinearOpMode{
                     }
 
                     if (hasReachedRPM) {
-                        robot.intake.intake();
-                        robot.shooter.feed();
-                    } else {
-                        robot.intake.stop();
+                        if (!isFeeding) {
+                            // Start feeding a shot
+                            robot.intake.intake();
+                            robot.shooter.feed();
+                            shotTimer.reset();
+                            isFeeding = true;
+                        }
+
+                        // Stop feeding after a short burst
+                        if (isFeeding && shotTimer.seconds() > shotDelay) { // feed duration
+                            robot.intake.stop();
+                            robot.shooter.stopFeed();
+                            isFeeding = false;
+
+                            // Force RPM to be re-validated before next shot
+                            hasReachedRPM = false;
+                        }
                     }
 
                     if (readyTimer.seconds() > shootTime) {
@@ -181,14 +202,20 @@ public class AutoFar extends LinearOpMode{
                     robot.intake.stop();
                     break;
             }
+            telemetry.addData("Current Pose", follower.getPose());
+            telemetry.addData("Current path",follower.getCurrentPath());
+            telemetry.addData("Current Drawn", robot.getCurrent(CurrentUnit.AMPS) );
+            telemetry.addData("CurrentRPM", shooterController.getFilteredRPM());
+            telemetry.addData("TargetRPM", shooterController.getTargetRPM());
+            telemetry.update();
         }
     }
 
     public static class Paths {
-        Pose shootPose = new Pose(82,25, Math.toRadians(67));
-        Pose prepPose = new Pose(82,35,Math.toRadians(0));
-        Pose endIntakePose = new Pose(125,35, Math.toRadians(0));
-        Pose parkPose = new Pose(136,40,Math.toRadians(90));
+        Pose shootPose = new Pose(82,25, Math.toRadians(70));
+        Pose prepPose = new Pose(82,35 + Tuning.IntakeOffsetY,Math.toRadians(0));
+        Pose endIntakePose = new Pose(125 + Tuning.IntakeOffsetX,35 + Tuning.IntakeOffsetY, Math.toRadians(0));
+        Pose parkPose = new Pose(130,40, Math.toRadians(90));
 
         public PathChain StartShootPath;
         public PathChain ShootPrepPath;
@@ -250,5 +277,11 @@ public class AutoFar extends LinearOpMode{
     }
     public void BuildPaths() {
         path = new Paths(follower);
+    }
+
+    @Config
+    public static class Tuning{
+        public static double IntakeOffsetY = 22.5;
+        public static double IntakeOffsetX = 5;
     }
 }

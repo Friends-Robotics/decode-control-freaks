@@ -34,8 +34,9 @@ public class Intake {
     /**
      * Pulses the intake motor. Starts the ON cycle immediately upon first call.
      */
-    public void pulse(double onTime, double offTime) {
+    public void pulse(double onTime, double offTime) {;
         // If this is the first loop cycle we are pulsing, reset the clock
+
         if (!wasPulsing) {
             pulseTimer.reset();
             wasPulsing = true;
@@ -46,6 +47,7 @@ public class Intake {
 
         if (currentTime % cycleTime < onTime) {
             intakeMotor.setPower(INTAKE_POWER);
+
         } else {
             intakeMotor.setPower(0.0);
         }

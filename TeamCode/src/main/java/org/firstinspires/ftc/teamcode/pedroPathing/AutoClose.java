@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.pedroPathing;
 
+import com.acmerobotics.dashboard.config.Config;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
@@ -12,6 +13,7 @@ import org.firstinspires.ftc.teamcode.friends.components.Intake;
 import org.firstinspires.ftc.teamcode.friends.components.RobotHardware;
 import org.firstinspires.ftc.teamcode.friends.components.Shooter;
 import org.firstinspires.ftc.teamcode.friends.components.Robot;
+import org.firstinspires.ftc.teamcode.friends.controllers.GoalFusion;
 import org.firstinspires.ftc.teamcode.friends.controllers.RobotConstants;
 import org.firstinspires.ftc.teamcode.friends.controllers.ShooterController;
 
@@ -28,12 +30,12 @@ public class AutoClose extends LinearOpMode {
     boolean hasReachedRPM;
     double targetRPM;
     private final ElapsedTime readyTimer = new ElapsedTime();
-    double shootTime = 2.75;
+    double shootTime = 3.25;
 
     boolean startedPath = false;
     boolean stateJustEntered = true;
 
-    Pose startPose = new Pose(122.500, 122.500, Math.toRadians(37));
+    Pose startPose = new Pose(125.000, 118.5, Math.toRadians(36));
 
     BuildNewCycle cycle;
 
@@ -63,6 +65,7 @@ public class AutoClose extends LinearOpMode {
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(startPose);
 
+
         buildCycle();
 
         waitForStart();
@@ -74,6 +77,8 @@ public class AutoClose extends LinearOpMode {
             double currentRPM = robot.shooter.getRPM();
             double shooterPower = shooterController.update(targetRPM, currentRPM);
             robot.shooter.setPower(shooterPower);
+
+            robot.shooter.setHoodPosition(RobotConstants.Shooter.CLOSE_HOOD);
 
             switch(currentState) {
 
@@ -204,19 +209,19 @@ public class AutoClose extends LinearOpMode {
         Pose currentPose;
 
         Pose[] IntakePoses1 = {
-                new Pose(95.500, 84.000, Math.toRadians(0)),
-                new Pose(95.500,60, Math.toRadians(0)),
-                new Pose(95.500,36, Math.toRadians(0))
+                new Pose(95.500, 84.000 + Tuning.IntakeOffsetY, Math.toRadians(0)),
+                new Pose(95.500,60 + Tuning.IntakeOffsetY , Math.toRadians(0)),
+                new Pose(95.500,36 + Tuning.IntakeOffsetY , Math.toRadians(0))
         };
 
         Pose[] IntakePoses2 = {
-                new Pose(129.000, 84.000, Math.toRadians(0)),
-                new Pose(132.500,60, Math.toRadians(0)),
-                new Pose(132.500,36, Math.toRadians(0))
+                new Pose(127.000 + Tuning.IntakeOffsetX, 84.000 + Tuning.IntakeOffsetY, Math.toRadians(0)),
+                new Pose(132.500 + Tuning.IntakeOffsetX,60 + Tuning.IntakeOffsetY, Math.toRadians(0)),
+                new Pose(132.500 + Tuning.IntakeOffsetX,36 + Tuning.IntakeOffsetY, Math.toRadians(0))
         };
 
         Pose shootPose = new Pose(102.000, 102.000, Math.toRadians(45));
-        Pose parkPose = new Pose(96, 120, Math.toRadians(90));
+        Pose parkPose = new Pose(95,12,Math.toRadians(35));
 
         public PathChain StartShootPath;
         public PathChain ShootIntakePath;
@@ -271,5 +276,11 @@ public class AutoClose extends LinearOpMode {
 
     public void buildCycle() {
         cycle = new BuildNewCycle(follower);
+    }
+
+    @Config
+    public static class Tuning{
+        public static double IntakeOffsetY = 5.5;
+        public static double IntakeOffsetX = 8; //Change to 7
     }
 }
