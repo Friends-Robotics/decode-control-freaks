@@ -16,7 +16,7 @@ import org.firstinspires.ftc.teamcode.friends.controllers.RobotConstants;
 import org.firstinspires.ftc.teamcode.friends.controllers.ShooterController;
 
 @Autonomous
-public class AutoClose extends LinearOpMode { //hello
+public class AutoClose extends LinearOpMode {
 
     RobotHardware robotHardware;
     Robot robot;
