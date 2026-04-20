@@ -31,13 +31,15 @@ public class AutoFar extends LinearOpMode{
 
     ElapsedTime shotTimer = new ElapsedTime();
     boolean isFeeding = false;
-    double shotDelay = 0.3; //between shots
+    double shotDelay = 0.3; //between shots TUNE
     int timesEnteredShooting;
 
     boolean startedPath = false;
     boolean stateJustEntered = true;
 
     static Pose startPose = new Pose(82, 9, Math.toRadians(90));
+
+    public static boolean isBlue;
 
     Paths path;
 
@@ -283,5 +285,17 @@ public class AutoFar extends LinearOpMode{
     public static class Tuning{
         public static double IntakeOffsetY = 22.5;
         public static double IntakeOffsetX = 5;
+    }
+
+    public Pose mirrorPose(Pose p) {
+        return new Pose(
+                144.0 - p.getX(), //144 is full length of arena
+                p.getY(),
+                Math.PI - p.getHeading() //PI is Pi
+        );
+    }
+    public Pose p(double x, double y, double headingDeg) {
+        Pose pose = new Pose(x, y, Math.toRadians(headingDeg));
+        return isBlue ? mirrorPose(pose) : pose;
     }
 }
