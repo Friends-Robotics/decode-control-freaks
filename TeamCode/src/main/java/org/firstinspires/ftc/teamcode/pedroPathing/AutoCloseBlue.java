@@ -231,19 +231,17 @@ public class AutoCloseBlue extends LinearOpMode {
         Pose currentPose;
 
         Pose[] IntakePoses1 = {
-                new Pose(48.5, 84.000 + Tuning.IntakeOffsetY, Math.toRadians(180)),
-                new Pose(48.5,60 + Tuning.IntakeOffsetY , Math.toRadians(180))
-                //new Pose(48.5,36 + Tuning.IntakeOffsetY , Math.toRadians(180))
+                new Pose(50, 84.000 + Tuning.IntakeOffsetY, Math.toRadians(180)),
+                new Pose(50,60 + Tuning.IntakeOffsetY , Math.toRadians(180))
         };
 
         Pose[] IntakePoses2 = {
                 new Pose(18 + Tuning.IntakeOffsetX, 84.000 + Tuning.IntakeOffsetY, Math.toRadians(180)),
                 new Pose(11.5 + Tuning.IntakeOffsetX,60 + Tuning.IntakeOffsetY, Math.toRadians(180))
-                // new Pose(11.5 + Tuning.IntakeOffsetX,36 + Tuning.IntakeOffsetY, Math.toRadians(180))
         };
 
         Pose shootPose = new Pose(42, 102.000, Math.toRadians(135));
-        Pose parkPose = new Pose(95,12,Math.toRadians(135));
+        Pose parkPose = new Pose(60,110,Math.toRadians(90));
 
         public PathChain StartShootPath;
         public PathChain ShootIntakePath;
@@ -282,9 +280,9 @@ public class AutoCloseBlue extends LinearOpMode {
             ).build();
 
             IntakeShootPath = follower.pathBuilder().addPath(
-                    new BezierLine(IntakePoses2[cycleIndex], shootPose)
+                    new BezierLine(IntakePoses1[cycleIndex], shootPose)
             ).setLinearHeadingInterpolation(
-                    IntakePoses2[cycleIndex].getHeading(),
+                    IntakePoses1[cycleIndex].getHeading(),
                     shootPose.getHeading()
             ).build();
 
@@ -296,9 +294,9 @@ public class AutoCloseBlue extends LinearOpMode {
             ).build();
 
             ParkPath = follower.pathBuilder().addPath(
-                    new BezierLine(IntakePoses2[cycleIndex], parkPose)
+                    new BezierLine(shootPose, parkPose)
             ).setLinearHeadingInterpolation(
-                    IntakePoses2[cycleIndex].getHeading(),
+                    shootPose.getHeading(),
                     parkPose.getHeading()
             ).build();
         }

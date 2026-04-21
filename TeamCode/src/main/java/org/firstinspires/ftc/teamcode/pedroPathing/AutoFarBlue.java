@@ -216,7 +216,7 @@ public class AutoFarBlue extends LinearOpMode{
     }
 
     public static class Paths {
-        Pose shootPose = new Pose(62,15, Math.toRadians(115));
+        Pose shootPose = new Pose(62,15, Math.toRadians(110));
         Pose prepPose = new Pose(62,35 + Tuning.IntakeOffsetY,Math.toRadians(180));
         Pose endIntakePose = new Pose(19 + Tuning.IntakeOffsetX,35 + Tuning.IntakeOffsetY, Math.toRadians(180));
         Pose parkPose = new Pose(14,40, Math.toRadians(90));

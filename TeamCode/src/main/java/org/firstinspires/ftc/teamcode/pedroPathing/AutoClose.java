@@ -30,7 +30,7 @@ public class AutoClose extends LinearOpMode {
     boolean hasReachedRPM;
     double targetRPM;
     private final ElapsedTime readyTimer = new ElapsedTime();
-    double shootTime = 3.25;
+    double shootTime = 4;
 
     boolean startedPath = false;
     boolean stateJustEntered = true;
@@ -228,14 +228,13 @@ public class AutoClose extends LinearOpMode {
 
         Pose[] IntakePoses1 = {
                 new Pose(95.500, 84.000 + Tuning.IntakeOffsetY, Math.toRadians(0)),
-                new Pose(95.500,60 + Tuning.IntakeOffsetY , Math.toRadians(0)),
-                new Pose(95.500,36 + Tuning.IntakeOffsetY , Math.toRadians(0))
+                new Pose(95.500,60 + Tuning.IntakeOffsetY , Math.toRadians(0))
+
         };
 
         Pose[] IntakePoses2 = {
                 new Pose(127.000 + Tuning.IntakeOffsetX, 84.000 + Tuning.IntakeOffsetY, Math.toRadians(0)),
-                new Pose(132.500 + Tuning.IntakeOffsetX,60 + Tuning.IntakeOffsetY, Math.toRadians(0)),
-                new Pose(132.500 + Tuning.IntakeOffsetX,36 + Tuning.IntakeOffsetY, Math.toRadians(0))
+                new Pose(132.500 + Tuning.IntakeOffsetX,60 + Tuning.IntakeOffsetY, Math.toRadians(0))
         };
 
         Pose shootPose = new Pose(102.000, 102.000, Math.toRadians(45));
@@ -278,7 +277,7 @@ public class AutoClose extends LinearOpMode {
             ).build();
 
             IntakeShootPath = follower.pathBuilder().addPath(
-                    new BezierLine(IntakePoses2[cycleIndex], shootPose)
+                    new BezierLine(IntakePoses1[cycleIndex], shootPose)
             ).setLinearHeadingInterpolation(
                     IntakePoses2[cycleIndex].getHeading(),
                     shootPose.getHeading()
@@ -292,7 +291,7 @@ public class AutoClose extends LinearOpMode {
             ).build();
 
             ParkPath = follower.pathBuilder().addPath(
-                    new BezierLine(IntakePoses2[cycleIndex], parkPose)
+                    new BezierLine(shootPose, parkPose)
             ).setLinearHeadingInterpolation(
                     IntakePoses2[cycleIndex].getHeading(),
                     parkPose.getHeading()
