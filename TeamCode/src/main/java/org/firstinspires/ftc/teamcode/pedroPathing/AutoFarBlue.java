@@ -17,7 +17,7 @@ import org.firstinspires.ftc.teamcode.friends.controllers.RobotConstants;
 import org.firstinspires.ftc.teamcode.friends.controllers.ShooterController;
 
 @Autonomous
-public class AutoFar extends LinearOpMode{
+public class AutoFarBlue extends LinearOpMode{
     RobotHardware robotHardware;
     Robot robot;
     Intake intake;
@@ -37,7 +37,7 @@ public class AutoFar extends LinearOpMode{
     boolean startedPath = false;
     boolean stateJustEntered = true;
 
-    static Pose startPose = new Pose(82, 9, Math.toRadians(90));
+    static Pose startPose = new Pose(62, 9, Math.toRadians(90));
 
     public static boolean isBlue;
 
@@ -216,10 +216,10 @@ public class AutoFar extends LinearOpMode{
     }
 
     public static class Paths {
-        Pose shootPose = new Pose(82,25, Math.toRadians(70));
-        Pose prepPose = new Pose(82,35 + Tuning.IntakeOffsetY,Math.toRadians(0));
-        Pose endIntakePose = new Pose(125 + Tuning.IntakeOffsetX,35 + Tuning.IntakeOffsetY, Math.toRadians(0));
-        Pose parkPose = new Pose(130,40, Math.toRadians(90));
+        Pose shootPose = new Pose(62,15, Math.toRadians(115));
+        Pose prepPose = new Pose(62,35 + Tuning.IntakeOffsetY,Math.toRadians(180));
+        Pose endIntakePose = new Pose(19 + Tuning.IntakeOffsetX,35 + Tuning.IntakeOffsetY, Math.toRadians(180));
+        Pose parkPose = new Pose(14,40, Math.toRadians(90));
 
         public PathChain StartShootPath;
         public PathChain ShootPrepPath;
@@ -284,8 +284,8 @@ public class AutoFar extends LinearOpMode{
     }
 
     @Config
-    public static class Tuning{
-        public static double IntakeOffsetY = 22.5;
+    public static class Tuning{ //Tune
+        public static double IntakeOffsetY = 0;
         public static double IntakeOffsetX = 5;
     }
 
