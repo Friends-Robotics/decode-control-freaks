@@ -49,6 +49,7 @@ public class AutoCloseBlue extends LinearOpMode {
         INTAKE,
         INTAKE_TO_SHOOT,
         PARKING,
+        REVERSE_INTAKE,
         CYCLE
     }
 
@@ -155,23 +156,32 @@ public class AutoCloseBlue extends LinearOpMode {
                     if (!follower.isBusy()) {
                         startedPath = false;
                         robot.intake.stop();
+                        currentState = AutoState.REVERSE_INTAKE;
+                        stateJustEntered = true;
+                    }
+                    break;
+
+                case REVERSE_INTAKE:
+
+                    if (!startedPath) {
+                        follower.followPath(cycle.ReverseIntake);
+                        startedPath = true;
+                    }
+
+                    if (!follower.isBusy()) {
+                        startedPath = false;
+                        robot.intake.stop();
                         currentState = AutoState.INTAKE_TO_SHOOT;
                         stateJustEntered = true;
                     }
                     break;
 
+
                 case INTAKE_TO_SHOOT:
 
                     if (!startedPath) {
-                        if(cycleIndex == 2)
-                        {
-                            follower.followPath(cycle.IntakeShootPath2);
-                            startedPath = true;
-                        }
-                        else{
                             follower.followPath(cycle.IntakeShootPath);
                             startedPath = true;
-                        }
                     }
 
                     if (!follower.isBusy()) {
@@ -181,6 +191,7 @@ public class AutoCloseBlue extends LinearOpMode {
                         stateJustEntered = true;
                     }
                     break;
+
 
                 case CYCLE:
 
@@ -232,7 +243,6 @@ public class AutoCloseBlue extends LinearOpMode {
         };
 
         Pose shootPose = new Pose(42, 102.000, Math.toRadians(135));
-        Pose controlPose = new Pose(48.5, 60 + Tuning.IntakeOffsetY, Math.toRadians(180));
         Pose parkPose = new Pose(95,12,Math.toRadians(135));
 
         public PathChain StartShootPath;
@@ -240,7 +250,7 @@ public class AutoCloseBlue extends LinearOpMode {
         public PathChain IntakePath;
         public PathChain IntakeShootPath;
         public PathChain ParkPath;
-        public PathChain IntakeShootPath2;
+        public PathChain ReverseIntake;
 
         public BuildNewCycle(Follower follower) {
 
@@ -278,11 +288,11 @@ public class AutoCloseBlue extends LinearOpMode {
                     shootPose.getHeading()
             ).build();
 
-            IntakeShootPath2 = follower.pathBuilder().addPath(
-                    new BezierCurve(IntakePoses2[cycleIndex], controlPose, shootPose)
+            ReverseIntake = follower.pathBuilder().addPath(
+                    new BezierLine(IntakePoses2[cycleIndex], IntakePoses1[cycleIndex])
             ).setLinearHeadingInterpolation(
                     IntakePoses2[cycleIndex].getHeading(),
-                    shootPose.getHeading()
+                    IntakePoses1[cycleIndex].getHeading()
             ).build();
 
             ParkPath = follower.pathBuilder().addPath(
@@ -302,7 +312,7 @@ public class AutoCloseBlue extends LinearOpMode {
 
     @Config
     public static class Tuning{
-        public static double IntakeOffsetY = 2;
+        public static double IntakeOffsetY = 0;
         public static double IntakeOffsetX = 9;
     }
 }

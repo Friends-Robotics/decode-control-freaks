@@ -45,6 +45,7 @@ public class AutoClose extends LinearOpMode {
         SHOOTING,
         SHOOT_TO_INTAKE,
         INTAKE,
+        REVERSE_INTAKE,
         INTAKE_TO_SHOOT,
         PARKING,
         CYCLE
@@ -153,10 +154,26 @@ public class AutoClose extends LinearOpMode {
                     if (!follower.isBusy()) {
                         startedPath = false;
                         robot.intake.stop();
+                        currentState = AutoState.REVERSE_INTAKE;
+                        stateJustEntered = true;
+                    }
+                    break;
+
+                case REVERSE_INTAKE:
+
+                    if (!startedPath) {
+                        follower.followPath(cycle.ReverseIntake);
+                        startedPath = true;
+                    }
+
+                    if (!follower.isBusy()) {
+                        startedPath = false;
+                        robot.intake.stop();
                         currentState = AutoState.INTAKE_TO_SHOOT;
                         stateJustEntered = true;
                     }
                     break;
+
 
                 case INTAKE_TO_SHOOT:
 
@@ -230,6 +247,7 @@ public class AutoClose extends LinearOpMode {
         public PathChain IntakeShootPath;
         public PathChain ParkPath;
 
+        public PathChain ReverseIntake;
         public BuildNewCycle(Follower follower) {
 
             if (cycleIndex == 0) {
@@ -264,6 +282,13 @@ public class AutoClose extends LinearOpMode {
             ).setLinearHeadingInterpolation(
                     IntakePoses2[cycleIndex].getHeading(),
                     shootPose.getHeading()
+            ).build();
+
+            ReverseIntake = follower.pathBuilder().addPath(
+                    new BezierLine(IntakePoses2[cycleIndex], IntakePoses1[cycleIndex])
+            ).setLinearHeadingInterpolation(
+                    IntakePoses2[cycleIndex].getHeading(),
+                    IntakePoses1[cycleIndex].getHeading()
             ).build();
 
             ParkPath = follower.pathBuilder().addPath(
