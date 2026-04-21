@@ -39,6 +39,7 @@ public class AutoClose extends LinearOpMode {
 
     BuildNewCycle cycle;
 
+
     enum AutoState{
         START_TO_SHOOT,
         SHOOTING,
@@ -280,7 +281,7 @@ public class AutoClose extends LinearOpMode {
 
     @Config
     public static class Tuning{
-        public static double IntakeOffsetY = 5.5;
+        public static double IntakeOffsetY = 4.5;
         public static double IntakeOffsetX = 8; //Change to 7
     }
 }

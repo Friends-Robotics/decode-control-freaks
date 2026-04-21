@@ -19,7 +19,7 @@ import org.firstinspires.ftc.teamcode.friends.controllers.RobotConstants;
 import org.firstinspires.ftc.teamcode.friends.controllers.ShooterController;
 
 @Autonomous
-public class NotTestedAutoClose extends LinearOpMode {
+public class AutoCloseBlue extends LinearOpMode {
 
     RobotHardware robotHardware;
     Robot robot;
@@ -28,20 +28,19 @@ public class NotTestedAutoClose extends LinearOpMode {
     private Follower follower;
 
     public static int cycleIndex;
-    public static int maxCycles;
     boolean hasReachedRPM;
     double targetRPM;
     private final ElapsedTime readyTimer = new ElapsedTime();
-    private final ElapsedTime gateTimer = new ElapsedTime();
     double shootTime = 3.25;
-    double gateWaitTime = 1.5;
 
     boolean startedPath = false;
     boolean stateJustEntered = true;
 
-    public static boolean isBlue;
+    Pose startPose = new Pose(19, 118.5, Math.toRadians(144));
 
     BuildNewCycle cycle;
+
+    public static boolean isBlue;
 
     enum AutoState{
         START_TO_SHOOT,
@@ -49,8 +48,6 @@ public class NotTestedAutoClose extends LinearOpMode {
         SHOOT_TO_INTAKE,
         INTAKE,
         INTAKE_TO_SHOOT,
-        SHOOT_TO_GATE,
-        GATE_TO_SHOOT,
         PARKING,
         CYCLE
     }
@@ -61,7 +58,6 @@ public class NotTestedAutoClose extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
 
         cycleIndex = 0;
-        isBlue = selectAlliance();
         targetRPM = RobotConstants.Shooter.IDLE_RPM;
         hasReachedRPM = false;
 
@@ -69,14 +65,13 @@ public class NotTestedAutoClose extends LinearOpMode {
         robot = new Robot(robotHardware);
         shooterController = new ShooterController();
 
+        follower = Constants.createFollower(hardwareMap);
+        follower.setStartingPose(startPose);
+
+
         buildCycle();
 
-        follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose(cycle.startPose);
-
-
         waitForStart();
-
 
         while (opModeIsActive()) {
 
@@ -168,8 +163,15 @@ public class NotTestedAutoClose extends LinearOpMode {
                 case INTAKE_TO_SHOOT:
 
                     if (!startedPath) {
-                        follower.followPath(cycle.IntakeShootPath);
-                        startedPath = true;
+                        if(cycleIndex == 2)
+                        {
+                            follower.followPath(cycle.IntakeShootPath2);
+                            startedPath = true;
+                        }
+                        else{
+                            follower.followPath(cycle.IntakeShootPath);
+                            startedPath = true;
+                        }
                     }
 
                     if (!follower.isBusy()) {
@@ -180,63 +182,12 @@ public class NotTestedAutoClose extends LinearOpMode {
                     }
                     break;
 
-                case SHOOT_TO_GATE:
-
-                    if(!startedPath) {
-                        follower.followPath(cycle.ShootGatePath);
-                        startedPath = true;
-                    }
-
-                    if(!follower.isBusy()){
-                        startedPath = false;
-                        robot.intake.intake();
-                        currentState = AutoState.GATE_TO_SHOOT;
-                        stateJustEntered = true;
-                    }
-                    break;
-
-                case GATE_TO_SHOOT:
-
-                    if (stateJustEntered) {
-                        gateTimer.reset();
-                        stateJustEntered = false;
-                    }
-
-                    if (gateTimer.seconds() < gateWaitTime) {
-                        robot.intake.intake();
-                    } else {
-                        robot.intake.stop();
-
-                        if(!startedPath){
-                            follower.followPath(cycle.GateShootPath);
-                            startedPath = true;
-                        }
-                    }
-
-                    if(!follower.isBusy())
-                    {
-                        startedPath = false;
-                        cycleIndex++;
-                        currentState = AutoState.SHOOTING;
-                        stateJustEntered = true;
-                    }
-                    break;
-
                 case CYCLE:
 
-                    if (cycleIndex < maxCycles ) {
-                        if(maxCycles == 3 && cycleIndex == 2) //Checks for whether we are doing 12 ball and we are on our 3rd intake
-                        {
-                            buildCycle();
-                            currentState = AutoState.SHOOT_TO_GATE;
-                            stateJustEntered = true;
-                        }
-                        else{
-                            buildCycle();
-                            currentState = AutoState.SHOOT_TO_INTAKE;
-                            stateJustEntered = true;
-                        }
-
+                    if (cycleIndex < cycle.IntakePoses1.length ) {
+                        buildCycle();
+                        currentState = AutoState.SHOOT_TO_INTAKE;
+                        stateJustEntered = true;
                     } else {
                         currentState = AutoState.PARKING;
                         stateJustEntered = true;
@@ -259,39 +210,37 @@ public class NotTestedAutoClose extends LinearOpMode {
         }
     }
 
+
     // =========================
     //  PATH BUILDER CLASS
     // =========================
     public class BuildNewCycle {
 
 
-        Pose startPose = p(125.000, 118.5, 36);
         Pose currentPose;
 
         Pose[] IntakePoses1 = {
-                p(95.500, 84.000 + Tuning.IntakeOffsetY, 0),
-                p(95.500,60 + Tuning.IntakeOffsetY , 0),
-                //p(95.500,36 + Tuning.IntakeOffsetY , 0) don't need for updated 12 ball
+                new Pose(48.5, 84.000 + Tuning.IntakeOffsetY, Math.toRadians(180)),
+                new Pose(48.5,60 + Tuning.IntakeOffsetY , Math.toRadians(180))
+                //new Pose(48.5,36 + Tuning.IntakeOffsetY , Math.toRadians(180))
         };
 
         Pose[] IntakePoses2 = {
-                p(127.000 + Tuning.IntakeOffsetX, 84.000 + Tuning.IntakeOffsetY, 0),
-                p(132.500 + Tuning.IntakeOffsetX,60 + Tuning.IntakeOffsetY, 0),
-                //p(132.500 + Tuning.IntakeOffsetX,36 + Tuning.IntakeOffsetY, 0)
+                new Pose(18 + Tuning.IntakeOffsetX, 84.000 + Tuning.IntakeOffsetY, Math.toRadians(180)),
+                new Pose(11.5 + Tuning.IntakeOffsetX,60 + Tuning.IntakeOffsetY, Math.toRadians(180))
+                // new Pose(11.5 + Tuning.IntakeOffsetX,36 + Tuning.IntakeOffsetY, Math.toRadians(180))
         };
 
-        Pose shootPose = p(102.000, 102.000, 45);
-        Pose parkPose = p(95,12,35);
-        Pose gatePose = p(135,60,60);
+        Pose shootPose = new Pose(42, 102.000, Math.toRadians(135));
+        Pose controlPose = new Pose(48.5, 60 + Tuning.IntakeOffsetY, Math.toRadians(180));
+        Pose parkPose = new Pose(95,12,Math.toRadians(135));
 
         public PathChain StartShootPath;
         public PathChain ShootIntakePath;
         public PathChain IntakePath;
         public PathChain IntakeShootPath;
-        public PathChain ShootGatePath;
-        public PathChain GateShootPath;
-
         public PathChain ParkPath;
+        public PathChain IntakeShootPath2;
 
         public BuildNewCycle(Follower follower) {
 
@@ -329,30 +278,15 @@ public class NotTestedAutoClose extends LinearOpMode {
                     shootPose.getHeading()
             ).build();
 
-            ShootGatePath = follower.pathBuilder().addPath(
-                            new BezierLine(
-                                    new Pose(shootPose.getX(),shootPose.getY()),
-                                    new Pose(gatePose.getX(), gatePose.getY())
-                            )
-                    ).setLinearHeadingInterpolation(shootPose.getHeading() , gatePose.getHeading())
-                    .build();
-
-            GateShootPath = follower.pathBuilder().addPath(
-                            new BezierLine(
-                                    new Pose(gatePose.getX(), gatePose.getY()),
-
-                                    new Pose(shootPose.getX(), shootPose.getY())
-                            )
-                    ).setLinearHeadingInterpolation(gatePose.getHeading(), shootPose.getHeading())
-
-                    .build();
+            IntakeShootPath2 = follower.pathBuilder().addPath(
+                    new BezierCurve(IntakePoses2[cycleIndex], controlPose, shootPose)
+            ).setLinearHeadingInterpolation(
+                    IntakePoses2[cycleIndex].getHeading(),
+                    shootPose.getHeading()
+            ).build();
 
             ParkPath = follower.pathBuilder().addPath(
-                    new BezierLine(
-                            new Pose (IntakePoses2[cycleIndex].getX(),IntakePoses2[cycleIndex].getY()),
-                            new Pose (parkPose.getX(), parkPose.getY())
-                    )
-
+                    new BezierLine(IntakePoses2[cycleIndex], parkPose)
             ).setLinearHeadingInterpolation(
                     IntakePoses2[cycleIndex].getHeading(),
                     parkPose.getHeading()
@@ -360,113 +294,15 @@ public class NotTestedAutoClose extends LinearOpMode {
         }
     }
 
-    //Matthew please don't CrashOut
+
+
     public void buildCycle() {
         cycle = new BuildNewCycle(follower);
     }
 
-    //Calculates mirrored pose
-    public Pose mirrorPose(Pose p) {
-        return new Pose(
-                144.0 - p.getX(), //144 is full length of arena
-                p.getY(),
-                Math.PI - p.getHeading() //PI is Pi
-        );
-    }
-    public Pose p(double x, double y, double headingDeg) {
-        Pose pose = new Pose(x, y, Math.toRadians(headingDeg));
-        return isBlue ? mirrorPose(pose) : pose;
-    }
-
-    private boolean selectAlliance() {
-        boolean isBlue = true;
-
-        while (!opModeIsActive() && !isStopRequested()) {
-            telemetry.addLine("WARNING: Ensure the turret is pointing forward");
-            telemetry.addLine();
-            telemetry.addLine("Which net are you shooting into");
-            telemetry.addLine("Red: (Dpad Up) Blue: (Dpad Down)");
-
-            if (gamepad1.dpad_up || gamepad2.dpad_up) {
-                isBlue = false;
-            } else if (gamepad1.dpad_down || gamepad2.dpad_down) {
-                isBlue = true;
-            }
-
-            telemetry.addData("Selected", isBlue ? "Blue" : "Red");
-            telemetry.update();
-            sleep(50);
-        }
-
-        return isBlue;
-    }
-
-    public void PickMode(){
-        String[] alliances = {"RED", "BLUE"};
-        int allianceIndex = 0;
-
-        int[] ballOptions = {3, 6, 9, 12};
-        int ballIndex = 2; // default = 9 ball since that one works
-
-        int menuIndex = 0; // 0 = alliance, 1 = balls
-
-        boolean lastUp = false;
-        boolean lastDown = false;
-        boolean lastLeft = false;
-        boolean lastRight = false;
-
-        while (!isStarted() && !isStopRequested()) {
-
-            if (gamepad1.dpad_up) {
-                menuIndex = 1;
-            }
-            if (gamepad1.dpad_down) {
-                menuIndex = 0;
-            }
-
-            if (gamepad1.dpad_left && !lastLeft) {
-                if (menuIndex == 0) allianceIndex = 0;
-                if (menuIndex == 1) ballIndex--;
-            }
-
-            if (gamepad1.dpad_right && !lastRight) {
-                if (menuIndex == 0) allianceIndex = 1;
-                if (menuIndex == 1) ballIndex++;
-            }
-
-            if (ballIndex < 0) ballIndex = ballOptions.length - 1;
-            if (ballIndex >= ballOptions.length) ballIndex = 0;
-
-            // Display menu
-            telemetry.addLine("=== AUTO SELECT ===");
-
-            telemetry.addData(
-                    menuIndex == 0 ? "> Alliance" : "  Alliance",
-                    alliances[allianceIndex]
-            );
-
-            telemetry.addData(
-                    menuIndex == 1 ? "> Balls" : "  Balls",
-                    ballOptions[ballIndex]
-            );
-
-            telemetry.addLine("Use D-pad to change");
-            telemetry.update();
-
-            lastLeft = gamepad1.dpad_left;
-            lastRight = gamepad1.dpad_right;
-            sleep(100);
-        }
-
-        isBlue = alliances[allianceIndex].equals("BLUE");
-        int selectedBalls = ballOptions[ballIndex];
-        maxCycles = (selectedBalls/3) -1; // At 3 ball there is no cycles
-    }
-
-
     @Config
     public static class Tuning{
-        public static double IntakeOffsetY = 4.5;
-        public static double IntakeOffsetX = 8;
+        public static double IntakeOffsetY = 2;
+        public static double IntakeOffsetX = 9;
     }
 }
